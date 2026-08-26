@@ -1,0 +1,524 @@
+[
+  {
+    "nome": "Acadêmico",
+    "pericias": [
+      "Ciências",
+      "Investigação"
+    ],
+    "periciasTexto": "Ciências e Investigação",
+    "poder": "Saber é Poder",
+    "poderDescricao": "2 PE → +5 em um teste de Intelecto.",
+    "fonte": "Livro de Regras"
+  },
+  {
+    "nome": "Agente de Saúde",
+    "pericias": [
+      "Intuição",
+      "Medicina"
+    ],
+    "periciasTexto": "Intuição e Medicina",
+    "poder": "Técnica Medicinal",
+    "poderDescricao": "Ao curar alguém, soma seu Intelecto aos PV recuperados.",
+    "fonte": "Livro de Regras"
+  },
+  {
+    "nome": "Amnésico",
+    "pericias": [],
+    "periciasTexto": "Duas à escolha do mestre",
+    "poder": "Vislumbres do Passado",
+    "poderDescricao": "1×/sessão: Intelecto DT 10 para reconhecer algo do passado → 1d4 PE temporários + uma informação.",
+    "fonte": "Livro de Regras"
+  },
+  {
+    "nome": "Artista",
+    "pericias": [
+      "Artes",
+      "Enganação"
+    ],
+    "periciasTexto": "Artes e Enganação",
+    "poder": "Magnum Opus",
+    "poderDescricao": "1×/missão: alguém em cena de interação te reconhece → +5 em Presença e perícias de PRE contra ela.",
+    "fonte": "Livro de Regras"
+  },
+  {
+    "nome": "Atleta",
+    "pericias": [
+      "Acrobacia",
+      "Atletismo"
+    ],
+    "periciasTexto": "Acrobacia e Atletismo",
+    "poder": "110%",
+    "poderDescricao": "2 PE → +5 em teste de perícia de Força ou Agilidade (exceto Luta e Pontaria).",
+    "fonte": "Livro de Regras"
+  },
+  {
+    "nome": "Chef",
+    "pericias": [
+      "Fortitude",
+      "Profissão"
+    ],
+    "periciasTexto": "Fortitude e Profissão (cozinheiro)",
+    "poder": "Ingrediente Secreto",
+    "poderDescricao": "Interlúdio: ao alimentar-se, você e quem comeu junto recebem o benefício de 2 pratos.",
+    "fonte": "Livro de Regras"
+  },
+  {
+    "nome": "Criminoso",
+    "pericias": [
+      "Crime",
+      "Furtividade"
+    ],
+    "periciasTexto": "Crime e Furtividade",
+    "poder": "O Crime Compensa",
+    "poderDescricao": "Fim de missão: 1 item achado nela entra na próxima sem contar no limite da patente.",
+    "fonte": "Livro de Regras"
+  },
+  {
+    "nome": "Cultista Arrependido",
+    "pericias": [
+      "Ocultismo",
+      "Religião"
+    ],
+    "periciasTexto": "Ocultismo e Religião",
+    "poder": "Traços do Outro Lado",
+    "poderDescricao": "1 poder paranormal à escolha; começa com metade da Sanidade da classe.",
+    "fonte": "Livro de Regras",
+    "modificadores": {
+      "sanMetade": true
+    }
+  },
+  {
+    "nome": "Desgarrado",
+    "pericias": [
+      "Fortitude",
+      "Sobrevivência"
+    ],
+    "periciasTexto": "Fortitude e Sobrevivência",
+    "poder": "Calejado",
+    "poderDescricao": "+1 PV para cada 5% de NEX.",
+    "fonte": "Livro de Regras",
+    "modificadores": {
+      "pvPorNivel": 1
+    }
+  },
+  {
+    "nome": "Engenheiro",
+    "pericias": [
+      "Profissão",
+      "Tecnologia"
+    ],
+    "periciasTexto": "Profissão e Tecnologia",
+    "poder": "Ferramenta Favorita",
+    "poderDescricao": "1 item à escolha (exceto arma) conta uma categoria abaixo.",
+    "fonte": "Livro de Regras"
+  },
+  {
+    "nome": "Executivo",
+    "pericias": [
+      "Diplomacia",
+      "Profissão"
+    ],
+    "periciasTexto": "Diplomacia e Profissão",
+    "poder": "Processo Otimizado",
+    "poderDescricao": "2 PE → +5 em teste de perícia dentro de teste estendido ou ao revisar documentos.",
+    "fonte": "Livro de Regras"
+  },
+  {
+    "nome": "Investigador",
+    "pericias": [
+      "Investigação",
+      "Percepção"
+    ],
+    "periciasTexto": "Investigação e Percepção",
+    "poder": "Faro para Pistas",
+    "poderDescricao": "1×/cena: 1 PE → +5 no teste para procurar pistas.",
+    "fonte": "Livro de Regras"
+  },
+  {
+    "nome": "Lutador",
+    "pericias": [
+      "Luta",
+      "Reflexos"
+    ],
+    "periciasTexto": "Luta e Reflexos",
+    "poder": "Mão Pesada",
+    "poderDescricao": "+2 em rolagens de dano com ataques corpo a corpo.",
+    "fonte": "Livro de Regras"
+  },
+  {
+    "nome": "Magnata",
+    "pericias": [
+      "Diplomacia",
+      "Pilotagem"
+    ],
+    "periciasTexto": "Diplomacia e Pilotagem",
+    "poder": "Patrocinador da Ordem",
+    "poderDescricao": "Limite de crédito conta sempre um acima do atual.",
+    "fonte": "Livro de Regras"
+  },
+  {
+    "nome": "Mercenário",
+    "pericias": [
+      "Iniciativa",
+      "Intimidação"
+    ],
+    "periciasTexto": "Iniciativa e Intimidação",
+    "poder": "Posição de Combate",
+    "poderDescricao": "1º turno da cena de ação: 2 PE → 1 ação de movimento adicional.",
+    "fonte": "Livro de Regras"
+  },
+  {
+    "nome": "Militar",
+    "pericias": [
+      "Pontaria",
+      "Tática"
+    ],
+    "periciasTexto": "Pontaria e Tática",
+    "poder": "Para Bellum",
+    "poderDescricao": "+2 em rolagens de dano com armas de fogo.",
+    "fonte": "Livro de Regras"
+  },
+  {
+    "nome": "Operário",
+    "pericias": [
+      "Fortitude",
+      "Profissão"
+    ],
+    "periciasTexto": "Fortitude e Profissão",
+    "poder": "Ferramenta de Trabalho",
+    "poderDescricao": "1 arma simples ou tática da sua profissão: proficiência e +1 em ataque, dano e margem de ameaça.",
+    "fonte": "Livro de Regras"
+  },
+  {
+    "nome": "Policial",
+    "pericias": [
+      "Percepção",
+      "Pontaria"
+    ],
+    "periciasTexto": "Percepção e Pontaria",
+    "poder": "Patrulha",
+    "poderDescricao": "+2 em Defesa.",
+    "fonte": "Livro de Regras",
+    "modificadores": {
+      "defesa": 2
+    }
+  },
+  {
+    "nome": "Religioso",
+    "pericias": [
+      "Religião",
+      "Vontade"
+    ],
+    "periciasTexto": "Religião e Vontade",
+    "poder": "Acalentar",
+    "poderDescricao": "+5 em Religião para acalmar; quem você acalma recupera 1d6 + Presença de Sanidade.",
+    "fonte": "Livro de Regras"
+  },
+  {
+    "nome": "Servidor Público",
+    "pericias": [
+      "Intuição",
+      "Vontade"
+    ],
+    "periciasTexto": "Intuição e Vontade",
+    "poder": "Espírito Cívico",
+    "poderDescricao": "1 PE → +2 no bônus que você concede ao ajudar.",
+    "fonte": "Livro de Regras"
+  },
+  {
+    "nome": "Teórico da Conspiração",
+    "pericias": [
+      "Investigação",
+      "Ocultismo"
+    ],
+    "periciasTexto": "Investigação e Ocultismo",
+    "poder": "Eu Já Sabia",
+    "poderDescricao": "Resistência a dano mental igual ao seu Intelecto.",
+    "fonte": "Livro de Regras"
+  },
+  {
+    "nome": "T.I.",
+    "pericias": [
+      "Investigação",
+      "Tecnologia"
+    ],
+    "periciasTexto": "Investigação e Tecnologia",
+    "poder": "Motor de Busca",
+    "poderDescricao": "Com acesso à internet: 2 PE → troca um teste de perícia qualquer por Tecnologia.",
+    "fonte": "Livro de Regras"
+  },
+  {
+    "nome": "Trabalhador Rural",
+    "pericias": [
+      "Adestramento",
+      "Sobrevivência"
+    ],
+    "periciasTexto": "Adestramento e Sobrevivência",
+    "poder": "Desbravador",
+    "poderDescricao": "2 PE → +5 em Adestramento ou Sobrevivência; sem penalidade de deslocamento em terreno difícil.",
+    "fonte": "Livro de Regras"
+  },
+  {
+    "nome": "Trambiqueiro",
+    "pericias": [
+      "Crime",
+      "Enganação"
+    ],
+    "periciasTexto": "Crime e Enganação",
+    "poder": "Impostor",
+    "poderDescricao": "1×/cena: 2 PE → troca um teste de perícia qualquer por Enganação.",
+    "fonte": "Livro de Regras"
+  },
+  {
+    "nome": "Universitário",
+    "pericias": [
+      "Atualidades",
+      "Investigação"
+    ],
+    "periciasTexto": "Atualidades e Investigação",
+    "poder": "Dedicação",
+    "poderDescricao": "+1 PE (e mais 1 a cada NEX ímpar: 15%, 25%…) e +1 no limite de PE por turno.",
+    "fonte": "Livro de Regras",
+    "modificadores": {
+      "pe": 1,
+      "pePorNivelImpar": 1,
+      "limitePe": 1
+    }
+  },
+  {
+    "nome": "Vítima",
+    "pericias": [
+      "Reflexos",
+      "Vontade"
+    ],
+    "periciasTexto": "Reflexos e Vontade",
+    "poder": "Cicatrizes Psicológicas",
+    "poderDescricao": "+1 de Sanidade para cada 5% de NEX.",
+    "fonte": "Livro de Regras",
+    "modificadores": {
+      "sanPorNivel": 1
+    }
+  },
+  {
+    "nome": "Amigo dos Animais",
+    "pericias": [
+      "Adestramento",
+      "Percepção"
+    ],
+    "periciasTexto": "Adestramento e Percepção",
+    "poder": "Companheiro Animal",
+    "poderDescricao": "Adestramento muda atitude de animais. Aliado animal dá +2 em 1 perícia; NEX 35% e 70% ampliam.",
+    "fonte": "Sobrevivendo ao Horror"
+  },
+  {
+    "nome": "Astronauta",
+    "pericias": [
+      "Ciências",
+      "Fortitude"
+    ],
+    "periciasTexto": "Ciências e Fortitude",
+    "poder": "Acostumado ao Extremo",
+    "poderDescricao": "1 PE → reduz em 5 um dano de fogo, frio ou mental. Cada novo uso na mesma cena custa +1 PE.",
+    "fonte": "Sobrevivendo ao Horror"
+  },
+  {
+    "nome": "Chef do Outro Lado",
+    "pericias": [
+      "Ocultismo",
+      "Profissão"
+    ],
+    "periciasTexto": "Ocultismo e Profissão (cozinheiro)",
+    "poder": "Fome do Outro Lado",
+    "poderDescricao": "Cozinha parte de criatura: Profissão DT 15+ → prato dá RD 10 ao elemento, ou vulnerabilidade. −1 SAN permanente.",
+    "fonte": "Sobrevivendo ao Horror"
+  },
+  {
+    "nome": "Colegial",
+    "pericias": [
+      "Atualidades",
+      "Tecnologia"
+    ],
+    "periciasTexto": "Atualidades e Tecnologia",
+    "poder": "Poder da Amizade",
+    "poderDescricao": "Melhor amigo em alcance médio e à vista → +2 em todo teste de perícia. Se ele morrer, −1 PE por 5% de NEX.",
+    "fonte": "Sobrevivendo ao Horror"
+  },
+  {
+    "nome": "Cosplayer",
+    "pericias": [
+      "Artes",
+      "Vontade"
+    ],
+    "periciasTexto": "Artes e Vontade",
+    "poder": "Não é Fantasia, é Cosplay!",
+    "poderDescricao": "Disfarce com Artes em vez de Enganação; +2 em testes que combinem com o cosplay que está usando.",
+    "fonte": "Sobrevivendo ao Horror"
+  },
+  {
+    "nome": "Diplomata",
+    "pericias": [
+      "Atualidades",
+      "Diplomacia"
+    ],
+    "periciasTexto": "Atualidades e Diplomacia",
+    "poder": "Conexões",
+    "poderDescricao": "+2 em Diplomacia. 10 min + 2 PE → troca um teste da área de um NPC contatado por Diplomacia.",
+    "fonte": "Sobrevivendo ao Horror"
+  },
+  {
+    "nome": "Explorador",
+    "pericias": [
+      "Fortitude",
+      "Sobrevivência"
+    ],
+    "periciasTexto": "Fortitude e Sobrevivência",
+    "poder": "Manual do Sobrevivente",
+    "poderDescricao": "2 PE → +5 para resistir a armadilha, clima, doença, fome, sede, fumaça, sono, sufocamento e veneno.",
+    "fonte": "Sobrevivendo ao Horror"
+  },
+  {
+    "nome": "Experimento",
+    "pericias": [
+      "Atletismo",
+      "Fortitude"
+    ],
+    "periciasTexto": "Atletismo e Fortitude",
+    "poder": "Mutação",
+    "poderDescricao": "Resistência a dano 2 e +2 em 1 perícia de FOR, AGI ou VIG; −1 dado em Diplomacia.",
+    "fonte": "Sobrevivendo ao Horror"
+  },
+  {
+    "nome": "Fanático por Criaturas",
+    "pericias": [
+      "Investigação",
+      "Ocultismo"
+    ],
+    "periciasTexto": "Investigação e Ocultismo",
+    "poder": "Conhecimento Oculto",
+    "poderDescricao": "Ocultismo identifica criatura por imagem ou rastro; ao passar, +2 em todo teste contra ela até fim da missão.",
+    "fonte": "Sobrevivendo ao Horror"
+  },
+  {
+    "nome": "Fotógrafo",
+    "pericias": [
+      "Artes",
+      "Percepção"
+    ],
+    "periciasTexto": "Artes e Percepção",
+    "poder": "Através da Lente",
+    "poderDescricao": "2 PE → +5 em Investigação ou Percepção feita por câmera ou foto (andar pela lente = meio deslocamento).",
+    "fonte": "Sobrevivendo ao Horror"
+  },
+  {
+    "nome": "Inventor Paranormal",
+    "pericias": [
+      "Profissão",
+      "Vontade"
+    ],
+    "periciasTexto": "Profissão (engenheiro) e Vontade",
+    "poder": "Invenção Paranormal",
+    "poderDescricao": "Invento cat. 0 com 1 ritual de 1º círculo: Profissão DT 15 (+5 por ativação na missão) → lança sem gastar PE.",
+    "fonte": "Sobrevivendo ao Horror"
+  },
+  {
+    "nome": "Jovem Místico",
+    "pericias": [
+      "Ocultismo",
+      "Religião"
+    ],
+    "periciasTexto": "Ocultismo e Religião",
+    "poder": "A Culpa é das Estrelas",
+    "poderDescricao": "Início de cena: 1 PE + 1d6; no número da sorte, +2 em perícia até fim da cena; senão, ganha mais um número.",
+    "fonte": "Sobrevivendo ao Horror"
+  },
+  {
+    "nome": "Legista do Turno da Noite",
+    "pericias": [
+      "Ciências",
+      "Medicina"
+    ],
+    "periciasTexto": "Ciências e Medicina",
+    "poder": "Luto Habitual",
+    "poderDescricao": "Metade do dano mental em cena de rotina de legista; 2 PE → +5 em Medicina de primeiros socorros ou necropsia.",
+    "fonte": "Sobrevivendo ao Horror"
+  },
+  {
+    "nome": "Mateiro",
+    "pericias": [
+      "Percepção",
+      "Sobrevivência"
+    ],
+    "periciasTexto": "Percepção e Sobrevivência",
+    "poder": "Mapa Celeste",
+    "poderDescricao": "Vendo o céu, não se perde. 2 PE → rola Sobrevivência de novo e fica com o melhor. Sono precário conta normal.",
+    "fonte": "Sobrevivendo ao Horror"
+  },
+  {
+    "nome": "Mergulhador",
+    "pericias": [
+      "Atletismo",
+      "Fortitude"
+    ],
+    "periciasTexto": "Atletismo e Fortitude",
+    "poder": "Fôlego de Nadador",
+    "poderDescricao": "+5 PV; prende a respiração o dobro do Vigor em rodadas; nada o deslocamento inteiro ao passar em Atletismo.",
+    "fonte": "Sobrevivendo ao Horror",
+    "modificadores": {
+      "pv": 5
+    }
+  },
+  {
+    "nome": "Motorista",
+    "pericias": [
+      "Pilotagem",
+      "Reflexos"
+    ],
+    "periciasTexto": "Pilotagem e Reflexos",
+    "poder": "Mãos no Volante",
+    "poderDescricao": "Sem penalidade de ataque por estar em veículo em movimento. 2 PE → +5 em Pilotagem ou resistência pilotando.",
+    "fonte": "Sobrevivendo ao Horror"
+  },
+  {
+    "nome": "Nerd Entusiasta",
+    "pericias": [
+      "Ciências",
+      "Tecnologia"
+    ],
+    "periciasTexto": "Ciências e Tecnologia",
+    "poder": "O Inteligentão",
+    "poderDescricao": "A ação de interlúdio ler dá +1 dado no bônus (de +1d6 para +2d6).",
+    "fonte": "Sobrevivendo ao Horror"
+  },
+  {
+    "nome": "Profetizado",
+    "pericias": [
+      "Vontade"
+    ],
+    "periciasTexto": "Vontade e mais uma, ligada à premonição",
+    "poder": "Luta ou Fuga",
+    "poderDescricao": "+2 em Vontade. Ao surgir uma referência à sua premonição, +2 PE temporários até o fim da cena.",
+    "fonte": "Sobrevivendo ao Horror"
+  },
+  {
+    "nome": "Psicólogo",
+    "pericias": [
+      "Intuição",
+      "Profissão"
+    ],
+    "periciasTexto": "Intuição e Profissão (psicólogo)",
+    "poder": "Terapia",
+    "poderDescricao": "Profissão no lugar de Diplomacia. 1×/rodada: 2 PE → troca resistência falha a dano mental em alcance curto.",
+    "fonte": "Sobrevivendo ao Horror"
+  },
+  {
+    "nome": "Repórter Investigativo",
+    "pericias": [
+      "Atualidades",
+      "Investigação"
+    ],
+    "periciasTexto": "Atualidades e Investigação",
+    "poder": "Encontrar a Verdade",
+    "poderDescricao": "Investigação no lugar de Diplomacia para persuadir e mudar atitude; 2 PE → +5 em Investigação.",
+    "fonte": "Sobrevivendo ao Horror"
+  }
+]

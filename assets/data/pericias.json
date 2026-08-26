@@ -1,0 +1,198 @@
+[
+  {
+    "nome": "Acrobacia",
+    "atributo": "AGI",
+    "soTreinada": false,
+    "sofreCarga": true,
+    "usaKit": false
+  },
+  {
+    "nome": "Adestramento",
+    "atributo": "PRE",
+    "soTreinada": true,
+    "sofreCarga": false,
+    "usaKit": false
+  },
+  {
+    "nome": "Artes",
+    "atributo": "PRE",
+    "soTreinada": true,
+    "sofreCarga": false,
+    "usaKit": false
+  },
+  {
+    "nome": "Atletismo",
+    "atributo": "FOR",
+    "soTreinada": false,
+    "sofreCarga": false,
+    "usaKit": false
+  },
+  {
+    "nome": "Atualidades",
+    "atributo": "INT",
+    "soTreinada": false,
+    "sofreCarga": false,
+    "usaKit": false
+  },
+  {
+    "nome": "Ciências",
+    "atributo": "INT",
+    "soTreinada": true,
+    "sofreCarga": false,
+    "usaKit": false
+  },
+  {
+    "nome": "Crime",
+    "atributo": "AGI",
+    "soTreinada": true,
+    "sofreCarga": true,
+    "usaKit": true
+  },
+  {
+    "nome": "Diplomacia",
+    "atributo": "PRE",
+    "soTreinada": false,
+    "sofreCarga": false,
+    "usaKit": false
+  },
+  {
+    "nome": "Enganação",
+    "atributo": "PRE",
+    "soTreinada": false,
+    "sofreCarga": false,
+    "usaKit": true
+  },
+  {
+    "nome": "Fortitude",
+    "atributo": "VIG",
+    "soTreinada": false,
+    "sofreCarga": false,
+    "usaKit": false
+  },
+  {
+    "nome": "Furtividade",
+    "atributo": "AGI",
+    "soTreinada": false,
+    "sofreCarga": true,
+    "usaKit": false
+  },
+  {
+    "nome": "Iniciativa",
+    "atributo": "AGI",
+    "soTreinada": false,
+    "sofreCarga": false,
+    "usaKit": false
+  },
+  {
+    "nome": "Intimidação",
+    "atributo": "PRE",
+    "soTreinada": false,
+    "sofreCarga": false,
+    "usaKit": false
+  },
+  {
+    "nome": "Intuição",
+    "atributo": "PRE",
+    "soTreinada": false,
+    "sofreCarga": false,
+    "usaKit": false
+  },
+  {
+    "nome": "Investigação",
+    "atributo": "INT",
+    "soTreinada": false,
+    "sofreCarga": false,
+    "usaKit": false
+  },
+  {
+    "nome": "Luta",
+    "atributo": "FOR",
+    "soTreinada": false,
+    "sofreCarga": false,
+    "usaKit": false
+  },
+  {
+    "nome": "Medicina",
+    "atributo": "INT",
+    "soTreinada": false,
+    "sofreCarga": false,
+    "usaKit": true
+  },
+  {
+    "nome": "Ocultismo",
+    "atributo": "INT",
+    "soTreinada": true,
+    "sofreCarga": false,
+    "usaKit": false
+  },
+  {
+    "nome": "Percepção",
+    "atributo": "PRE",
+    "soTreinada": false,
+    "sofreCarga": false,
+    "usaKit": false
+  },
+  {
+    "nome": "Pilotagem",
+    "atributo": "AGI",
+    "soTreinada": true,
+    "sofreCarga": false,
+    "usaKit": false
+  },
+  {
+    "nome": "Pontaria",
+    "atributo": "AGI",
+    "soTreinada": false,
+    "sofreCarga": false,
+    "usaKit": false
+  },
+  {
+    "nome": "Profissão",
+    "atributo": "INT",
+    "soTreinada": true,
+    "sofreCarga": false,
+    "usaKit": false
+  },
+  {
+    "nome": "Reflexos",
+    "atributo": "AGI",
+    "soTreinada": false,
+    "sofreCarga": false,
+    "usaKit": false
+  },
+  {
+    "nome": "Religião",
+    "atributo": "PRE",
+    "soTreinada": true,
+    "sofreCarga": false,
+    "usaKit": false
+  },
+  {
+    "nome": "Sobrevivência",
+    "atributo": "INT",
+    "soTreinada": false,
+    "sofreCarga": false,
+    "usaKit": false
+  },
+  {
+    "nome": "Tática",
+    "atributo": "INT",
+    "soTreinada": true,
+    "sofreCarga": false,
+    "usaKit": false
+  },
+  {
+    "nome": "Tecnologia",
+    "atributo": "INT",
+    "soTreinada": true,
+    "sofreCarga": false,
+    "usaKit": true
+  },
+  {
+    "nome": "Vontade",
+    "atributo": "PRE",
+    "soTreinada": false,
+    "sofreCarga": false,
+    "usaKit": false
+  }
+]

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "484442516229",
+    "project_id": "ordem-paranormal-mesa",
+    "storage_bucket": "ordem-paranormal-mesa.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:484442516229:android:bdcafc50f4e18a4026256c",
+        "android_client_info": {
+          "package_name": "com.gabesilvadev.ordem_paranormal"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDdq60MKPHtz2FQD5NZhPaA0qopPTSGtao"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

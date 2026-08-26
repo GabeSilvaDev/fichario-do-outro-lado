@@ -1,0 +1,14 @@
+services:
+  flutter:
+    image: ghcr.io/cirruslabs/flutter:stable
+    container_name: ordem-paranormal-flutter
+    working_dir: /app
+    volumes:
+      - .:/app
+      - pub-cache:/root/.pub-cache
+    ports:
+      - "8093:8093"   # flutter run web (hot reload)
+    command: tail -f /dev/null   # mantém o container vivo; comandos via exec
+
+volumes:
+  pub-cache:
