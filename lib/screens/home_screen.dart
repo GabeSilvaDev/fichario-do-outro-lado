@@ -82,6 +82,7 @@ class _HomeScreenState extends State<HomeScreen> {
       body: Column(
         children: [
           const FaixaLicenca(),
+          const CapaAplicativo(),
           Expanded(child: embrulhado),
         ],
       ),

@@ -154,6 +154,67 @@ class SeloLicenca extends StatelessWidget {
   }
 }
 
+/// Imagem de abertura da tela inicial: funciona como capa visual do app.
+class CapaAplicativo extends StatelessWidget {
+  const CapaAplicativo({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final altura = (MediaQuery.sizeOf(context).width * .44)
+        .clamp(154.0, 230.0)
+        .toDouble();
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(14, 12, 14, 4),
+      child: Semantics(
+        label: 'Capa do Fichário do Outro Lado',
+        image: true,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: SizedBox(
+            width: double.infinity,
+            height: altura,
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                Image.asset(
+                  'assets/capa_aplicativo.png',
+                  fit: BoxFit.cover,
+                  alignment: Alignment.center,
+                  filterQuality: FilterQuality.high,
+                ),
+                const DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [Colors.transparent, Color(0xCC080611)],
+                    ),
+                  ),
+                ),
+                const Positioned(
+                  left: 16,
+                  right: 16,
+                  bottom: 13,
+                  child: Text(
+                    'Fichário do Outro Lado',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: .4,
+                      shadows: [Shadow(blurRadius: 6, color: Colors.black)],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 /// A faixa da tela inicial: selo pequeno + o aviso, sempre visível, abrindo
 /// a tela completa no toque. É o "equivalente à capa" do app.
 class FaixaLicenca extends StatelessWidget {

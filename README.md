@@ -1,5 +1,7 @@
 <div align="center">
 
+<img src="assets/logo.png" width="180" alt="Logo do Fichário do Outro Lado">
+
 <img src="assets/licenca/selo-comunidade.png" width="150" alt="Selo da Licença da Comunidade de Ordem Paranormal">
 
 # Fichário do Outro Lado

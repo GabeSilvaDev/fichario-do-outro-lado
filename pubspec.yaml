@@ -44,6 +44,7 @@ flutter:
   # Dados do sistema: só mecânica (nomes de perícia/origem/classe e números).
   # Nenhum texto dos livros oficiais é reproduzido aqui — ver LICENCA.md.
   assets:
+    - assets/capa_aplicativo.png
     - assets/data/
     - assets/licenca/
     - assets/bestiario/
