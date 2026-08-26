@@ -16,12 +16,58 @@ mundo.**
 Flutter · Android · Web/PWA · offline por padrão · mesa online opcional ·
 gratuito
 
+**[▶ Jogar agora no navegador](https://gabesilvadev.github.io/fichario-do-outro-lado/)** —
+funciona no iPhone, Android e PC, sem instalar nada. No iPhone, abra no
+Safari e use *Compartilhar → Adicionar à Tela de Início* para virar app.
+
 Ferramenta de fã, sem vínculo com os detentores dos direitos.
 Regras de uso, créditos e privacidade: **[LICENCA.md](LICENCA.md)**.
 
 </div>
 
 ---
+
+## O app em telas
+
+### Fichas e criação de personagem
+
+| Suas fichas | Assistente (1/6) | Classe e NEX |
+|:---:|:---:|:---:|
+| <img src="docs/imagens/fichas-lista.png" width="260" alt="Lista de fichas com agente e NPC"> | <img src="docs/imagens/wizard-identidade.png" width="260" alt="Assistente de criação — identidade"> | <img src="docs/imagens/wizard-classe-nex.png" width="260" alt="Assistente — NEX e classe"> |
+
+| Atributos | Perícias | Conferir e criar |
+|:---:|:---:|:---:|
+| <img src="docs/imagens/wizard-atributos.png" width="260" alt="Assistente — distribuição de atributos"> | <img src="docs/imagens/wizard-pericias.png" width="260" alt="Assistente — escolha de perícias"> | <img src="docs/imagens/wizard-conferir.png" width="260" alt="Assistente — resumo com PV/SAN/PE calculados"> |
+
+### A ficha em jogo
+
+| Ficha completa | 28 perícias | Rolagem no toque |
+|:---:|:---:|:---:|
+| <img src="docs/imagens/ficha-geral.png" width="260" alt="Ficha — aba geral com recursos"> | <img src="docs/imagens/ficha-pericias.png" width="260" alt="Ficha — perícias com grau de treino"> | <img src="docs/imagens/rolagem.png" width="260" alt="Rolagem 2d20 pegando o melhor"> |
+
+### Bestiário e catálogo
+
+| Bestiário (150 fichas) | Ficha de ameaça | Habilidades em notação de mesa |
+|:---:|:---:|:---:|
+| <img src="docs/imagens/bestiario.png" width="260" alt="Bestiário da campanha por grupos"> | <img src="docs/imagens/npc-ficha.png" width="260" alt="Ameaça importada como NPC"> | <img src="docs/imagens/npc-poderes.png" width="260" alt="Habilidades da ameaça"> |
+
+| 81 rituais | Tabela de armas |
+|:---:|:---:|
+| <img src="docs/imagens/catalogo-rituais.png" width="260" alt="Catálogo de rituais por elemento e círculo"> | <img src="docs/imagens/catalogo-armas.png" width="260" alt="Catálogo de armas"> |
+
+### Mesa online
+
+| Criar ou entrar | A mesa do mestre | A mesa do jogador |
+|:---:|:---:|:---:|
+| <img src="docs/imagens/mesa-entrar.png" width="260" alt="Criar mesa ou entrar com código"> | <img src="docs/imagens/mesa-mestre.png" width="260" alt="Mesa do mestre com código ORDO e mapa"> | <img src="docs/imagens/mesa-jogador.png" width="260" alt="Mesa do jogador com presença ao vivo"> |
+
+| Mural em tela cheia | Painel do mestre ao vivo | Plantas do mapa |
+|:---:|:---:|:---:|
+| <img src="docs/imagens/mural-tela-cheia.png" width="260" alt="Imagem do mestre aberta na tela do jogador"> | <img src="docs/imagens/painel-mestre.png" width="260" alt="Ficha publicada e feed de testes no painel do mestre"> | <img src="docs/imagens/mapa-biblioteca.png" width="260" alt="Biblioteca de plantas da mesa"> |
+
+*As telas da mesa online acima são reais: duas sessões ao vivo no
+Firestore — o mestre mostrou a imagem e ela abriu na tela da jogadora; a
+ficha publicada e as rolagens entraram no painel do mestre na hora.*
 
 ## O que o app faz
 
@@ -132,6 +178,23 @@ docker run --rm --privileged -v /dev/bus/usb:/dev/bus/usb -v "$PWD":/app -w /app
 # web estático (hospede a pasta build/web onde quiser)
 docker compose exec flutter flutter build web --release
 ```
+
+### Atualizar o app no GitHub Pages
+
+O site em <https://gabesilvadev.github.io/fichario-do-outro-lado/> é a
+pasta `build/web` publicada na branch `gh-pages`:
+
+```bash
+docker compose exec flutter flutter build web --release \
+  --base-href /fichario-do-outro-lado/
+cd build/web && git init -b gh-pages && git add -A \
+  && git commit -m "web build" \
+  && git push -f git@github.com:GabeSilvaDev/fichario-do-outro-lado.git gh-pages
+```
+
+Para a mesa online funcionar no site, o domínio
+`gabesilvadev.github.io` precisa estar em **Authentication → Settings →
+Authorized domains** no console do Firebase (uma vez só).
 
 ## Mesa online — já configurada
 
