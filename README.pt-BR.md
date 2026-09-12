@@ -10,6 +10,7 @@ O mestre vê as fichas e as rolagens dos jogadores em tempo real, e mostra image
 [![Jogar no navegador](https://img.shields.io/badge/%E2%96%B6%20Jogar%20agora-PWA-7c4dff?style=for-the-badge)](https://gabesilvadev.github.io/fichario-do-outro-lado/)
 
 [![Flutter](https://img.shields.io/badge/Flutter-stable-02569B?logo=flutter&logoColor=white)](https://flutter.dev)
+[![CI](https://github.com/GabeSilvaDev/fichario-do-outro-lado/actions/workflows/ci.yml/badge.svg)](https://github.com/GabeSilvaDev/fichario-do-outro-lado/actions/workflows/ci.yml)
 [![Plataformas](https://img.shields.io/badge/Android%20%7C%20Web%20%7C%20PWA-4a3a7a)](#como-usar)
 [![Offline](https://img.shields.io/badge/offline-por%20padr%C3%A3o-2e7d32)](#funcionalidades)
 [![Firebase](https://img.shields.io/badge/mesa%20online-Firestore-ffca28?logo=firebase&logoColor=black)](#mesa-online-firebase)

@@ -10,6 +10,7 @@ The GM sees every sheet and every roll in real time, and pushes images that open
 [![Play in the browser](https://img.shields.io/badge/%E2%96%B6%20Play%20now-PWA-7c4dff?style=for-the-badge)](https://gabesilvadev.github.io/fichario-do-outro-lado/)
 
 [![Flutter](https://img.shields.io/badge/Flutter-stable-02569B?logo=flutter&logoColor=white)](https://flutter.dev)
+[![CI](https://github.com/GabeSilvaDev/fichario-do-outro-lado/actions/workflows/ci.yml/badge.svg)](https://github.com/GabeSilvaDev/fichario-do-outro-lado/actions/workflows/ci.yml)
 [![Platforms](https://img.shields.io/badge/Android%20%7C%20Web%20%7C%20PWA-4a3a7a)](#getting-started)
 [![Offline first](https://img.shields.io/badge/offline-first-2e7d32)](#features)
 [![Firebase](https://img.shields.io/badge/online%20table-Firestore-ffca28?logo=firebase&logoColor=black)](#online-table-firebase)
