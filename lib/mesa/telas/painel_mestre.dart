@@ -28,8 +28,6 @@ class PainelMestre extends StatelessWidget {
     );
   }
 
-  // ---------- fichas ----------
-
   Widget _fichas() {
     return StreamBuilder<List<FichaNaMesa>>(
       stream: servico.observarFichas(mesaId),
@@ -57,7 +55,6 @@ class PainelMestre extends StatelessWidget {
   }
 
   Widget _cartao(BuildContext context, FichaNaMesa naMesa) {
-    // o JSON da mesa é o mesmo da ficha local: o model lê direto
     final ficha = FichaOP(Map<String, dynamic>.from(naMesa.ficha));
     return Card(
       child: InkWell(
@@ -100,8 +97,6 @@ class PainelMestre extends StatelessWidget {
                       spacing: 6,
                       runSpacing: 4,
                       children: [
-                        // o jogador pode esconder um recurso: a ficha oficial
-                        // tem esses botões, e aqui eles valem de verdade
                         ficha.oculto('pv')
                             ? _pilulaOculta('PV')
                             : _pilula('PV', ficha.pv, ficha.pvMax, Cores.sangue),
@@ -187,8 +182,6 @@ class PainelMestre extends StatelessWidget {
       ),
     );
   }
-
-  // ---------- rolagens ----------
 
   Widget _rolagens() {
     return StreamBuilder<List<RolagemNaMesa>>(

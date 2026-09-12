@@ -88,7 +88,6 @@ void main() {
     test('cada arma tem nome e linha de tabela', () {
       for (final a in armas) {
         expect((a['nome'] as String).trim(), isNotEmpty);
-        // munição não tem dano próprio; arma tem
         final ehMunicao = ['Balas curtas', 'Balas longas', 'Cartuchos',
                 'Flechas', 'Foguete', 'Combustível']
             .contains(a['nome']);
@@ -100,7 +99,6 @@ void main() {
     });
 
     test('sem descrição em prosa do livro', () {
-      // o extrator captura a prosa junto; o gerador tem que jogar fora
       for (final a in armas) {
         expect(a.containsKey('desc'), isFalse,
             reason: '${a['nome']} veio com texto de livro');
@@ -134,7 +132,6 @@ void main() {
           semLista.add(f['nome'] as String);
         }
       }
-      // sobra só quem cita ritual na narrativa sem conjurar nada
       expect(semLista, ['Turba de Seguidores da Noite'],
           reason: 'ficha que fala em conjurar precisa vir com os rituais');
     });

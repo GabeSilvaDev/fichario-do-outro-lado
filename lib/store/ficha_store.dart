@@ -29,7 +29,6 @@ class FichaStore {
       try {
         fichas.add(FichaOP(jsonDecode(s) as Map<String, dynamic>));
       } catch (_) {
-        // uma ficha corrompida não derruba a lista inteira
       }
     }
     fichas.sort((a, b) =>

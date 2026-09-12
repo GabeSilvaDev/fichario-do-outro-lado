@@ -8,8 +8,6 @@ import 'package:ordem_paranormal/models/ficha_op.dart';
 /// As fórmulas do Livro de Regras v1.3, conferidas número a número.
 /// Se uma destas quebrar, a ficha passou a mentir para a mesa.
 void main() {
-  // as classes reais do app: se a tabela do livro for alterada por engano,
-  // estes testes quebram
   final combatente = DadosOP.classePorNome('Combatente')!;
   final especialista = DadosOP.classePorNome('Especialista')!;
   final ocultista = DadosOP.classePorNome('Ocultista')!;
@@ -24,7 +22,6 @@ void main() {
     });
 
     test('NEX 0% ainda pode gastar 1 PE por turno', () {
-      // o livro garante ao menos uma habilidade no custo mínimo por turno
       expect(ClasseOP.limitePeTurno(0), 1);
     });
   });
@@ -37,28 +34,26 @@ void main() {
     });
 
     test('NEX 10% com Vigor 2 soma um nível', () {
-      expect(combatente.pvMax(10, 2), 28); // 22 + (4+2)
-      expect(combatente.sanMax(10), 15); // 12 + 3
+      expect(combatente.pvMax(10, 2), 28);
+      expect(combatente.sanMax(10), 15);
     });
 
     test('NEX 35% com Vigor 3 — o fim de Vendeta Oculta 1', () {
-      // nível 7: 23 + 6×(4+3)
       expect(combatente.pvMax(35, 3), 65);
-      // PE: 2+Pre + 6×(2+Pre), com Presença 2 → 4 + 6×4
       expect(combatente.peMax(35, 2), 28);
-      expect(combatente.sanMax(35), 30); // 12 + 6×3
+      expect(combatente.sanMax(35), 30);
     });
   });
 
   group('especialista e ocultista', () {
     test('especialista NEX 15% com Vigor 1', () {
-      expect(especialista.pvMax(15, 1), 25); // 17 + 2×(3+1)
-      expect(especialista.sanMax(15), 24); // 16 + 2×4
+      expect(especialista.pvMax(15, 1), 25);
+      expect(especialista.sanMax(15), 24);
     });
 
     test('ocultista NEX 20% com Presença 3', () {
-      expect(ocultista.peMax(20, 3), 28); // 7 + 3×(4+3)
-      expect(ocultista.sanMax(20), 35); // 20 + 3×5
+      expect(ocultista.peMax(20, 3), 28);
+      expect(ocultista.sanMax(20), 35);
     });
   });
 
@@ -78,7 +73,7 @@ void main() {
       expect(f.pv, 9);
       expect(f.san, 8);
       expect(f.pe, 2);
-      expect(f.defesa, 11); // 10 + AGI 1
+      expect(f.defesa, 11);
     });
   });
 
@@ -93,7 +88,7 @@ void main() {
 
     test('sobrecarga tira 5 da Defesa e 3m do deslocamento', () {
       final f = FichaOP.nova('c');
-      f.definirAtributo('FOR', 1); // limite 5
+      f.definirAtributo('FOR', 1);
       f.definirAtributo('AGI', 3);
       expect(f.defesa, 13);
       expect(f.deslocamentoEfetivo, 9);
@@ -106,9 +101,6 @@ void main() {
   });
 
   group('poderes de origem que mexem nos números', () {
-    // DadosOP.origens vem de asset, que não carrega em teste de unidade;
-    // aqui a lista é montada à mão com os mesmos modificadores do JSON
-    // (o JSON em si é conferido no grupo "assets do sistema").
     setUp(() {
       DadosOP.origens = const [
         Origem(
@@ -193,7 +185,7 @@ void main() {
     });
 
     test('Patrulha dá +2 em Defesa', () {
-      expect(agente('Policial').defesa, 13); // 10 + Agi 1 + 2
+      expect(agente('Policial').defesa, 13);
     });
 
     test('Dedicação: +1 PE e mais 1 a cada NEX ímpar', () {
@@ -213,7 +205,7 @@ void main() {
 
     test('Traços do Outro Lado corta a Sanidade pela metade', () {
       final f = agente('Cultista Arrependido', nex: 5);
-      expect(f.sanMax, combatente.sanMax(5) ~/ 2); // 12 → 6
+      expect(f.sanMax, combatente.sanMax(5) ~/ 2);
     });
 
     test('máximo manual continua mandando em tudo', () {
@@ -229,8 +221,6 @@ void main() {
       expect(combatente.proficiencias,
           ['Armas simples', 'Armas táticas', 'Proteções leves']);
       expect(especialista.proficiencias, ['Armas simples', 'Proteções leves']);
-      // o ocultista tem armas simples — o livro traz a linha, e a ficha
-      // ficava sem nenhuma proficiência
       expect(ocultista.proficiencias, ['Armas simples']);
     });
 
@@ -249,7 +239,7 @@ void main() {
       final f = FichaOP.nova('e');
       f.aplicarClasse(especialista);
       expect(f.habilidades.length, 2);
-      f.aplicarClasse(especialista); // não duplica
+      f.aplicarClasse(especialista);
       expect(f.habilidades.length, 2);
     });
   });
@@ -258,21 +248,20 @@ void main() {
     final sobrevivente = DadosOP.classePorNome('Sobrevivente')!;
 
     test('estágio 1 com Vigor 1 e Presença 1', () {
-      expect(sobrevivente.pvMax(0, 1, estagio: 1), 9); // 8 + Vig
-      expect(sobrevivente.peMax(0, 1, estagio: 1), 3); // 2 + Pre
+      expect(sobrevivente.pvMax(0, 1, estagio: 1), 9);
+      expect(sobrevivente.peMax(0, 1, estagio: 1), 3);
       expect(sobrevivente.sanMax(0, estagio: 1), 8);
     });
 
     test('estágio 5 soma quatro passos', () {
-      expect(sobrevivente.pvMax(0, 1, estagio: 5), 17); // 9 + 4×2
-      expect(sobrevivente.peMax(0, 1, estagio: 5), 7); // 3 + 4×1
-      expect(sobrevivente.sanMax(0, estagio: 5), 16); // 8 + 4×2
+      expect(sobrevivente.pvMax(0, 1, estagio: 5), 17);
+      expect(sobrevivente.peMax(0, 1, estagio: 5), 7);
+      expect(sobrevivente.sanMax(0, estagio: 5), 16);
     });
 
     test('o limite de PE fica em 1 em qualquer estágio', () {
       expect(sobrevivente.limitePe(0), 1);
       expect(sobrevivente.limitePe(99), 1);
-      // as classes de agente continuam subindo pelo NEX
       expect(combatente.limitePe(30), 6);
     });
 
@@ -289,7 +278,7 @@ void main() {
       expect(f.porEstagio, isTrue);
       expect(f.pvMax, 10);
       f.estagio = 3;
-      expect(f.pvMax, 14); // 10 + 2×2
+      expect(f.pvMax, 14);
       expect(f.limitePeTurno, 1);
     });
 
@@ -307,7 +296,7 @@ void main() {
       f.nex = 10;
       f.definirAtributo('VIG', 2);
       f.estagio = 5;
-      expect(f.pvMax, 28); // continua vindo do NEX
+      expect(f.pvMax, 28);
       expect(f.porEstagio, isFalse);
     });
   });
@@ -329,7 +318,7 @@ void main() {
       f.vestirProtecao('Leve');
       expect(f.defesa, 17);
       f.vestirProtecao('Pesada');
-      expect(f.defesa, 22); // 10 + 2 + 10, e não 10 + 2 + 5 + 10
+      expect(f.defesa, 22);
       f.vestirProtecao('Nenhuma');
       expect(f.defesa, 12);
       expect(f.protecaoTipo, 'Nenhuma');
@@ -349,10 +338,10 @@ void main() {
     test('outros bônus e sobrecarga entram no mesmo cálculo', () {
       final f = FichaOP.nova('p');
       f.definirAtributo('AGI', 1);
-      f.definirAtributo('FOR', 1); // limite de carga 5
+      f.definirAtributo('FOR', 1);
       f.vestirProtecao('Pesada');
       f.defesaBonus = 1;
-      expect(f.defesa, 22); // 10 + 1 + 10 + 1
+      expect(f.defesa, 22);
       f.adicionarEm('inventario', {'nome': 'Marreta', 'espacos': 6});
       expect(f.defesa, 17);
     });
@@ -520,8 +509,6 @@ void _assets() {
             File('assets/data/pericias.json').readAsStringSync()) as List)
           Pericia.fromJson(comoMapa(j)).nome
       };
-      // Amnésico (mestre escolhe as duas) e Profetizado (uma fixa, outra
-      // ligada à premonição) são os únicos que não trazem duas prontas
       const parciais = {'Amnésico', 'Profetizado'};
       for (final o in origens) {
         expect(o.poder, isNotEmpty, reason: '${o.nome} sem poder');
@@ -541,7 +528,6 @@ void _assets() {
             File('assets/data/origens.json').readAsStringSync()) as List)
           (comoMapa(j)['nome'] as String): Origem.fromJson(comoMapa(j))
       };
-      // cada um destes estava errado antes de conferir com o livro
       expect(origens['Mercenário']!.poderDescricao, contains('movimento'));
       expect(origens['Policial']!.poderDescricao, contains('Defesa'));
       expect(origens['Religioso']!.poderDescricao, contains('Sanidade'));
@@ -552,7 +538,6 @@ void _assets() {
       expect(origens['Servidor Público']!.poderDescricao, contains('ajudar'));
       expect(origens['Agente de Saúde']!.poderDescricao, contains('Intelecto'));
 
-      // e os efeitos numéricos precisam estar declarados, não só escritos
       expect(origens['Policial']!.mod('defesa'), 2);
       expect(origens['Desgarrado']!.mod('pvPorNivel'), 1);
       expect(origens['Vítima']!.mod('sanPorNivel'), 1);
@@ -630,9 +615,6 @@ void _criacao() {
     });
 
     test('origem treina as duas perícias dela e dá o poder', () {
-      // a Origem é montada aqui de propósito: `DadosOP.origens` vem de um
-      // asset, que só existe com o app rodando. O JSON em si é conferido
-      // no grupo "assets do sistema", lendo o arquivo do disco.
       const militar = Origem(
         nome: 'Militar',
         pericias: ['Pontaria', 'Tática'],
@@ -665,7 +647,6 @@ void _criacao() {
     });
 
     test('reaplicar a origem corrige o texto do poder na ficha antiga', () {
-      // ficha criada antes de o poder ser corrigido no asset
       final f = FichaOP.nova('r');
       f.adicionarEm('habilidades', {
         'nome': 'Posição de Combate (origem)',
@@ -695,9 +676,9 @@ void _criacao() {
       f.pv = f.pvMax;
       f.san = f.sanMax;
       f.pe = f.peMax;
-      expect(f.pv, 18); // 16 + Vigor 2
+      expect(f.pv, 18);
       expect(f.san, 16);
-      expect(f.pe, 6); // 3 + Presença 3
+      expect(f.pe, 6);
     });
   });
 }
@@ -725,8 +706,6 @@ void _npcELivre() {
       f.ehNpc = true;
       expect(f.dados['tipo'], 'npc');
       f.ehNpc = false;
-      // volta ao padrão em vez de gravar 'pc': ficha antiga e ficha nova
-      // ficam com o mesmo formato
       expect(f.dados.containsKey('tipo'), isFalse);
       expect(f.ehNpc, isFalse);
     });
@@ -759,8 +738,6 @@ void _npcELivre() {
     });
 
     test('criatura com Vigor alto tem os PV que a fórmula manda', () {
-      // o Ocultista é a classe mais frágil; com Vigor 8 e NEX 50% (nível 10)
-      // dá 12 + 8 + 9×(2+8)
       final f = FichaOP.novoNpc('c');
       f.classe = 'Ocultista';
       f.nex = 50;
@@ -769,9 +746,6 @@ void _npcELivre() {
     });
   });
 
-  // ---------------------------------------------------------------------
-  // Licença da Comunidade de Ordem Paranormal — as condições da Parte 4 que
-  // dá para verificar por arquivo. Ver LICENCA.md.
   group('licença da comunidade', () {
     test('o selo está no repositório e declarado como asset', () {
       expect(File('assets/licenca/selo-comunidade.png').existsSync(), isTrue,
@@ -786,8 +760,6 @@ void _npcELivre() {
         File('web/index.html').readAsStringSync(),
         File('web/manifest.json').readAsStringSync(),
       ];
-      // "Ordem Paranormal" só pode aparecer na frase da licença — nunca como
-      // nome do app, do site ou do ícone.
       for (final texto in publicos) {
         for (final linha in texto.split('\n')) {
           if (!linha.contains('Ordem Paranormal')) continue;
@@ -806,7 +778,6 @@ void _npcELivre() {
       for (final o in origens) {
         final d = (o as Map)['poderDescricao'] as String;
         expect(d, isNotEmpty, reason: '${o['nome']} sem efeito descrito');
-        // prosa de livro passa longe disso; notação cabe em uma linha
         expect(d.length, lessThanOrEqualTo(130),
             reason: '${o['nome']}: descrição longa demais, virou prosa');
       }

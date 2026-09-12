@@ -37,7 +37,6 @@ class MesaFirestore implements MesaService {
     final meuUid = await entrarAnonimo();
     final agora = DateTime.now();
 
-    // A mesa vem primeiro: a regra de `codigos` consulta o mestreUid dela.
     final ref = _db.collection('mesas').doc();
     var codigo = CodigoMesa.gerar();
     await ref.set({
@@ -47,7 +46,6 @@ class MesaFirestore implements MesaService {
       'criadaEm': agora.toIso8601String(),
     });
 
-    // Colisão de código é rara, mas custa pouco tentar de novo.
     for (var tentativa = 0; tentativa < 5; tentativa++) {
       final doc = _db.collection('codigos').doc(codigo);
       if (!(await doc.get()).exists) {
@@ -66,7 +64,6 @@ class MesaFirestore implements MesaService {
     });
 
     final chave = ChaveMesa.gerar();
-    // documento que ninguém lê: só as regras enxergam, com get()
     await ref.collection('privado').doc('chave').set({'chave': chave});
 
     return (
@@ -95,9 +92,6 @@ class MesaFirestore implements MesaService {
 
     try {
       final jaEra = await membros.get();
-      // Provisório: `codigos` só guarda o mesaId, não o mestreUid, e a mesa
-      // só é legível depois que este registro existir — então ainda não
-      // sabemos se este uid é o mestre dela.
       final papelProvisorio = (jaEra.data()?['papel'] as String?) ?? 'jogador';
 
       await membros.set({
@@ -108,33 +102,21 @@ class MesaFirestore implements MesaService {
         'visto': agora.toIso8601String(),
       });
 
-      // A mesa só é legível depois que o registro de membro existe — é assim
-      // que a regra sabe que somos da casa.
       final doc = await _mesa(mesaId).get();
       if (!doc.exists) throw MesaNaoEncontrada();
       final mesa = Mesa.fromJson(mesaId, doc.data()!);
 
-      // O registro de membro não é a fonte da verdade sobre quem manda na
-      // mesa: `encerrarSessao` apaga todos os membros, mestre incluso, e um
-      // mestre reentrando não pode ser rebaixado a jogador só por não achar
-      // mais o próprio registro antigo. Quem manda é o `mestreUid` da mesa,
-      // lido agora — corrige o provisório se ele estiver errado.
       final papelCerto = mesa.mestreUid == meuUid ? 'mestre' : 'jogador';
       if (papelCerto != papelProvisorio) {
         await membros.update({'papel': papelCerto});
       }
       return mesa;
     } on FirebaseException catch (e) {
-      // O código apontava para uma mesa que não existe mais: sem a mesa, a
-      // regra não tem como reconhecer ninguém.
       if (e.code == 'permission-denied') throw MesaNaoEncontrada();
       rethrow;
     }
   }
 
-  // Mesmo corpo de `entrarPorCodigo` a partir do registro de membro, sem a
-  // etapa de resolver o código: quem chama já sabe o mesaId (veio da lista de
-  // mesas conhecidas do aparelho).
   @override
   Future<Mesa> entrarPorId(String mesaId, String meuNome) async {
     final meuUid = await entrarAnonimo();
@@ -143,8 +125,6 @@ class MesaFirestore implements MesaService {
 
     try {
       final jaEra = await membros.get();
-      // Provisório: a mesa só é legível depois que este registro existir,
-      // então ainda não sabemos se este uid é o mestre dela.
       final papelProvisorio = (jaEra.data()?['papel'] as String?) ?? 'jogador';
 
       await membros.set({
@@ -155,24 +135,16 @@ class MesaFirestore implements MesaService {
         'visto': agora.toIso8601String(),
       });
 
-      // A mesa só é legível depois que o registro de membro existe — é assim
-      // que a regra sabe que somos da casa.
       final doc = await _mesa(mesaId).get();
       if (!doc.exists) throw MesaNaoEncontrada();
       final mesa = Mesa.fromJson(mesaId, doc.data()!);
 
-      // O registro de membro não é a fonte da verdade sobre quem manda na
-      // mesa: `encerrarSessao` apaga todos os membros, mestre incluso, e um
-      // mestre reentrando não pode ser rebaixado a jogador só por não achar
-      // mais o próprio registro antigo. Quem manda é o `mestreUid` da mesa,
-      // lido agora — corrige o provisório se ele estiver errado.
       final papelCerto = mesa.mestreUid == meuUid ? 'mestre' : 'jogador';
       if (papelCerto != papelProvisorio) {
         await membros.update({'papel': papelCerto});
       }
       return mesa;
     } on FirebaseException catch (e) {
-      // A mesa foi apagada: sem ela, a regra não tem como reconhecer ninguém.
       if (e.code == 'permission-denied') throw MesaNaoEncontrada();
       rethrow;
     }
@@ -188,8 +160,6 @@ class MesaFirestore implements MesaService {
     final mesaId = atalho.data()!['mesaId'] as String;
 
     try {
-      // a tentativa vai num documento ilegível; a regra do update compara os
-      // dois com get() e só deixa passar se baterem
       await _mesa(mesaId).collection('privado').doc('pedido').set({
         'chave': ChaveMesa.normalizar(chave),
         'uid': meuUid,
@@ -200,17 +170,9 @@ class MesaFirestore implements MesaService {
       rethrow;
     }
 
-    // some com o pedido depois do sucesso: a chave em claro não fica parada
-    // no documento depois de já ter cumprido o papel dela — as regras já
-    // deixam o mestre apagar `privado/pedido`. FORA do try acima de
-    // propósito: nesse ponto a reassunção já deu certo (quem chama já É o
-    // mestre), então uma falha só nesta limpeza não pode virar "Chave não
-    // confere." para alguém que acabou de provar a chave certa.
     try {
       await _mesa(mesaId).collection('privado').doc('pedido').delete();
     } catch (_) {
-      // best-effort: o documento órfão não vaza nada (ninguém tem `read` em
-      // `privado/*`), e `apagarMesa` o apaga de qualquer jeito mais tarde
     }
 
     await _mesa(mesaId).collection('membros').doc(meuUid).set({
@@ -245,9 +207,6 @@ class MesaFirestore implements MesaService {
     await _mesa(mesaId).collection('fichas').doc(meuUid).delete();
   }
 
-  // Quem corta o que cada um vê é a regra de segurança: para o jogador comum
-  // esta mesma consulta devolve só o documento dele. Não há filtro no cliente
-  // porque filtro no cliente não protege nada.
   @override
   Stream<List<FichaNaMesa>> observarFichas(String mesaId) => _mesa(mesaId)
       .collection('fichas')
@@ -267,8 +226,6 @@ class MesaFirestore implements MesaService {
   Future<void> publicarRolagem(String mesaId, RolagemNaMesa rolagem) async {
     final meuUid = uid;
     if (meuUid == null) return;
-    // porUid vem do chamador, mas a regra só aceita o próprio uid — grava o
-    // certo aqui para nunca esbarrar nela por engano
     final dados = rolagem.toJson()..['porUid'] = meuUid;
     await _rolagens(mesaId).add(dados);
   }
@@ -311,8 +268,6 @@ class MesaFirestore implements MesaService {
     if (meuUid == null) throw SemPermissao();
     final ref = _galeria(mesaId).doc();
     try {
-      // a imagem cheia primeiro: a entrada da galeria só aparece quando há o
-      // que abrir, e não fica item pela metade se a rede cair no meio
       await _imagens(mesaId).doc(ref.id).set({'imagem': imagemBase64});
       await ref.set(ItemGaleria(
         id: ref.id,
@@ -331,8 +286,6 @@ class MesaFirestore implements MesaService {
   @override
   Future<void> apagarDaGaleria(String mesaId, String imagemId) async {
     try {
-      // pesado primeiro: se o segundo delete falhar, o item continua na
-      // galeria e ninguém fica com imagem grande órfã ocupando espaço
       await _imagens(mesaId).doc(imagemId).delete();
       await _galeria(mesaId).doc(imagemId).delete();
       final atual = await _mural(mesaId).get();
@@ -362,9 +315,6 @@ class MesaFirestore implements MesaService {
   @override
   Future<void> mostrarAgora(String mesaId, String imagemId) async {
     try {
-      // um `get()` do doc único da imagem em destaque — não da coleção
-      // inteira. Ver o comentário de `ItemMural` para o porquê de a legenda
-      // ir junto do ponteiro em vez de ficar só na galeria.
       final item = await _galeria(mesaId).doc(imagemId).get();
       final legenda =
           item.exists ? (item.data()!['legenda'] ?? '') as String : '';
@@ -419,8 +369,6 @@ class MesaFirestore implements MesaService {
   Future<void> sair(String mesaId) async {
     final meuUid = uid;
     if (meuUid == null) return;
-    // primeiro a ficha: depois de deixar de ser membro a regra já não deixa
-    // apagar nada aqui dentro
     await despublicarFicha(mesaId);
     await _mesa(mesaId).collection('membros').doc(meuUid).delete();
   }
@@ -460,7 +408,6 @@ class MesaFirestore implements MesaService {
           await d.reference.delete();
         }
       }
-      // o mapa é da cena, não da campanha: encerrar sessão tira ele da mesa
       await _mapa(mesaId).delete();
     } on FirebaseException catch (e) {
       if (e.code == 'permission-denied') throw SemPermissao();
@@ -481,11 +428,6 @@ class MesaFirestore implements MesaService {
           await d.reference.delete();
         }
       }
-      // `privado` não entra no laço acima: as regras não dão `list` nessa
-      // coleção (só `get` documento a documento, e `chave`/`pedido` são
-      // ilegíveis de propósito), então um `.get()` de coleção levaria
-      // permission-denied. Os dois ids são fixos e conhecidos, então
-      // apagamos cada um diretamente.
       await _mesa(mesaId).collection('privado').doc('chave').delete();
       await _mesa(mesaId).collection('privado').doc('pedido').delete();
       await _mural(mesaId).delete();
@@ -503,8 +445,6 @@ class MesaFirestore implements MesaService {
       String miniaturaBase64, String nome) async {
     final ref = _mapas(mesaId).doc();
     try {
-      // a imagem cheia primeiro: entrada sem imagem seria um mapa que não
-      // abre
       await _mapasImagens(mesaId).doc(ref.id).set({'imagem': imagemBase64});
       await ref.set(ImagemDeMapa(
         id: ref.id,
@@ -533,7 +473,6 @@ class MesaFirestore implements MesaService {
   Future<String?> imagemDeMapa(String mesaId, String imagemId) async {
     final doc = await _mapasImagens(mesaId).doc(imagemId).get();
     if (doc.exists) return doc.data()!['imagem'] as String?;
-    // compatibilidade: mapa antigo apontava para a galeria do mural
     return imagemCheia(mesaId, imagemId);
   }
 
@@ -547,8 +486,6 @@ class MesaFirestore implements MesaService {
       rethrow;
     }
   }
-
-  // ---------- mapa da cena ----------
 
   @override
   Future<void> abrirMapa(String mesaId, String imagemId, String titulo,
@@ -569,16 +506,12 @@ class MesaFirestore implements MesaService {
   @override
   Future<void> salvarTokens(String mesaId, List<TokenMapa> tokens) async {
     try {
-      // `update` e não `set`: mover peça não pode criar mapa do nada nem
-      // apagar sem querer a imagem que está na mesa.
       await _mapa(mesaId).update({
         'tokens': [for (final t in tokens) t.toJson()],
         'em': DateTime.now().toIso8601String(),
       });
     } on FirebaseException catch (e) {
       if (e.code == 'permission-denied') throw SemPermissao();
-      // mapa fechado no meio do arrasto: não é erro que valha estourar na
-      // cara do mestre no meio da cena
       if (e.code == 'not-found') return;
       rethrow;
     }

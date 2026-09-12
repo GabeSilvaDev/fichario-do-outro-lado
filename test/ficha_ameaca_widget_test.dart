@@ -12,8 +12,6 @@ import 'package:ordem_paranormal/theme.dart';
 void main() {
   testWidgets('aba de perícias aguenta bônus fora da tabela', (tester) async {
     await DadosOP.carregar();
-    // tela alta e estreita como a de um celular: cabe a lista inteira de
-    // perícias sem precisar rolar no teste
     tester.view.physicalSize = const Size(1500, 6000);
     tester.view.devicePixelRatio = 3;
     addTearDown(tester.view.reset);

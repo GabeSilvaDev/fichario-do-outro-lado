@@ -208,8 +208,6 @@ class TokenMapa {
   String get inicial {
     final limpo = nome.trim();
     if (limpo.isEmpty) return '?';
-    // pelas runas, não por substring: nome que começa com emoji ou letra
-    // fora do BMP viraria meio caractere quebrado.
     return String.fromCharCode(limpo.runes.first).toUpperCase();
   }
 

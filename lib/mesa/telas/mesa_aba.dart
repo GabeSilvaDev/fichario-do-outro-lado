@@ -152,8 +152,6 @@ class _MesaAbaState extends State<MesaAba> {
       _cuidandoDaSaida = false;
       _sessaoPronta = true;
     });
-    // só depois da mesa entrar de vez: a chave é mostrada uma vez, e não pode
-    // ficar presa atrás de um erro no meio da criação
     if (chaveCriada != null && mounted) await _mostrarChave(chaveCriada!);
   }
 
@@ -166,8 +164,6 @@ class _MesaAbaState extends State<MesaAba> {
       final mesa = await _servico.entrarPorCodigo(codigo, meuNome);
       final papel =
           mesa.mestreUid == uid ? PapelMesa.mestre : PapelMesa.jogador;
-      // entrar por código não devolve a chave; se este aparelho já foi mestre
-      // desta mesa antes, a chave que ele já guardava continua valendo
       final chave =
           papel == PapelMesa.mestre ? MesaStore.chaveDe(mesa.id) : null;
       await MesaStore.entrar(EstadoMesa(
@@ -196,18 +192,12 @@ class _MesaAbaState extends State<MesaAba> {
   Future<void> _voltarPara(MesaConhecida m) async {
     await _comEspera(() async {
       final uid = await _servico.entrarAnonimo();
-      // `m.nome` é o nome da MESA, não o da pessoa — usar `m.nome` aqui
-      // renomearia quem volta para o nome da mesa. `meuNome` é o nome que a
-      // pessoa usa aqui; se a mesa foi lembrada antes desse campo existir,
-      // cai num padrão pelo papel guardado.
       final meuNome = m.meuNome ??
           (m.papel == PapelMesa.mestre ? 'Mestre' : 'Jogador');
       Mesa mesa;
       try {
         mesa = await _servico.entrarPorId(m.mesaId, meuNome);
       } on MesaNaoEncontrada {
-        // a mesa não existe mais: a entrada na lista está morta, tira ela
-        // daqui — senão fica para sempre convidando a tocar de novo
         await MesaStore.esquecer(m.mesaId);
         rethrow;
       }
@@ -219,9 +209,6 @@ class _MesaAbaState extends State<MesaAba> {
         papel: papel,
         chave: m.chave,
       ));
-      // sem isto, `papel` e `meuNome` na lista de mesas conhecidas nunca se
-      // atualizavam por este caminho — era o único dos quatro jeitos de
-      // entrar que não gravava aqui
       await MesaStore.lembrar(MesaConhecida(
         mesaId: mesa.id,
         nome: mesa.nome,
@@ -236,9 +223,6 @@ class _MesaAbaState extends State<MesaAba> {
   }
 
   Future<void> _esquecer(MesaConhecida m) async {
-    // sem a chave anotada em outro lugar, esquecer uma mesa em que a pessoa é
-    // mestre destrói o único jeito de recuperá-la: ela volta a poder entrar
-    // pelo código, mas como jogadora da própria crônica, não mais como mestra
     final perdeAMestria = m.papel == PapelMesa.mestre && m.chave != null;
     final ok = await showDialog<bool>(
       context: context,
@@ -274,9 +258,6 @@ class _MesaAbaState extends State<MesaAba> {
     final dados = await pedirChaveDeMesa(context);
     if (dados == null) return;
     final (codigo, chave) = dados;
-    // pedirChaveDeMesa não pede nome (só código e chave): quem reassume vira
-    // mestre de uma mesa que talvez nunca tenha visto por dentro, então não
-    // há "meu nome" prévio para reaproveitar
     const meuNome = 'Mestre';
     await _comEspera(() async {
       final uid = await _servico.entrarAnonimo();
@@ -453,7 +434,6 @@ class _MesaAbaState extends State<MesaAba> {
       _desligarPonto();
       _desligarEspelho();
       await MesaStore.limpar();
-      // a mesa não existe mais em lugar nenhum: nada a lembrar
       await MesaStore.esquecer(mesaId);
     });
   }
@@ -590,8 +570,6 @@ class _MesaAbaState extends State<MesaAba> {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 20),
-            // mesas em que este aparelho já entrou: voltar sem pedir código
-            // de novo, jogamos toda semana e ninguém quer ditar o código
             for (final m in conhecidas) _mesaConhecida(m),
             if (conhecidas.isNotEmpty) const SizedBox(height: 10),
             if (_ocupado)
@@ -665,24 +643,10 @@ class _MesaAbaState extends State<MesaAba> {
     } on MesaNaoEncontrada {
       apagada = true;
     } catch (_) {
-      // rede fora (ou qualquer outro erro): trata como sessão encerrada,
-      // mas sem `sondaOk` — sem confirmação de que `entrarPorId` chegou a
-      // gravar o registro de membro, não há o que desfazer
     }
     if (apagada) {
       await MesaStore.esquecer(estado.mesaId);
     } else if (sondaOk) {
-      // a sonda acima só existe para descobrir se a mesa ainda está de pé,
-      // mas `entrarPorId` grava o registro de membro ANTES de ler a mesa —
-      // é a ordem que a regra de segurança exige, não dá para inverter.
-      // Isso dá à sonda um efeito colateral: quem tinha sido posto para
-      // fora (por `encerrarSessao` ou por `removerMembro`) se recadastra
-      // sozinho só de rodar esta checagem. Sem desfazer, "encerrar sessão
-      // tira todo mundo" deixaria de valer, e alguém removido reapareceria
-      // na lista com a bolinha verde. `sair` desfaz exatamente essa
-      // escrita; se falhar, segue mesmo assim — a pessoa já está saindo da
-      // tela e vendo a mensagem certa, o pior caso é um membro órfão até o
-      // próximo evento na mesa.
       try {
         await _servico.sair(estado.mesaId);
       } catch (_) {}
@@ -696,21 +660,10 @@ class _MesaAbaState extends State<MesaAba> {
       stream: _servico.observarMesa(estado.mesaId),
       builder: (context, snap) {
         final mesa = snap.data;
-        // deriva de quem manda na mesa AGORA (`mestreUid` do documento), não
-        // do que foi gravado na entrada e nunca mais reavaliado: o mestre
-        // pode reassumir a mesa noutro aparelho enquanto este continua
-        // aberto, e sem isso o aparelho antigo seguiria mostrando controles
-        // de mestre que a regra passa a recusar. Enquanto a primeira
-        // emissão do stream não chega, cai no que foi gravado na entrada.
         final souMestre = mesa != null
             ? mesa.mestreUid == estado.uid
             : estado.papel == PapelMesa.mestre;
 
-        // `hasData` não serve aqui: ela só olha se `data != null`, e um null
-        // de verdade (a mesa sumiu) sempre bate com isso — travaria
-        // `hasData` em false para sempre. O que importa é já termos recebido
-        // alguma coisa (não estar mais esperando a primeira emissão) — ou um
-        // erro, que é a outra cara do mesmo sumiço (ver `_tratarMesaSumida`).
         final sumiu = snap.hasError ||
             (snap.connectionState == ConnectionState.active &&
                 snap.data == null);
@@ -805,16 +758,11 @@ class _MesaAbaState extends State<MesaAba> {
             ),
             const FaixaSecao('Quem está na mesa'),
             _membros(estado, souMestre),
-            // o mural é de todos: quem fechou a imagem volta a ela por aqui
             const FaixaSecao('Mural da mesa'),
             MuralDaMesa(
                 servico: _servico,
                 mesaId: estado.mesaId,
                 souMestre: souMestre),
-            // o acervo mora logo abaixo do que está em destaque agora, e é
-            // de todos: quem não é mestre só não mexe nele
-            // o mapa vem logo depois do mural: os dois são "o que está na
-            // mesa agora", e o mestre alterna entre eles o tempo todo
             const FaixaSecao('Mapa da cena'),
             CartaoMapa(
                 servico: _servico,

@@ -73,9 +73,6 @@ class _OuvinteMuralState extends State<OuvinteMural> {
         await widget.servico.imagemCheia(widget.mesaId, item.imagemId);
     if (imagem == null || !mounted) return;
 
-    // só marca como aberto DEPOIS do sucesso: se a busca falhasse (rede
-    // fora) com a marca já feita, este aparelho nunca mais abriria aquela
-    // imagem, mesmo com a rede de volta.
     _ultimoAberto = item.em;
 
     VisualizadorImagem.abrir(context, base64Decode(imagem), item.legenda);

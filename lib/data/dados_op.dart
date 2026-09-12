@@ -5,7 +5,7 @@ import 'package:flutter/services.dart' show rootBundle;
 /// Uma perícia do sistema (TABELA 2.1 do Livro de Regras v1.3).
 class Pericia {
   final String nome;
-  final String atributo; // AGI, FOR, INT, PRE, VIG
+  final String atributo;
   final bool soTreinada;
   final bool sofreCarga;
   final bool usaKit;
@@ -120,7 +120,7 @@ class ClasseOP {
 
   int pvMax(int nex, int vig, {int estagio = 1}) {
     final nivel = nivelDe(nex, estagio);
-    if (nivel == 0) return pvIni + vig; // mundano NEX 0%
+    if (nivel == 0) return pvIni + vig;
     final ganho = pvPorNivel + (pvNivelAtributo ? vig : 0);
     return pvIni + vig + (nivel - 1) * ganho;
   }
@@ -212,7 +212,7 @@ class Patente {
   final String nome;
   final int pp;
   final String credito;
-  final Map<String, int> limites; // categoria (I..IV) -> quantidade
+  final Map<String, int> limites;
 
   const Patente({
     required this.nome,
@@ -310,8 +310,6 @@ class DadosOP {
                 'NEX. Círculos: 2º em 25%, 3º em 55%, 4º em 85%.'),
       ],
     ),
-    // Sobrevivendo ao Horror, p. 30. Sobe por estágio (1 a 5), não por NEX,
-    // e o limite de PE fica em 1 em todos eles.
     ClasseOP(
       nome: 'Sobrevivente',
       pvIni: 8, pvPorNivel: 2, pvNivelAtributo: false,

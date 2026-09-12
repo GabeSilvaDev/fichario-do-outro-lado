@@ -94,12 +94,8 @@ class _MapaDaCenaState extends State<MapaDaCena> {
     descritor.dispose();
   }
 
-  // ---------- mover ----------
-
   void _mover(TokenMapa token, Offset nova) {
     setState(() => _arrastando[token.id] = nova);
-    // uma escrita a cada 120 ms enquanto o dedo anda: a mesa acompanha o
-    // movimento sem transformar um arrasto em cinquenta escritas
     _debounce?.cancel();
     _debounce = Timer(const Duration(milliseconds: 120), _gravarArrasto);
   }
@@ -124,8 +120,6 @@ class _MapaDaCenaState extends State<MapaDaCena> {
     try {
       await widget.servico.salvarTokens(widget.mesaId, tokens);
     } catch (_) {
-      // sem rede a peça continua onde o mestre soltou; a próxima gravação
-      // que der certo leva a posição junto
     }
   }
 
@@ -138,8 +132,6 @@ class _MapaDaCenaState extends State<MapaDaCena> {
 
   Future<void> _removerToken(TokenMapa alvo) =>
       _salvar([for (final t in _tokens) if (t.id != alvo.id) t]);
-
-  // ---------- peça: tamanho, ameaça, remover ----------
 
   void _abrirPeca(TokenMapa token) {
     if (!widget.mestre) return;
@@ -156,8 +148,6 @@ class _MapaDaCenaState extends State<MapaDaCena> {
       ),
     );
   }
-
-  // ---------- peças novas ----------
 
   Future<void> _editarPecas() async {
     final fichas = await widget.servico
@@ -177,8 +167,6 @@ class _MapaDaCenaState extends State<MapaDaCena> {
       ),
     );
   }
-
-  // ---------- biblioteca de plantas ----------
 
   Future<void> _abrirBiblioteca() async {
     await showModalBottomSheet<void>(
@@ -222,8 +210,6 @@ class _MapaDaCenaState extends State<MapaDaCena> {
   Future<void> _porNaMesa(String imagemId, String nome) async {
     setState(() => _ocupado = true);
     try {
-      // troca de planta mantém as peças que já estavam em jogo; mapa novo
-      // começa com o grupo enfileirado embaixo
       final tokens = _tokens.isEmpty ? await _pecasIniciais() : _tokens;
       await widget.servico.abrirMapa(widget.mesaId, imagemId, nome, tokens);
     } catch (e) {
@@ -376,7 +362,6 @@ class _MapaDaCenaState extends State<MapaDaCena> {
 
     return LayoutBuilder(
       builder: (context, limites) {
-        // a imagem inteira sempre cabe na tela; o zoom é por cima disso
         final escala = (limites.maxWidth / tamanho.width)
             .clamp(0.0, limites.maxHeight / tamanho.height);
         final largura = tamanho.width * escala;
@@ -740,7 +725,6 @@ class _FolhaPecasState extends State<_FolhaPecas> {
   void _porNpc(String nome, String retrato) {
     setState(() {
       _tokens.add(TokenMapa(
-        // marca de tempo no id: dois "Zumbi de Sangue" são duas peças
         id: 'npc:${DateTime.now().microsecondsSinceEpoch}',
         nome: nome,
         retrato: ImagemMural.peca(retrato),
@@ -945,12 +929,12 @@ class _FolhaPecasState extends State<_FolhaPecas> {
 int corDaPeca(String nome, {required bool inimigo}) {
   if (inimigo) return Cores.sangue.toARGB32();
   const paleta = [
-    0xFFA06BFF, // energia
-    0xFF57B98A, // membrana estável
-    0xFFD9A441, // conhecimento
-    0xFF4FA8E0, // frio
-    0xFFE07FB8, // rosa
-    0xFF8CD17D, // verde claro
+    0xFFA06BFF,
+    0xFF57B98A,
+    0xFFD9A441,
+    0xFF4FA8E0,
+    0xFFE07FB8,
+    0xFF8CD17D,
   ];
   var soma = 0;
   for (final c in nome.codeUnits) {

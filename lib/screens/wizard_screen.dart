@@ -47,10 +47,8 @@ class _WizardScreenState extends State<WizardScreen> {
 
   /// Escolhas do passo de perícias, separadas por procedência: assim dá para
   /// mostrar de onde veio cada treinamento e refazer só o que é do jogador.
-  final Map<int, String> _escolhasDeClasse = {}; // índice do par -> perícia
+  final Map<int, String> _escolhasDeClasse = {};
   final Set<String> _livres = {};
-
-  // ---------- regras ----------
 
   ClasseOP get classe =>
       DadosOP.classePorNome(f.classe) ?? DadosOP.classes.first;
@@ -66,7 +64,6 @@ class _WizardScreenState extends State<WizardScreen> {
   Set<String> get _daOrigem => {...(origem?.pericias ?? const [])};
 
   int get _pontosAtributoTotais {
-    // reduzir UM atributo a zero dá um ponto a mais (OPRPG p. 171)
     final zerado = ['AGI', 'FOR', 'INT', 'PRE', 'VIG']
         .any((s) => f.atributo(s) == 0);
     return classe.pontosAtributo + (zerado ? 1 : 0);
@@ -77,7 +74,7 @@ class _WizardScreenState extends State<WizardScreen> {
     for (final s in ['AGI', 'FOR', 'INT', 'PRE', 'VIG']) {
       soma += f.atributo(s);
     }
-    return soma - 5; // todos começam em 1
+    return soma - 5;
   }
 
   int get _pontosAtributoRestantes =>
@@ -139,13 +136,9 @@ class _WizardScreenState extends State<WizardScreen> {
     }
   }
 
-  // ---------- ações ----------
-
   void _trocarClasse(String nome) {
     setState(() {
       f.classe = nome;
-      // trocar de classe muda o que ela treina: as escolhas anteriores
-      // deixam de valer, e as livres podem ter mudado de quantidade
       _escolhasDeClasse.clear();
       _livres.clear();
     });
@@ -154,17 +147,14 @@ class _WizardScreenState extends State<WizardScreen> {
   void _trocarOrigem(String nome) {
     setState(() {
       f.origem = nome;
-      // uma perícia que a origem nova já treina não pode ocupar vaga livre
       _livres.removeWhere(_daOrigem.contains);
     });
   }
 
   Future<void> _criar() async {
-    // 1) o que a classe e a origem dão de graça
     f.aplicarClasse(classe);
     if (origem != null) f.aplicarOrigem(origem!);
 
-    // 2) as escolhas do jogador
     for (final nome in _escolhasDeClasse.values) {
       f.definirGrauPericia(nome, 5);
     }
@@ -172,20 +162,16 @@ class _WizardScreenState extends State<WizardScreen> {
       f.definirGrauPericia(nome, 5);
     }
 
-    // 3) recursos cheios: ficha nova entra em jogo inteira
     f.pv = f.pvMax;
     f.san = f.sanMax;
     f.pe = f.peMax;
 
     await FichaStore.salvar(f);
     if (!mounted) return;
-    // troca a rota: voltar da ficha volta para a lista, não para o wizard
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(builder: (_) => FichaScreen(fichaId: f.id)),
     );
   }
-
-  // ---------- construção ----------
 
   @override
   Widget build(BuildContext context) {
@@ -357,8 +343,6 @@ class _WizardScreenState extends State<WizardScreen> {
     );
   }
 
-  // ---------- passo 1: identidade ----------
-
   Widget _passoIdentidade() {
     return ListView(
       padding: const EdgeInsets.all(16),
@@ -424,8 +408,6 @@ class _WizardScreenState extends State<WizardScreen> {
       ],
     );
   }
-
-  // ---------- passo 2: origem ----------
 
   Widget _passoOrigem() {
     return ListView(
@@ -504,8 +486,6 @@ class _WizardScreenState extends State<WizardScreen> {
     );
   }
 
-  // ---------- passo 3: classe e NEX ----------
-
   /// Mundano e Sobrevivente são as classes de quem ainda não é agente:
   /// as duas ficam em NEX 0%.
   static bool _ehCivil(ClasseOP c) => c.nome == 'Mundano' || c.porEstagio;
@@ -553,14 +533,12 @@ class _WizardScreenState extends State<WizardScreen> {
                     final passoNex = v.round();
                     setState(() {
                       f.nex = passoNex >= 100 ? 99 : passoNex;
-                      if (_livre) return; // o mestre combina o que quiser
+                      if (_livre) return;
                       final atual = DadosOP.classePorNome(f.classe);
                       final eraCivil = atual != null && _ehCivil(atual);
                       if (f.nex == 0) {
-                        // Sobrevivente também é NEX 0%: não vira Mundano
                         if (!eraCivil) _trocarClasse('Mundano');
                       } else if (eraCivil) {
-                        // virou agente: a classe de civil não vale mais
                         _trocarClasse('Combatente');
                       }
                     });
@@ -720,8 +698,6 @@ class _WizardScreenState extends State<WizardScreen> {
     );
   }
 
-  // ---------- passo 4: atributos ----------
-
   Widget _passoAtributos() {
     const siglas = ['AGI', 'FOR', 'INT', 'PRE', 'VIG'];
     const nomes = {
@@ -783,7 +759,6 @@ class _WizardScreenState extends State<WizardScreen> {
 
   Widget _linhaAtributo(String sigla, String nome) {
     final valor = f.atributo(sigla);
-    // só um atributo pode ficar em zero, e o teto na criação é 3
     final jaTemZero = ['AGI', 'FOR', 'INT', 'PRE', 'VIG']
         .any((x) => x != sigla && f.atributo(x) == 0);
     final podeSubir =
@@ -832,8 +807,6 @@ class _WizardScreenState extends State<WizardScreen> {
       ),
     );
   }
-
-  // ---------- passo 5: perícias ----------
 
   Widget _passoPericias() {
     final daOrigem = _daOrigem;
@@ -987,8 +960,6 @@ class _WizardScreenState extends State<WizardScreen> {
       ),
     );
   }
-
-  // ---------- passo 6: conferir ----------
 
   Widget _passoConferir() {
     final vig = f.atributo('VIG');

@@ -1,14 +1,3 @@
-// Projeto Firebase da mesa: ordem-paranormal-mesa (Firestore em
-// southamerica-east1, login anônimo ativado, regras publicadas).
-//
-// Estas chaves NÃO são segredo: elas identificam o projeto, não autorizam
-// nada por si. Quem protege a mesa são as regras do Firestore
-// (`firestore.rules`) — dono escreve a própria ficha, mestre lê; rolagem só
-// em nome próprio; galeria e mural só do mestre.
-//
-// Regerar (se trocar de projeto):
-//   flutterfire configure --project=<id> --platforms=android,web
-
 import 'package:flutter/foundation.dart'
     show defaultTargetPlatform, kIsWeb, TargetPlatform;
 import 'package:firebase_core/firebase_core.dart' show FirebaseOptions;
@@ -20,8 +9,6 @@ class DefaultFirebaseOptions {
       case TargetPlatform.android:
         return android;
       default:
-        // as outras plataformas não são alvo deste app; a aba Mesa avisa
-        // em vez de estourar
         return web;
     }
   }

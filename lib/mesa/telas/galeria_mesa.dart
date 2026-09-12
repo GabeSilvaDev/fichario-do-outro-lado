@@ -46,8 +46,6 @@ class _GaleriaMesaState extends State<GaleriaMesa> {
       }
       VisualizadorImagem.abrir(context, base64Decode(cheia), item.legenda);
     } catch (e) {
-      // sem isto, uma falha de rede aqui deixava o véu e o spinner presos na
-      // célula até sair da aba — o erro subia sem tratamento
       _erro(e);
     } finally {
       if (mounted) setState(() => _carregando = null);

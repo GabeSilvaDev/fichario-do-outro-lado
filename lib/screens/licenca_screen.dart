@@ -222,8 +222,6 @@ class FaixaLicenca extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // 10% da largura da tela é o mínimo da licença; 13% dá folga em telas
-    // estreitas sem virar cartaz nas largas.
     final largura =
         (MediaQuery.of(context).size.width * .13).clamp(44.0, 72.0);
     return InkWell(

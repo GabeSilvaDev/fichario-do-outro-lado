@@ -90,8 +90,6 @@ class _BestiarioScreenState extends State<BestiarioScreen> {
     }
 
     for (final f in fichas) {
-      // cópia profunda: a ficha do asset é a fonte, e a do Hive tem que ser
-      // independente dela (o asset é relido a cada abertura da tela)
       await FichaStore.salvar(
           FichaOP(jsonDecode(jsonEncode(f.dados)) as Map<String, dynamic>));
     }
@@ -186,9 +184,6 @@ class _BestiarioScreenState extends State<BestiarioScreen> {
     if (visiveis.isEmpty) return const SizedBox.shrink();
     return Card(
       child: ExpansionTile(
-        // a key muda quando a busca liga/desliga: sem isso o Flutter
-        // reaproveita o tile antigo e o grupo continua fechado mesmo com o
-        // resultado filtrado dentro dele
         key: ValueKey('${g.nome}-${_filtro.isNotEmpty}'),
         shape: const Border(),
         initiallyExpanded: _filtro.isNotEmpty,
@@ -232,7 +227,6 @@ class _BestiarioScreenState extends State<BestiarioScreen> {
         style: const TextStyle(fontSize: 11, color: Cores.tinta2),
       ),
       onTap: () => Navigator.of(context).push(MaterialPageRoute(
-        // espiada antes de importar: a ficha do asset abre só para leitura
         builder: (_) => FichaScreen(fichaDireta: f, somenteLeitura: true),
       )),
       trailing: IconButton(

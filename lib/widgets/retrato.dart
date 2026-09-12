@@ -24,7 +24,6 @@ class RetratoAvatar extends StatelessWidget {
               width: tamanho, height: tamanho, fit: BoxFit.cover),
         );
       } catch (_) {
-        // base64 estragado não derruba a tela
       }
     }
     return Container(

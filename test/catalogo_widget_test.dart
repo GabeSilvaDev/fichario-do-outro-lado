@@ -35,13 +35,10 @@ void main() {
     await tester.tap(find.text('abrir'));
     await tester.pumpAndSettle();
 
-    // 1) a lista sai agrupada por elemento e círculo
     expect(find.text('CONHECIMENTO · 1º CÍRCULO'), findsOneWidget);
     expect(find.text('Compreensão Paranormal'), findsOneWidget);
     expect(find.textContaining('1 PE · padrão · toque'), findsWidgets);
 
-    // 2) a busca filtra e o ritual abre com efeito e ampliação
-    // (pump com duração em vez de settle: o cursor do campo pisca sempre)
     await tester.enterText(find.byType(TextField), 'eletrocuss');
     await tester.pump(const Duration(milliseconds: 400));
     expect(find.text('Eletrocussão'), findsOneWidget);
@@ -49,11 +46,9 @@ void main() {
     await tester.tap(find.text('Eletrocussão'));
     await tester.pump(const Duration(seconds: 1));
     expect(find.textContaining('3d6 de eletricidade'), findsOneWidget);
-    // a ampliação é desenhada com RichText (o nome em destaque)
     expect(find.textContaining('Discente', findRichText: true),
         findsWidgets);
 
-    // 3) na aba de armas, o item volta pronto para virar ataque
     await tester.tap(find.text('Armas'));
     await tester.pump(const Duration(seconds: 1));
     await tester.enterText(find.byType(TextField), 'espingarda');

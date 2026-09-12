@@ -39,8 +39,6 @@ void main() {
   });
 
   test('PV, SAN e PE batem com as fórmulas do sistema', () {
-    // Ameaça do livro tem PV impresso (pvMaxManual) e não sai de fórmula
-    // nenhuma: a conferência vale para os NPCs escritos aqui.
     for (final f in fichas.where((f) => !f.pvMaxManual)) {
       final classe = DadosOP.classePorNome(f.classe);
       expect(classe, isNotNull, reason: '${f.nome}: classe ${f.classe}');
@@ -64,8 +62,6 @@ void main() {
       expect(f.defesa, greaterThan(0), reason: '${f.nome}: sem Defesa');
       expect(f.categoria.isNotEmpty || f.tamanho.isNotEmpty, isTrue,
           reason: '${f.nome}: sem categoria/tamanho');
-      // ou bate, ou faz alguma coisa: ameaça sem ataque nem habilidade é
-      // ficha pela metade
       expect(f.ataques.isNotEmpty || f.habilidades.isNotEmpty, isTrue,
           reason: '${f.nome}: sem ataque e sem habilidade');
     }
@@ -100,8 +96,6 @@ void main() {
   });
 
   test('perícias existem e os graus são os do livro', () {
-    // as perícias vêm de um asset, que só carrega com o app rodando: aqui o
-    // JSON é lido do disco, igual ao teste dos assets do sistema
     final nomes = {
       for (final p in jsonDecode(
               File('assets/data/pericias.json').readAsStringSync()) as List)
@@ -111,8 +105,6 @@ void main() {
       (f.dados['pericias'] as Map).forEach((pericia, grau) {
         expect(nomes.contains(pericia), isTrue,
             reason: '${f.nome}: perícia desconhecida "$pericia"');
-        // agente treina em 5/10/15; ameaça do livro traz o bônus impresso
-        // (pode ser +12, +23…), e é ele que a rolagem soma
         expect(grau, greaterThan(0), reason: '${f.nome}: $pericia grau $grau');
         expect(grau, lessThanOrEqualTo(60), reason: '${f.nome}: $pericia');
       });

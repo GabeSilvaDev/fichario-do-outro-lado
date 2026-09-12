@@ -37,18 +37,12 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     final corpo = _aba == 0 ? const _ListaFichas() : const MesaAba();
 
-    // dentro de uma mesa, o mural abre sozinho quando o mestre mostra algo —
-    // em qualquer aba, inclusive com a ficha aberta por cima. O
-    // ValueListenableBuilder é o que monta o ouvinte NA HORA em que o
-    // aparelho entra numa mesa, sem depender de troca de aba.
     final embrulhado = ValueListenableBuilder(
       valueListenable: MesaStore.listenable,
       builder: (context, Box<String> _, _) {
         final estado = MesaStore.atual;
         if (estado == null) return corpo;
         return OuvinteMural(
-          // a key derruba e recria o ouvinte quando a mesa muda: assinatura
-          // antiga não pode continuar ouvindo a mesa anterior
           key: ValueKey('mural-${estado.mesaId}'),
           servico: PonteRolagens.servico,
           mesaId: estado.mesaId,
@@ -77,8 +71,6 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
-      // A faixa do selo fica acima das abas: é a "capa" do app, e some
-      // de vista em nenhuma delas.
       body: Column(
         children: [
           const FaixaLicenca(),
@@ -141,7 +133,6 @@ class _ListaFichasState extends State<_ListaFichas> {
     try {
       final dados =
           jsonDecode(utf8.decode(bytes)) as Map<String, dynamic>;
-      // id novo: importar não pode atropelar uma ficha existente
       dados['id'] = const Uuid().v4();
       await FichaStore.salvar(FichaOP(dados));
       if (mounted) setState(() {});
@@ -186,9 +177,6 @@ class _ListaFichasState extends State<_ListaFichas> {
 
   @override
   Widget build(BuildContext context) {
-    // Ouvir o Hive, e não só o próprio setState: ficha salva por OUTRA tela
-    // (bestiário, wizard, edição) mexe na caixa sem passar por aqui, e sem
-    // isto a lista continua mostrando o estado velho até a próxima ação.
     return ValueListenableBuilder(
       valueListenable: FichaStore.listenable,
       builder: (context, Box<String> _, _) => _corpo(FichaStore.todas()),
@@ -202,8 +190,6 @@ class _ListaFichasState extends State<_ListaFichas> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          // o mestre monta NPC e criatura aqui: mesma ficha, sem o
-          // orçamento da criação e fora da mesa online
           FloatingActionButton.small(
             heroTag: 'npc',
             onPressed: () => _nova(npc: true),

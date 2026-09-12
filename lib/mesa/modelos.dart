@@ -26,7 +26,6 @@ class Membro {
   factory Membro.fromJson(String uid, Map<String, dynamic> j) => Membro(
         uid: uid,
         nome: (j['nome'] ?? '') as String,
-        // papel desconhecido vira jogador: nunca promover por engano
         papel: j['papel'] == 'mestre' ? PapelMesa.mestre : PapelMesa.jogador,
         entrouEm: DateTime.parse(j['entrouEm'] as String),
         visto: DateTime.parse(j['visto'] as String),

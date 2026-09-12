@@ -8,14 +8,9 @@ import 'theme.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  // Em release, uma exceção durante o build vira uma tela cinza muda — no
-  // meio de uma sessão isso é pior do que o erro. Aqui ela vira um recado
-  // legível, com o começo da pilha, para dar para consertar depois.
   ErrorWidget.builder = (detalhes) => _TelaDeErro(detalhes: detalhes);
   await DadosOP.carregar();
   await FichaStore.init();
-  // só o estado local de "estou na mesa X": abrir a box é leitura de disco,
-  // não conexão. O Firebase continua desligado até alguém entrar numa mesa.
   await MesaStore.init();
   runApp(const AppOrdemParanormal());
 }

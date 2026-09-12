@@ -125,8 +125,6 @@ class _CatalogoScreenState extends State<CatalogoScreen> {
     );
   }
 
-  // ---------- rituais ----------
-
   Widget _abaRituais() {
     final lista = _rituais!
         .where((r) =>
@@ -136,7 +134,6 @@ class _CatalogoScreenState extends State<CatalogoScreen> {
         .toList();
     if (lista.isEmpty) return const _Vazio('Nenhum ritual com esse nome.');
 
-    // agrupado por elemento e círculo, que é como a mesa procura
     final grupos = <String, List<Map<String, dynamic>>>{};
     for (final r in lista) {
       grupos
@@ -158,8 +155,6 @@ class _CatalogoScreenState extends State<CatalogoScreen> {
     final ampliacoes = (r['ampliacoes'] as List).cast<Map>();
     return Card(
       child: ExpansionTile(
-        // mesma história do bestiário: a key força o tile a nascer aberto
-        // quando a busca acha o ritual
         key: ValueKey('${r['nome']}-${_filtro.isNotEmpty}'),
         shape: const Border(),
         initiallyExpanded:
@@ -243,8 +238,6 @@ class _CatalogoScreenState extends State<CatalogoScreen> {
       ].join('\n'),
     };
   }
-
-  // ---------- armas ----------
 
   Widget _abaArmas() {
     final armas = _armas!

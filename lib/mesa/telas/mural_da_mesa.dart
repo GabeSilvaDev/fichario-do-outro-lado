@@ -124,8 +124,6 @@ class _MuralDaMesaState extends State<MuralDaMesa> {
         }
         final item = snap.data;
         if (item == null) return _vazio();
-        // a key troca quando o destaque muda: o estado (e o Future já em
-        // andamento) reinicia do zero para a imagem nova.
         return _CartaoDestaque(
           key: ValueKey(item.imagemId),
           servico: servico,

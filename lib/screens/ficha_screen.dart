@@ -55,8 +55,6 @@ class _FichaScreenState extends State<FichaScreen> {
     setState(() {});
   }
 
-  // ---------- rolagem ----------
-
   void _rolarPericia(Pericia p) {
     final (dados, melhor, bonus) = ficha.testePericia(p);
     final r = Rolagem.teste(
@@ -75,8 +73,6 @@ class _FichaScreenState extends State<FichaScreen> {
   }
 
   void _mostrarResultado(ResultadoRolagem r) {
-    // rolagem de ficha aberta pelo mestre (somenteLeitura) não publica: o
-    // dado é de quem rolou, e o mestre rola pelos NPCs fora daqui
     if (!leitura) {
       PonteRolagens.publicar(r, ficha.nome.isEmpty ? 'Sem nome' : ficha.nome);
     }
@@ -131,8 +127,6 @@ class _FichaScreenState extends State<FichaScreen> {
       ),
     );
   }
-
-  // ---------- construção ----------
 
   @override
   Widget build(BuildContext context) {
@@ -255,8 +249,6 @@ class _FichaScreenState extends State<FichaScreen> {
       ),
     );
   }
-
-  // ---------- aba geral ----------
 
   Widget _abaGeral() {
     return ListView(
@@ -479,7 +471,6 @@ class _FichaScreenState extends State<FichaScreen> {
   }
 
   Widget _linhaNex() {
-    // o Sobrevivente não tem NEX: ele sobe um estágio no fim de cada missão
     if (ficha.porEstagio) return _linhaEstagio();
     return Card(
       child: Padding(
@@ -494,9 +485,6 @@ class _FichaScreenState extends State<FichaScreen> {
                     color: Cores.energiaViva)),
             Expanded(
               child: Slider(
-                // 0..100 com 20 divisões cai exatamente nos múltiplos de 5;
-                // o topo (100) é escrito como 99%, o máximo espontâneo do
-                // livro — NEX 100% só por Desconjuração.
                 value: (ficha.nex == 99 ? 100 : ficha.nex).toDouble(),
                 min: 0,
                 max: 100,
@@ -613,8 +601,6 @@ class _FichaScreenState extends State<FichaScreen> {
                     onTap: leitura
                         ? null
                         : () {
-                            // 0→1→…→5→0; no modo livre o teto é 20, e aí
-                            // ciclar seria ruim: abre um campo para digitar
                             if (ficha.modoLivre) {
                               _digitarAtributo(s);
                             } else {
@@ -722,8 +708,6 @@ class _FichaScreenState extends State<FichaScreen> {
     }
     _salvar();
   }
-
-  // ---------- aba perícias ----------
 
   final _campoDadoRapido = TextEditingController();
 
@@ -866,8 +850,6 @@ class _FichaScreenState extends State<FichaScreen> {
                     },
               borderRadius: BorderRadius.circular(6),
               child: Container(
-                // largura mínima, não fixa: bônus de ameaça ("+25") não
-                // cabia nos 46px do grau de agente e estourava a linha
                 constraints: const BoxConstraints(minWidth: 46),
                 padding:
                     const EdgeInsets.symmetric(vertical: 6, horizontal: 6),
@@ -941,8 +923,6 @@ class _FichaScreenState extends State<FichaScreen> {
     );
   }
 
-  // ---------- aba ataques ----------
-
   Widget _abaAtaques() {
     final ataques = ficha.ataques;
     return ListView(
@@ -1011,8 +991,6 @@ class _FichaScreenState extends State<FichaScreen> {
             ),
             Text(
               [
-                // teste impresso da ficha de ameaça na frente da perícia:
-                // é o número que o mestre precisa ver no meio do combate
                 if (((a['dadosTeste'] ?? 0) as int) > 0)
                   '${a['dadosTeste']}d20+${a['bonusTeste'] ?? 0}'
                 else
@@ -1030,9 +1008,6 @@ class _FichaScreenState extends State<FichaScreen> {
               children: [
                 OutlinedButton.icon(
                   onPressed: () {
-                    // Ficha de ameaça traz o teste impresso ("2⬡+5"): quando
-                    // o ataque tem teste fixo, é ele que rola — a criatura
-                    // não passa pela perícia do agente.
                     final dadosFixos = (a['dadosTeste'] ?? 0) as int;
                     if (dadosFixos > 0) {
                       _mostrarResultado(Rolagem.teste(
@@ -1249,8 +1224,6 @@ class _FichaScreenState extends State<FichaScreen> {
     if (ok == true) _salvar();
   }
 
-  // ---------- aba poderes & rituais ----------
-
   Widget _abaPoderes() {
     return ListView(
       padding: const EdgeInsets.all(14),
@@ -1278,8 +1251,6 @@ class _FichaScreenState extends State<FichaScreen> {
       ],
     );
   }
-
-  // ---------- aba inventário & notas ----------
 
   Widget _abaInventario() {
     final itens = ficha.inventario;
@@ -1459,8 +1430,6 @@ class _FichaScreenState extends State<FichaScreen> {
     if (ok == true) _salvar();
   }
 
-  // ---------- listas de nome+descrição (habilidades, rituais) ----------
-
   List<Widget> _listaSimples(String chave, String rotulo,
       {required List<(String, String)> camposExtras}) {
     final itens = ficha._listaPublica(chave);
@@ -1597,8 +1566,6 @@ class _FichaScreenState extends State<FichaScreen> {
     );
     if (ok == true) _salvar();
   }
-
-  // ---------- estado de mesa ----------
 
   /// Em combate / morto e o que o mestre NÃO vê. A ficha oficial tem esses
   /// botões e eles mudam o que aparece no painel de quem mestra.
@@ -1775,8 +1742,6 @@ class _FichaScreenState extends State<FichaScreen> {
     );
   }
 
-  // ---------- aba sobre ----------
-
   Widget _abaSobre() {
     return ListView(
       padding: const EdgeInsets.all(14),
@@ -1873,8 +1838,6 @@ class _FichaScreenState extends State<FichaScreen> {
     _salvar();
   }
 
-  // ---------- campos genéricos ----------
-
   Widget _campoTexto(String rotulo, String valor, ValueChanged<String> grava) {
     return TextFormField(
       initialValue: valor,
@@ -1882,9 +1845,6 @@ class _FichaScreenState extends State<FichaScreen> {
       decoration: InputDecoration(labelText: rotulo, isDense: true),
       onChanged: (v) {
         grava(v);
-        // _salvar() e não FichaStore.salvar(): sem o setState, o que é
-        // derivado do campo (Defesa, deslocamento efetivo) só aparecia
-        // depois de sair e voltar na aba.
         _salvar();
       },
     );
@@ -1927,7 +1887,6 @@ class _FichaScreenState extends State<FichaScreen> {
           : (v) {
               if (v == null) return;
               if (v == 'Outra') {
-                // mantém o que já estava; os campos livres aparecem abaixo
                 if (ficha.protecao.isEmpty) ficha.protecao = 'Proteção';
               } else {
                 ficha.vestirProtecao(v);
@@ -2024,8 +1983,6 @@ class _FichaScreenState extends State<FichaScreen> {
       decoration: const InputDecoration(labelText: 'Origem', isDense: true),
       dropdownColor: Cores.carta2,
       items: [
-        // as 20 de Sobrevivendo ao Horror ficam depois das 26 do básico e
-        // levam o selo do livro: nem toda mesa usa o suplemento
         for (final o in DadosOP.origens)
           DropdownMenuItem(
             value: o.nome,

@@ -90,7 +90,6 @@ class ImagemMural {
       }
     }
 
-    // Último recurso: bem pequena, mas o mural nunca falha por tamanho.
     final mini = img.copyResize(imagem, width: 480);
     return base64Encode(img.encodeJpg(mini, quality: 55));
   }

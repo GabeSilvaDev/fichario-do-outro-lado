@@ -33,10 +33,10 @@ class FichaOP {
         'pv': 9,
         'san': 8,
         'pe': 2,
-        'defesaBonus': 0, // equipamento e outros, somado a 10+AGI
+        'defesaBonus': 0,
         'protecao': '',
         'resistencias': '',
-        'pericias': <String, dynamic>{}, // nome -> grau (5, 10, 15)
+        'pericias': <String, dynamic>{},
         'ataques': <dynamic>[],
         'habilidades': <dynamic>[],
         'rituais': <dynamic>[],
@@ -44,13 +44,11 @@ class FichaOP {
         'nacionalidade': '',
         'idade': 0,
         'proficiencias': <dynamic>[],
-        // o que o mestre vê no painel — e o que o jogador esconde dele
         'emCombate': false,
         'morto': false,
         'ocultarPv': false,
         'ocultarSan': false,
         'ocultarPe': false,
-        // aba Sobre
         'historia': '',
         'aparencia': '',
         'primeiroEncontro': '',
@@ -59,7 +57,7 @@ class FichaOP {
         'personalidade': '',
         'piorPesadelo': '',
         'anotacoes': '',
-        'retrato': '', // base64 (jpeg pequeno), vazio = sem retrato
+        'retrato': '',
         'criadaEm': DateTime.now().toIso8601String(),
       });
 
@@ -150,8 +148,6 @@ class FichaOP {
   String sobre(String chave) => (dados[chave] ?? '') as String;
   void definirSobre(String chave, String valor) => dados[chave] = valor;
 
-  // ---------- estado de mesa ----------
-
   bool get emCombate => (dados['emCombate'] ?? false) as bool;
   set emCombate(bool v) => dados['emCombate'] = v;
 
@@ -173,8 +169,6 @@ class FichaOP {
   String get resistencias => (dados['resistencias'] ?? '') as String;
   set resistencias(String v) => dados['resistencias'] = v;
 
-  // ---------- atributos ----------
-
   Map<String, dynamic> get _atributos =>
       (dados['atributos'] ??= <String, dynamic>{}) as Map<String, dynamic>;
 
@@ -184,8 +178,6 @@ class FichaOP {
   /// de ameaça do livro chegam.
   void definirAtributo(String sigla, int valor) =>
       _atributos[sigla] = valor.clamp(0, modoLivre ? 20 : 5);
-
-  // ---------- recursos ----------
 
   int get pv => (dados['pv'] ?? 0) as int;
   set pv(int v) => dados['pv'] = v.clamp(0, 999);
@@ -235,7 +227,6 @@ class FichaOP {
         var total = c.sanMax(nex, estagio: estagio);
         if (o == null) return total;
         total += o.mod('sanPorNivel') * nivelNex;
-        // Cultista Arrependido troca metade da Sanidade pelo poder paranormal
         if (o.flag('sanMetade')) total = total ~/ 2;
         return total;
       })();
@@ -249,7 +240,6 @@ class FichaOP {
         var total = c.peMax(nex, atributo('PRE'), estagio: estagio);
         if (o == null) return total;
         total += o.mod('pe');
-        // "+1 a cada NEX ímpar (15%, 25%…)" — nível 3, 5, 7…
         final porImpar = o.mod('pePorNivelImpar');
         if (porImpar > 0 && nex >= 15) total += porImpar * ((nex - 5) ~/ 10);
         return total;
@@ -339,11 +329,6 @@ class FichaOP {
               defesaBonus)) -
       (sobrecarregado ? 5 : 0);
 
-  // ---------- bloco de ameaça ----------
-  // O que uma ficha de criatura tem e a de agente não: valor de desafio,
-  // categoria, presença perturbadora, sentidos e vulnerabilidades. Tudo
-  // opcional — ficha de jogador simplesmente não usa nada disso.
-
   /// Valor de Desafio. Null = ficha sem VD (agente, NPC comum).
   int? get vd => dados['vd'] as int?;
   set vd(int? v) {
@@ -403,8 +388,6 @@ class FichaOP {
 
   bool get sobrecarregado => cargaUsada > cargaLimite;
 
-  // ---------- perícias ----------
-
   Map<String, dynamic> get _pericias =>
       (dados['pericias'] ??= <String, dynamic>{}) as Map<String, dynamic>;
 
@@ -450,8 +433,6 @@ class FichaOP {
     return (valor, true, bonus);
   }
 
-  // ---------- listas ----------
-
   List<Map<String, dynamic>> _lista(String chave) {
     final bruta = (dados[chave] ??= <dynamic>[]) as List<dynamic>;
     return [
@@ -496,7 +477,6 @@ class FichaOP {
     if (indice < 0) {
       adicionarEm('habilidades', item);
     } else {
-      // reaplica a origem para corrigir ficha antiga com texto desatualizado
       atualizarEm('habilidades', indice, item);
     }
   }
