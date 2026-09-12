@@ -1,0 +1,53 @@
+name: 🐛 Bug report
+description: Something broke on a sheet, the bestiary or the online table. (Português também é bem-vindo.)
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What did you do, what did you expect, and what happened instead?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open a sheet…
+        2. Tap…
+        3. See…
+  - type: dropdown
+    id: where
+    attributes:
+      label: Where?
+      multiple: true
+      options:
+        - Character sheet
+        - Creation wizard
+        - Bestiary / catalog
+        - Online table (GM)
+        - Online table (player)
+        - Scene map
+        - Other
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      multiple: true
+      options:
+        - Android (APK)
+        - PWA on Android
+        - PWA on iPhone
+        - Desktop browser
+  - type: input
+    id: version
+    attributes:
+      label: App version
+      description: APK — Android app info; PWA — say "web" and the date.
+      placeholder: 0.9.1
+  - type: textarea
+    id: extra
+    attributes:
+      label: Screenshots or exported sheet (.json)
+      description: Drag files here. Remove anything personal first.

@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: ▶ Play in the browser
+    url: https://gabesilvadev.github.io/fichario-do-outro-lado/
+    about: The latest version, installable as a PWA on iPhone, Android and desktop.
+  - name: License & privacy / Licença e privacidade
+    url: https://github.com/GabeSilvaDev/fichario-do-outro-lado/blob/main/LICENCA.md
+    about: Ordem Paranormal Community License terms, credits and LGPD notice.

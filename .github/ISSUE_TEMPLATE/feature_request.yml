@@ -1,0 +1,24 @@
+name: ✨ Feature request
+description: An idea for the sheet, the bestiary or the online table. (Português também é bem-vindo.)
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What's the problem at the table?
+      description: Describe the situation during play that this would solve.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What would you like the app to do?
+    validations:
+      required: true
+  - type: checkboxes
+    id: license
+    attributes:
+      label: License check
+      options:
+        - label: This does not require reproducing text, art or maps from the official books (see LICENCA.md).
+          required: true
