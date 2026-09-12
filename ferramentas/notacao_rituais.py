@@ -16,8 +16,6 @@ custo de cada ampliação vem do extrator.
 """
 
 NOTACAO = {
-
-    # ==================================================== CONHECIMENTO 1º
     "Conhecimento:1:Compreensão Paranormal": {
         "efeito": "Você entende qualquer idioma escrito ou falado do alvo "
                   "tocado — texto, gravação ou fala. Não traduz o que você "
@@ -64,7 +62,6 @@ NOTACAO = {
         ],
     },
 
-    # ==================================================== CONHECIMENTO 2º
     "Conhecimento:2:Aprimorar Mente": {
         "efeito": "+1 em Intelecto ou Presença (escolha do alvo), com tudo "
                   "que isso arrasta: PE, perícias, graus.",
@@ -116,7 +113,6 @@ NOTACAO = {
         ],
     },
 
-    # ==================================================== CONHECIMENTO 3º
     "Conhecimento:3:Alterar Memória": {
         "efeito": "Altera ou apaga as lembranças da última hora do alvo "
                   "tocado — detalhes de eventos, não a vida inteira. Ele "
@@ -151,7 +147,6 @@ NOTACAO = {
                   "encerram e o deixam imune.",
     },
 
-    # ==================================================== CONHECIMENTO 4º
     "Conhecimento:4:Controle Mental": {
         "efeito": "Domina uma pessoa ou animal: obedece qualquer ordem, "
                   "menos ordem suicida. Resiste com Vontade no fim de cada "
@@ -180,7 +175,6 @@ NOTACAO = {
                   "fica caído e indefeso.",
     },
 
-    # ========================================================== ENERGIA 1º
     "Energia:1:Amaldiçoar Tecnologia": {
         "efeito": "Um acessório ou arma de fogo recebe uma modificação à sua "
                   "escolha pela cena.",
@@ -241,7 +235,6 @@ NOTACAO = {
         ],
     },
 
-    # ========================================================== ENERGIA 2º
     "Energia:2:Chamas do Caos": {
         "efeito": "Escolha: CHAMEJAR (arma corpo a corpo causa +1d6 de "
                   "fogo) ou ESQUENTAR (objeto sofre 1d6 de fogo por rodada "
@@ -288,7 +281,6 @@ NOTACAO = {
         ],
     },
 
-    # ========================================================== ENERGIA 3º
     "Energia:3:Convocação Instantânea": {
         "efeito": "Traz para a sua mão, de qualquer distância, um objeto de "
                   "até 2 espaços que você preparou antes com o símbolo do "
@@ -332,7 +324,6 @@ NOTACAO = {
         ],
     },
 
-    # ========================================================== ENERGIA 4º
     "Energia:4:Alterar Destino": {
         "efeito": "Reação: +15 em um teste de resistência ou na Defesa "
                   "contra um ataque — você viu a possibilidade certa antes "
@@ -342,7 +333,6 @@ NOTACAO = {
         ],
     },
     "Energia:4:Deflagração de Energia": {
-        # o cartão desta página perde a linha de duração no extrator
         "ficha": {"duracao": "instantânea"},
         "efeito": "Explosão de 15m: 3d10×10 de Energia e todo item "
                   "tecnológico na área quebra. Você não é atingido. "
@@ -361,7 +351,6 @@ NOTACAO = {
         ],
     },
 
-    # ============================================================= MEDO 1º
     "Medo:1:Cinerária": {
         "efeito": "Névoa de 6m: ritual conjurado dentro dela tem DT +5.",
         "ampliacoes": [
@@ -370,7 +359,6 @@ NOTACAO = {
         ],
     },
 
-    # ============================================================= MEDO 2º
     "Medo:2:Proteção contra Rituais": {
         "efeito": "Alvo tocado recebe resistência 5 a dano paranormal e +5 "
                   "para resistir a rituais e habilidades de criaturas.",
@@ -390,14 +378,12 @@ NOTACAO = {
         ],
     },
 
-    # ============================================================= MEDO 3º
     "Medo:3:Dissipar Ritual": {
         "efeito": "Encerra rituais ativos num alvo ou numa esfera de 3m: "
                   "role Ocultismo e anule todo ritual com DT igual ou menor "
                   "que o resultado. Efeito já instantâneo não volta atrás.",
     },
 
-    # ============================================================= MEDO 4º
     "Medo:4:Canalizar o Medo": {
         "efeito": "Passa a outra pessoa um ritual seu de até 3º círculo: "
                   "ela conjura uma vez, de graça, na forma básica. Até isso "
@@ -426,7 +412,6 @@ NOTACAO = {
                   "fica atordoado 1 rodada se falhar.",
     },
 
-    # ============================================================= MORTE 1º
     "Morte:1:Cicatrização": {
         "efeito": "Cura 3d8+3 PV no toque — e o alvo envelhece 1 ano.",
         "ampliacoes": [
@@ -482,7 +467,6 @@ NOTACAO = {
         ],
     },
 
-    # ============================================================= MORTE 2º
     "Morte:2:Desacelerar Impacto": {
         "efeito": "Reação: a queda de um ser (ou até 10 espaços de objetos) "
                   "cai para 18m por rodada — sem dano. Serve para frear "
@@ -523,7 +507,6 @@ NOTACAO = {
                   "enquanto você sustentar. Não serve para conjurar ritual.",
     },
 
-    # ============================================================= MORTE 3º
     "Morte:3:Poeira da Podridão": {
         "efeito": "Nuvem de 6m sustentada: na conjuração e no início de "
                   "cada turno seu, 4d8 de Morte em seres e objetos na área "
@@ -558,7 +541,6 @@ NOTACAO = {
         ],
     },
 
-    # ============================================================= MORTE 4º
     "Morte:4:Convocar o Algoz": {
         "efeito": "Cria o que o alvo mais teme — só ele vê com nitidez; o "
                   "resto vê um vulto. O algoz surge do seu lado, flutua 12m "
@@ -577,7 +559,6 @@ NOTACAO = {
                   "na direção dele.",
     },
 
-    # ============================================================ SANGUE 1º
     "Sangue:1:Arma Atroz": {
         "efeito": "Arma corpo a corpo tocada: +2 em ataque e +1 na margem "
                   "de ameaça enquanto sustentar.",
@@ -633,7 +614,6 @@ NOTACAO = {
         ],
     },
 
-    # ============================================================ SANGUE 2º
     "Sangue:2:Aprimorar Físico": {
         "efeito": "+1 em Agilidade ou Força (escolha do alvo) pela cena.",
         "ampliacoes": [
@@ -679,7 +659,6 @@ NOTACAO = {
         ],
     },
 
-    # ============================================================ SANGUE 3º
     "Sangue:3:Ferver Sangue": {
         "efeito": "Sustentado: na conjuração e no início de cada turno do "
                   "alvo, Fortitude — falhou, 4d8 de Sangue e fica fraco; "
@@ -713,7 +692,6 @@ NOTACAO = {
         ],
     },
 
-    # ============================================================ SANGUE 4º
     "Sangue:4:Capturar o Coração": {
         "efeito": "Paixão obsessiva por você: no início de cada turno, "
                   "Vontade — falhou, o alvo age para te agradar naquele "

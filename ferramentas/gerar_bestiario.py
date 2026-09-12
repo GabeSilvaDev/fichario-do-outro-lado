@@ -29,11 +29,7 @@ from PIL import Image, ImageDraw, ImageFont
 RAIZ = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 SAIDA = os.path.join(RAIZ, "assets", "bestiario", "bestiario.json")
 
-# ---------------------------------------------------------------- fórmulas
-# Espelham ClasseOP de lib/data/dados_op.dart. Se lá mudar, muda aqui — o
-# teste do app confere os dois contra os mesmos números.
 CLASSES = {
-    # nome:        (pvIni, pvNivel, peIni, peNivel, sanIni, sanNivel)
     "Mundano":     (8,  2, 1, 1, 8,  0),
     "Combatente":  (20, 4, 2, 2, 12, 3),
     "Especialista": (16, 3, 3, 3, 16, 4),
@@ -59,8 +55,6 @@ def recursos(classe, nex, vig, pre):
     san = san_i + (n - 1) * san_n
     return pv, san, pe
 
-
-# ---------------------------------------------------------------- retratos
 ELEMENTOS = {
     "energia": (0xA0, 0x6B, 0xFF),
     "sangue": (0xE0, 0x55, 0x45),
@@ -95,7 +89,6 @@ def monograma(nome, elemento):
 
     im = Image.new("RGB", (lado * 4, lado * 4), fundo)
     d = ImageDraw.Draw(im)
-    # anel duplo: o de fora marca o elemento, o de dentro dá profundidade
     d.ellipse([10, 10, lado * 4 - 10, lado * 4 - 10], outline=cor, width=14)
     d.ellipse([34, 34, lado * 4 - 34, lado * 4 - 34],
               outline=tuple(int(c * 0.45) for c in cor), width=5)
@@ -115,8 +108,6 @@ def slug(nome):
     s = unicodedata.normalize("NFKD", nome).encode("ascii", "ignore").decode()
     return re.sub(r"[^a-z0-9]+", "-", s.lower()).strip("-")
 
-
-# ---------------------------------------------------------------- fichas
 def ficha(nome, *, papel, classe, nex, atributos, elemento="humano",
           pericias=None, ataques=(), habilidades=(), rituais=(),
           rituais_do_livro=None,
@@ -146,9 +137,6 @@ def ficha(nome, *, papel, classe, nex, atributos, elemento="humano",
         "pericias": pericias or {},
         "ataques": [dict(a) for a in ataques],
         "habilidades": [dict(h) for h in habilidades],
-        # NPC conjurador entra com os rituais que ele pode usar já na
-        # ficha: no meio da cena ninguém abre o livro para lembrar custo e
-        # efeito
         "rituais": [dict(r) for r in rituais]
         + (rituais_do_catalogo(rituais_do_livro) if rituais_do_livro else []),
         "inventario": [],
@@ -191,8 +179,6 @@ def rit(nome, circulo, custo, descricao, execucao="Padrão",
             "execucao": execucao, "alcance": alcance, "duracao": duracao,
             "descricao": descricao}
 
-
-# ================================================================ o elenco
 CATALOGO_RITUAIS = os.path.join(RAIZ, "assets", "catalogo", "rituais.json")
 _catalogo = None
 
@@ -258,8 +244,6 @@ GRUPOS = []
 def grupo(nome, descricao, fichas):
     GRUPOS.append({"nome": nome, "descricao": descricao, "fichas": fichas})
 
-# ---------------------------------------------------------------- aliados
-# Estes não vêm de livro nenhum: são os NPCs desta mesa, escritos aqui.
 grupo(
     "Ordo Realitas — aliados",
     "Quem chega para ajudar. Use com parcimônia: aliado que resolve a cena "
@@ -375,10 +359,6 @@ grupo(
                    "fácil do resto da missão."),
     ])
 
-# ------------------------------------------------- NPCs desta campanha
-# Gente e criatura que só existem nesta mesa: adaptações, pontes entre as
-# missões e ameaças montadas para as cenas que a campanha inventou. As que
-# têm ficha oficial estão nos grupos dos livros, não aqui.
 grupo(
     "NPCs desta campanha — Ato I",
     "Missões 00 a 03, NEX 0% → 15%. Os PJs são civis com 10 PV: a pressão "
@@ -929,7 +909,6 @@ grupo(
                    "esta."),
     ])
 
-# ---------------------------------------------------------------- coringas
 grupo(
     "Figurantes de qualquer cena",
     "Gente comum. Serve para qualquer missão, em qualquer NEX: são o mundo "
@@ -1011,13 +990,6 @@ grupo(
               nota="O golpe mais frustrante do Ato II. É de propósito."),
     ])
 
-
-# ==================================================== ameaças dos livros
-# Aqui o bestiário para de ser invenção e passa a ser a ficha real: os
-# números vêm do extrator (App-Mestre/ferramentas/extrair_ameacas.py, que lê
-# o PDF de quem tem o livro) e o texto das habilidades vem de
-# notacao_ameacas.py, escrito à mão em notação de mesa.
-
 AMEACAS_CRU = os.path.join(RAIZ, "..", "..", "Ordem", "App-Mestre", "dados",
                            "ameacas-cru.json")
 
@@ -1087,7 +1059,6 @@ def carrega_ameacas():
     por_chave = {}
     for a in bruto:
         chave = "%s:%s:%s" % (a["fonte"], a["pagina"], a["pv"])
-        # duas fichas na mesma página com o mesmo PV: a segunda vira "…b"
         if chave in por_chave:
             chave += "b"
         por_chave[chave] = a
@@ -1110,11 +1081,7 @@ def ficha_de_ameaca(notacao, cru):
     atributos = base.get("atributos") or {
         "AGI": 1, "FOR": 1, "INT": 1, "PRE": 1, "VIG": 1}
 
-    # perícias: o teste impresso vira grau. O app rola (atributo)d20 + grau,
-    # que é exatamente o "3⬡+10" do livro.
     pericias = {}
-    # bônus 0 não entra: na ficha do app, grau 0 é "destreinado", e o
-    # resultado da rolagem é o mesmo (só os dados do atributo).
     for chave_teste, valor in (base.get("testes") or {}).items():
         nome_p = PERICIA_POR_TESTE.get(chave_teste)
         if nome_p and valor["bonus"] > 0:
@@ -1158,9 +1125,6 @@ def ficha_de_ameaca(notacao, cru):
         rituais.append({"nome": "Rituais", "circulo": "", "custo": "",
                         "execucao": "", "alcance": "", "duracao": "",
                         "descricao": notacao["rituais"]})
-    # "conjura todos os rituais de Morte até o 3º círculo" vira a LISTA dos
-    # rituais, um por um, com custo e efeito — no meio da cena ninguém quer
-    # abrir o livro para lembrar o que cada um faz
     filtro = notacao.get("rituaisDoLivro")
     if filtro:
         rituais.extend(rituais_do_catalogo(filtro))
@@ -1172,8 +1136,6 @@ def ficha_de_ameaca(notacao, cru):
         if p.get("nexImune"):
             presenca += " · NEX %s%%+ é imune" % p["nexImune"]
 
-    # a diagramação de alguns cartões esconde a categoria do extrator; a
-    # notação preenche à mão nesses casos
     categoria = notacao.get("categoria") or base.get("tipo") or ""
     tamanho = notacao.get("tamanho") or base.get("tamanho") or ""
     elemento = notacao.get("elemento") or base.get("elemento") or ""
@@ -1259,7 +1221,6 @@ def main():
     if faltando:
         print("sem números (rode extrair_ameacas.py): %s"
               % ", ".join(faltando), file=sys.stderr)
-    # as ameaças do livro entram entre os aliados e os figurantes
     GRUPOS[1:1] = ameacas
 
     total = sum(len(g["fichas"]) for g in GRUPOS)

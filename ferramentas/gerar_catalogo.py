@@ -57,7 +57,6 @@ def carrega_rituais():
             faltando.append(chave)
             continue
 
-        # o custo de cada ampliação é do livro (número), o texto é nosso
         textos = {n: t for n, t in notacao.get("ampliacoes", [])}
         ampliacoes = []
         for a in r["ampliacoes"]:
@@ -68,8 +67,6 @@ def carrega_rituais():
                 "nome": a["nome"], "custo": a["custo"], "efeito": texto,
             })
 
-        # a diagramação às vezes esconde um campo do extrator; a notação
-        # pode completar à mão
         campos = dict(notacao.get("ficha", {}))
 
         saida.append({

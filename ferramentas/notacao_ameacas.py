@@ -15,8 +15,6 @@ efeito)], e opcionalmente tatica.
 """
 
 NOTACAO = {
-
-    # ============================================================ SANGUE
     "OPRPG:182:70": {
         "nome": "Aberração de Carne",
         "grupo": "Sangue",
@@ -187,7 +185,6 @@ NOTACAO = {
                   "mesmo lugar duas rodadas.",
     },
 
-    # ============================================================= MORTE
     "OPRPG:209:140": {
         "nome": "Aracnasita",
         "grupo": "Morte",
@@ -207,8 +204,6 @@ NOTACAO = {
     "OPRPG:211:400": {
         "nome": "Carniçal",
         "grupo": "Morte",
-        # não é conjurador: a habilidade Comando reproduz os efeitos
-        # básicos de Perturbação, e ter o ritual à mão evita abrir o livro
         "rituaisDoLivro": {"nomes": ["Perturbação"], "dt": 29,
                            "nota": "Referência da habilidade Comando — o "
                                    "carniçal não conjura, só produz estes "
@@ -365,7 +360,6 @@ NOTACAO = {
         "tatica": "Agarra, envelhece, e usa os mortos da cena como exército.",
     },
 
-    # ====================================================== CONHECIMENTO
     "OPRPG:234:1111": {
         "nome": "Anjo",
         "grupo": "Conhecimento",
@@ -558,7 +552,6 @@ NOTACAO = {
                   "combate.",
     },
 
-    # ============================================================ ENERGIA
     "OPRPG:257:30": {
         "nome": "Anárquico",
         "grupo": "Energia",
@@ -742,7 +735,6 @@ NOTACAO = {
                   "eles não conseguem se soltar.",
     },
 
-    # ================================================ gente comum e tropa
     "OPRPG:284:8": {
         "nome": "Bandido", "grupo": "Gente e tropa",
         "habilidades": [
@@ -797,8 +789,6 @@ NOTACAO = {
     },
     "OPRPG:286:15": {
         "nome": "Cultista", "grupo": "Gente e tropa",
-        # o livro manda escolher 2 rituais de 1º círculo de um elemento; a
-        # ficha traz os 24 possíveis, e o mestre apaga os que não usar
         "rituaisDoLivro": {"circuloMax": 1, "dt": 15,
                            "nota": "CONJURADOR: escolha 2 destes, de um "
                                    "elemento só. Conjura sem pagar PE, até "
@@ -932,7 +922,6 @@ NOTACAO = {
                   "apertado.",
     },
 
-    # ================================================ Vendeta Oculta (VO1)
     "VO1:30:15": {
         "nome": "Lia Schmidt", "grupo": "Vendeta Oculta",
         "habilidades": [],
@@ -1162,7 +1151,6 @@ NOTACAO = {
                   "lutar. Some assim que o combate deixar de convir.",
     },
 
-    # =============================================== Vendeta Oculta 2 (VO2)
     "VO2:110:6": {
         "nome": "Bêbado Local", "grupo": "Vendeta Oculta 2",
         "categoria": "Pessoa", "tamanho": "Médio",
@@ -1262,7 +1250,6 @@ NOTACAO = {
     },
     "VO2:115:200": {
         "nome": "Melancolia", "grupo": "Vendeta Oculta 2",
-        # parasita: o cartão não traz atributos porque ela nunca rola ataque
         "manual": {"atributos": {"AGI": 1, "FOR": 0, "INT": 2, "PRE": 4,
                                  "VIG": 1}},
         "categoria": "Criatura", "tamanho": "Grande", "elemento": "Sangue",
@@ -1322,7 +1309,6 @@ NOTACAO = {
                   "regressiva de cenas define com quantos PV ele entra.",
     },
 
-    # ======================================= Casos Paranormais e extras
     "CASOS:23:35": {
         "nome": "Bicho-Papão (versão de caso)",
         "grupo": "Casos Paranormais",
