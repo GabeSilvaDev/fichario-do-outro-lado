@@ -7,8 +7,8 @@ services:
       - .:/app
       - pub-cache:/root/.pub-cache
     ports:
-      - "8093:8093"   # flutter run web (hot reload)
-    command: tail -f /dev/null   # mantém o container vivo; comandos via exec
+      - "8093:8093"
+    command: tail -f /dev/null
 
 volumes:
   pub-cache:

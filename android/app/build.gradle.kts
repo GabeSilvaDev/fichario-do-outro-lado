@@ -1,9 +1,5 @@
 import java.util.Properties
 
-// Assinatura de release: senha e caminho do keystore vivem em
-// android/key.properties, que fica FORA do git. Sem esse arquivo o release
-// cai na chave de debug — e a chave de debug muda a cada máquina/container,
-// o que faz a instalação seguinte ser recusada por assinatura diferente.
 val chaves = Properties().apply {
     val arquivo = rootProject.file("key.properties")
     if (arquivo.exists()) arquivo.inputStream().use { load(it) }
@@ -32,8 +28,6 @@ android {
         applicationId = "com.gabesilvadev.ordem_paranormal"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
-        // Firebase Auth 6.x não instala abaixo de 23; o template ainda
-        // entrega 21, e o Gradle recusa o build por causa disso.
         minSdk = maxOf(flutter.minSdkVersion, 23)
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
@@ -53,8 +47,6 @@ android {
 
     buildTypes {
         release {
-            // com a chave de verdade, cada build novo instala POR CIMA do
-            // anterior; sem ela, o Android recusa a atualização
             signingConfig = if (temChave) {
                 signingConfigs.getByName("release")
             } else {
