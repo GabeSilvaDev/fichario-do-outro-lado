@@ -15,7 +15,7 @@ O mestre vê as fichas e as rolagens dos jogadores em tempo real, e mostra image
 [![Offline](https://img.shields.io/badge/offline-por%20padr%C3%A3o-2e7d32)](#funcionalidades)
 [![Firebase](https://img.shields.io/badge/mesa%20online-Firestore-ffca28?logo=firebase&logoColor=black)](#mesa-online-firebase)
 [![Licença](https://img.shields.io/badge/licen%C3%A7a-Comunidade%20OP-8e24aa)](LICENCA.md)
-[![Versão](https://img.shields.io/badge/vers%C3%A3o-0.9.1-555)](pubspec.yaml)
+[![Release](https://img.shields.io/github/v/release/GabeSilvaDev/fichario-do-outro-lado?label=release&color=555)](https://github.com/GabeSilvaDev/fichario-do-outro-lado/releases/latest)
 
 [English](README.md) · **Português (Brasil)**
 
@@ -127,6 +127,10 @@ A arquitetura da mesa é a mesma do app [Mago: A Ascensão](https://github.com/G
 ### Jogar agora
 
 **[gabesilvadev.github.io/fichario-do-outro-lado](https://gabesilvadev.github.io/fichario-do-outro-lado/)** — funciona no iPhone, Android e PC, sem instalar nada. No iPhone, abra no Safari e use *Compartilhar → Adicionar à Tela de Início* para virar app.
+
+### Android
+
+Baixe o APK mais recente em **[Releases](https://github.com/GabeSilvaDev/fichario-do-outro-lado/releases/latest)** e instale (libere "fontes desconhecidas" uma vez). Ele é assinado com a chave de release do projeto, então cada versão nova instala por cima da anterior sem perder as fichas.
 
 ### Compilar do código
 

@@ -15,7 +15,7 @@ The GM sees every sheet and every roll in real time, and pushes images that open
 [![Offline first](https://img.shields.io/badge/offline-first-2e7d32)](#features)
 [![Firebase](https://img.shields.io/badge/online%20table-Firestore-ffca28?logo=firebase&logoColor=black)](#online-table-firebase)
 [![License](https://img.shields.io/badge/license-OP%20Community%20License-8e24aa)](LICENCA.md)
-[![Version](https://img.shields.io/badge/version-0.9.1-555)](pubspec.yaml)
+[![Release](https://img.shields.io/github/v/release/GabeSilvaDev/fichario-do-outro-lado?label=release&color=555)](https://github.com/GabeSilvaDev/fichario-do-outro-lado/releases/latest)
 
 **English** · [Português (Brasil)](README.pt-BR.md)
 
@@ -129,6 +129,10 @@ The table architecture is shared with the [Mago: A Ascensão](https://github.com
 ### Play right now
 
 **[gabesilvadev.github.io/fichario-do-outro-lado](https://gabesilvadev.github.io/fichario-do-outro-lado/)** — works on iPhone, Android and desktop with nothing to install. On iPhone open it in Safari and use *Share → Add to Home Screen* to turn it into an app.
+
+### Android
+
+Download the latest APK from **[Releases](https://github.com/GabeSilvaDev/fichario-do-outro-lado/releases/latest)** and install it (allow "unknown sources" once). It is signed with the project's release key, so every new version installs over the previous one without losing your sheets.
 
 ### Build from source
 
