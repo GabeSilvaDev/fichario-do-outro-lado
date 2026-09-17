@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
@@ -59,15 +60,17 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Fichário do Outro Lado',
-            style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: .5)),
+        title: const Text(
+          'Fichário do Outro Lado',
+          style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: .5),
+        ),
         actions: [
           IconButton(
             tooltip: 'Licença e privacidade',
             icon: const Icon(Icons.verified_user_outlined),
-            onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const LicencaScreen()),
-            ),
+            onPressed: () => Navigator.of(
+              context,
+            ).push(MaterialPageRoute(builder: (_) => const LicencaScreen())),
           ),
         ],
       ),
@@ -85,9 +88,13 @@ class _HomeScreenState extends State<HomeScreen> {
         onDestinationSelected: (i) => setState(() => _aba = i),
         destinations: const [
           NavigationDestination(
-              icon: Icon(Icons.description_outlined), label: 'Fichas'),
+            icon: Icon(Icons.description_outlined),
+            label: 'Fichas',
+          ),
           NavigationDestination(
-              icon: Icon(Icons.groups_outlined), label: 'Mesa'),
+            icon: Icon(Icons.groups_outlined),
+            label: 'Mesa',
+          ),
         ],
       ),
     );
@@ -105,21 +112,22 @@ class _ListaFichasState extends State<_ListaFichas> {
   /// Ficha nova passa pelo assistente: ele cobra as regras de criação uma
   /// vez só. Depois disso a ficha vive na tela dela, onde tudo é editável.
   Future<void> _nova({bool npc = false}) async {
-    await Navigator.of(context).push(
-        MaterialPageRoute(builder: (_) => WizardScreen(npc: npc)));
+    await Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => WizardScreen(npc: npc)));
     if (mounted) setState(() {});
   }
 
   void _abrirCatalogo() {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const CatalogoScreen()),
-    );
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => const CatalogoScreen()));
   }
 
   void _abrirBestiario() {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const BestiarioScreen()),
-    );
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => const BestiarioScreen()));
   }
 
   Future<void> _importar() async {
@@ -131,24 +139,51 @@ class _ListaFichasState extends State<_ListaFichas> {
     final bytes = escolha?.files.single.bytes;
     if (bytes == null) return;
     try {
-      final dados =
-          jsonDecode(utf8.decode(bytes)) as Map<String, dynamic>;
+      final dados = jsonDecode(utf8.decode(bytes)) as Map<String, dynamic>;
       dados['id'] = const Uuid().v4();
       await FichaStore.salvar(FichaOP(dados));
       if (mounted) setState(() {});
     } catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('Esse arquivo não parece uma ficha exportada.')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Esse arquivo não parece uma ficha exportada.'),
+        ),
+      );
     }
   }
 
+  /// Compartilha a ficha como um arquivo `<nome>.json`, não como texto.
   Future<void> _exportar(FichaOP f) async {
-    final nome = f.nome.isEmpty ? 'ficha' : f.nome.replaceAll(' ', '-');
-    await Share.share(
-      jsonEncode(f.dados),
-      subject: 'Ficha $nome (Fichário do Outro Lado)',
+    final nome = f.nome.trim().isEmpty
+        ? 'ficha'
+        : f.nome
+              .trim()
+              .replaceAll(RegExp(r'[^\w\- À-ÿ]'), '')
+              .replaceAll(RegExp(r'\s+'), '-');
+    final bytes = Uint8List.fromList(
+      utf8.encode(const JsonEncoder.withIndent('  ').convert(f.dados)),
     );
+    try {
+      await Share.shareXFiles(
+        [
+          XFile.fromData(
+            bytes,
+            name: '$nome.json',
+            mimeType: 'application/json',
+          ),
+        ],
+        subject:
+            'Ficha ${f.nome.isEmpty ? 'sem nome' : f.nome} '
+            '(Fichário do Outro Lado)',
+        fileNameOverrides: ['$nome.json'],
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Falha ao exportar: $e')));
+    }
   }
 
   Future<void> _excluir(FichaOP f) async {
@@ -157,16 +192,18 @@ class _ListaFichasState extends State<_ListaFichas> {
       builder: (ctx) => AlertDialog(
         title: const Text('Excluir ficha?'),
         content: Text(
-            '"${f.nome.isEmpty ? 'Sem nome' : f.nome}" some do aparelho. '
-            'Isso não pode ser desfeito.'),
+          '"${f.nome.isEmpty ? 'Sem nome' : f.nome}" some do aparelho. '
+          'Isso não pode ser desfeito.',
+        ),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('Cancelar')),
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancelar'),
+          ),
           TextButton(
-              onPressed: () => Navigator.pop(ctx, true),
-              child: const Text('Excluir',
-                  style: TextStyle(color: Cores.sangue))),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Excluir', style: TextStyle(color: Cores.sangue)),
+          ),
         ],
       ),
     );
@@ -214,11 +251,16 @@ class _ListaFichasState extends State<_ListaFichas> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.auto_stories_outlined,
-                      size: 56, color: Cores.tinta2),
+                  const Icon(
+                    Icons.auto_stories_outlined,
+                    size: 56,
+                    color: Cores.tinta2,
+                  ),
                   const SizedBox(height: 12),
-                  const Text('Nenhuma ficha ainda.',
-                      style: TextStyle(color: Cores.tinta2)),
+                  const Text(
+                    'Nenhuma ficha ainda.',
+                    style: TextStyle(color: Cores.tinta2),
+                  ),
                   const SizedBox(height: 12),
                   TextButton.icon(
                     onPressed: _importar,
@@ -253,8 +295,7 @@ class _ListaFichasState extends State<_ListaFichas> {
                       ),
                       TextButton.icon(
                         onPressed: _abrirBestiario,
-                        icon: const Icon(Icons.pest_control_outlined,
-                            size: 18),
+                        icon: const Icon(Icons.pest_control_outlined, size: 18),
                         label: const Text('Bestiário da campanha'),
                       ),
                       TextButton.icon(
@@ -274,9 +315,11 @@ class _ListaFichasState extends State<_ListaFichas> {
   /// Agente continua com classe · NEX · patente.
   static String _linhaDeIdentidade(FichaOP f) {
     if (f.vd != null) {
-      final tipo = [f.categoria, f.tamanho, f.elemento]
-          .where((x) => x.isNotEmpty)
-          .join(' · ');
+      final tipo = [
+        f.categoria,
+        f.tamanho,
+        f.elemento,
+      ].where((x) => x.isNotEmpty).join(' · ');
       return 'VD ${f.vd}${tipo.isEmpty ? '' : ' · $tipo'}';
     }
     return '${f.classe} · NEX ${f.nex}% · ${f.patente}';
@@ -298,8 +341,9 @@ class _ListaFichasState extends State<_ListaFichas> {
       child: InkWell(
         borderRadius: BorderRadius.circular(10),
         onTap: () async {
-          await Navigator.of(context).push(MaterialPageRoute(
-              builder: (_) => FichaScreen(fichaId: f.id)));
+          await Navigator.of(
+            context,
+          ).push(MaterialPageRoute(builder: (_) => FichaScreen(fichaId: f.id)));
           setState(() {});
         },
         child: Padding(
@@ -315,31 +359,39 @@ class _ListaFichasState extends State<_ListaFichas> {
                     Row(
                       children: [
                         Flexible(
-                          child: Text(f.nome.isEmpty ? 'Sem nome' : f.nome,
-                              style: const TextStyle(
-                                  fontWeight: FontWeight.bold, fontSize: 16)),
+                          child: Text(
+                            f.nome.isEmpty ? 'Sem nome' : f.nome,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
                         ),
                         if (f.ehNpc)
                           Container(
                             margin: const EdgeInsets.only(left: 6),
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 7, vertical: 1),
+                              horizontal: 7,
+                              vertical: 1,
+                            ),
                             decoration: BoxDecoration(
                               border: Border.all(color: Cores.sangue),
                               borderRadius: BorderRadius.circular(99),
                             ),
-                            child: const Text('NPC',
-                                style: TextStyle(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.bold,
-                                    color: Cores.sangue)),
+                            child: const Text(
+                              'NPC',
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                color: Cores.sangue,
+                              ),
+                            ),
                           ),
                       ],
                     ),
                     Text(
                       _linhaDeIdentidade(f),
-                      style: const TextStyle(
-                          fontSize: 12, color: Cores.tinta2),
+                      style: const TextStyle(fontSize: 12, color: Cores.tinta2),
                     ),
                     const SizedBox(height: 4),
                     Text(
@@ -358,7 +410,9 @@ class _ListaFichasState extends State<_ListaFichas> {
                 },
                 itemBuilder: (_) => const [
                   PopupMenuItem(
-                      value: 'exportar', child: Text('Exportar (.json)')),
+                    value: 'exportar',
+                    child: Text('Exportar (.json)'),
+                  ),
                   PopupMenuItem(value: 'excluir', child: Text('Excluir')),
                 ],
               ),
