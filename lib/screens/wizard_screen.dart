@@ -6,6 +6,7 @@ import '../models/ficha_op.dart';
 import '../store/ficha_store.dart';
 import '../theme.dart';
 import '../widgets/retrato.dart';
+import 'catalogo_screen.dart';
 import 'ficha_screen.dart';
 
 /// Assistente de criação de personagem — as regras do livro, na ordem em que
@@ -50,6 +51,28 @@ class _WizardScreenState extends State<WizardScreen> {
   final Map<int, String> _escolhasDeClasse = {};
   final Set<String> _livres = {};
 
+  /// Rituais do Ocultista, no formato que a ficha guarda em `rituais`.
+  final List<Map<String, dynamic>> _rituais = [];
+
+  bool get _ocultista => f.classe == 'Ocultista';
+
+  /// Quantos rituais o Ocultista conhece neste NEX (0 para outras classes).
+  int get _rituaisDisponiveis => _ocultista ? DadosOP.rituaisPorNex(f.nex) : 0;
+
+  int get _circuloMaximo => DadosOP.circuloMaximoPorNex(f.nex);
+
+  static int _circuloDe(Map<String, dynamic> r) =>
+      int.tryParse('${r['circulo']}'.replaceAll(RegExp(r'\D'), '')) ?? 1;
+
+  /// Baixar o NEX pode tirar círculos e vagas: corta o que sobrou.
+  void _ajustarRituaisAoNex() {
+    if (_livre) return;
+    _rituais.removeWhere((r) => _circuloDe(r) > _circuloMaximo);
+    while (_rituais.length > _rituaisDisponiveis) {
+      _rituais.removeLast();
+    }
+  }
+
   ClasseOP get classe =>
       DadosOP.classePorNome(f.classe) ?? DadosOP.classes.first;
 
@@ -64,8 +87,13 @@ class _WizardScreenState extends State<WizardScreen> {
   Set<String> get _daOrigem => {...(origem?.pericias ?? const [])};
 
   int get _pontosAtributoTotais {
-    final zerado = ['AGI', 'FOR', 'INT', 'PRE', 'VIG']
-        .any((s) => f.atributo(s) == 0);
+    final zerado = [
+      'AGI',
+      'FOR',
+      'INT',
+      'PRE',
+      'VIG',
+    ].any((s) => f.atributo(s) == 0);
     return classe.pontosAtributo + (zerado ? 1 : 0);
   }
 
@@ -80,8 +108,7 @@ class _WizardScreenState extends State<WizardScreen> {
   int get _pontosAtributoRestantes =>
       _pontosAtributoTotais - _pontosAtributoGastos;
 
-  int get _livresDisponiveis =>
-      classe.periciasLivresBase + f.atributo('INT');
+  int get _livresDisponiveis => classe.periciasLivresBase + f.atributo('INT');
 
   /// O passo atual está fechado? É o que libera o botão "Próximo".
   ///
@@ -96,7 +123,8 @@ class _WizardScreenState extends State<WizardScreen> {
       case 1:
         return f.origem.isNotEmpty;
       case 2:
-        return f.classe.isNotEmpty;
+        return f.classe.isNotEmpty &&
+            (!_ocultista || _rituais.length == _rituaisDisponiveis);
       case 3:
         return _pontosAtributoRestantes == 0;
       case 4:
@@ -109,13 +137,21 @@ class _WizardScreenState extends State<WizardScreen> {
 
   String? get _pendencia {
     if (_livre && passo == 0) {
-      return f.nome.trim().isEmpty ? 'Sem nome, a ficha entra como "Sem nome".' : null;
+      return f.nome.trim().isEmpty
+          ? 'Sem nome, a ficha entra como "Sem nome".'
+          : null;
     }
     switch (passo) {
       case 0:
         return f.nome.trim().isEmpty ? 'Dê um nome ao personagem.' : null;
       case 1:
         return f.origem.isEmpty ? 'Escolha uma origem.' : null;
+      case 2:
+        if (!_ocultista) return null;
+        final faltam = _rituaisDisponiveis - _rituais.length;
+        if (faltam > 0) return 'Escolha mais $faltam ritual(is).';
+        if (faltam < 0) return 'Remova ${-faltam} ritual(is).';
+        return null;
       case 3:
         final r = _pontosAtributoRestantes;
         if (r > 0) return 'Ainda faltam $r ponto(s) para distribuir.';
@@ -141,6 +177,7 @@ class _WizardScreenState extends State<WizardScreen> {
       f.classe = nome;
       _escolhasDeClasse.clear();
       _livres.clear();
+      _rituais.clear();
     });
   }
 
@@ -160,6 +197,9 @@ class _WizardScreenState extends State<WizardScreen> {
     }
     for (final nome in _livres) {
       f.definirGrauPericia(nome, 5);
+    }
+    for (final r in _rituais) {
+      f.adicionarEm('rituais', r);
     }
 
     f.pv = f.pvMax;
@@ -213,7 +253,9 @@ class _WizardScreenState extends State<WizardScreen> {
   /// com as regras frouxas.
   Widget _menuTipo() {
     return PopupMenuButton<bool>(
-      icon: Icon(f.ehNpc ? Icons.psychology_alt_outlined : Icons.person_outline),
+      icon: Icon(
+        f.ehNpc ? Icons.psychology_alt_outlined : Icons.person_outline,
+      ),
       tooltip: 'Tipo da ficha',
       color: Cores.carta2,
       onSelected: (v) => setState(() {
@@ -277,8 +319,7 @@ class _WizardScreenState extends State<WizardScreen> {
               f.ehNpc
                   ? 'NPC — sem limite de pontos, e fora da mesa online.'
                   : 'Modo livre — os limites viram aviso; nada trava.',
-              style: const TextStyle(
-                  fontSize: 12, color: Cores.conhecimento),
+              style: const TextStyle(fontSize: 12, color: Cores.conhecimento),
             ),
           ),
           TextButton(
@@ -309,9 +350,13 @@ class _WizardScreenState extends State<WizardScreen> {
             if (pendencia != null)
               Padding(
                 padding: const EdgeInsets.only(bottom: 8),
-                child: Text(pendencia,
-                    style: const TextStyle(
-                        fontSize: 12, color: Cores.conhecimento)),
+                child: Text(
+                  pendencia,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: Cores.conhecimento,
+                  ),
+                ),
               ),
             Row(
               children: [
@@ -324,8 +369,9 @@ class _WizardScreenState extends State<WizardScreen> {
                 const Spacer(),
                 if (passo < 5)
                   ElevatedButton.icon(
-                    onPressed:
-                        _passoCompleto ? () => setState(() => passo++) : null,
+                    onPressed: _passoCompleto
+                        ? () => setState(() => passo++)
+                        : null,
                     icon: const Icon(Icons.arrow_forward, size: 18),
                     label: const Text('Próximo'),
                   )
@@ -364,8 +410,10 @@ class _WizardScreenState extends State<WizardScreen> {
                 child: RetratoAvatar(base64: f.retrato, tamanho: 96),
               ),
               const SizedBox(height: 6),
-              const Text('toque para escolher um retrato',
-                  style: TextStyle(fontSize: 12, color: Cores.tinta2)),
+              const Text(
+                'toque para escolher um retrato',
+                style: TextStyle(fontSize: 12, color: Cores.tinta2),
+              ),
             ],
           ),
         ),
@@ -374,8 +422,9 @@ class _WizardScreenState extends State<WizardScreen> {
           initialValue: f.nome,
           autofocus: true,
           decoration: const InputDecoration(
-              labelText: 'Nome do personagem *',
-              hintText: 'Ex.: Márcia Nogueira'),
+            labelText: 'Nome do personagem *',
+            hintText: 'Ex.: Márcia Nogueira',
+          ),
           onChanged: (v) => setState(() => f.nome = v),
         ),
         const SizedBox(height: 12),
@@ -385,26 +434,30 @@ class _WizardScreenState extends State<WizardScreen> {
           onChanged: (v) => f.jogador = v,
         ),
         const SizedBox(height: 12),
-        Row(children: [
-          Expanded(
-            child: TextFormField(
-              initialValue: f.nacionalidade,
-              decoration: const InputDecoration(
-                  labelText: 'Cidade natal', hintText: 'Ex.: Recife, PE'),
-              onChanged: (v) => f.nacionalidade = v,
+        Row(
+          children: [
+            Expanded(
+              child: TextFormField(
+                initialValue: f.nacionalidade,
+                decoration: const InputDecoration(
+                  labelText: 'Cidade natal',
+                  hintText: 'Ex.: Recife, PE',
+                ),
+                onChanged: (v) => f.nacionalidade = v,
+              ),
             ),
-          ),
-          const SizedBox(width: 10),
-          SizedBox(
-            width: 90,
-            child: TextFormField(
-              initialValue: f.idade == 0 ? '' : '${f.idade}',
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(labelText: 'Idade'),
-              onChanged: (v) => f.idade = int.tryParse(v.trim()) ?? 0,
+            const SizedBox(width: 10),
+            SizedBox(
+              width: 90,
+              child: TextFormField(
+                initialValue: f.idade == 0 ? '' : '${f.idade}',
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(labelText: 'Idade'),
+                onChanged: (v) => f.idade = int.tryParse(v.trim()) ?? 0,
+              ),
             ),
-          ),
-        ]),
+          ],
+        ),
       ],
     );
   }
@@ -424,7 +477,8 @@ class _WizardScreenState extends State<WizardScreen> {
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(10),
               side: BorderSide(
-                  color: f.origem == o.nome ? Cores.energia : Cores.linha),
+                color: f.origem == o.nome ? Cores.energia : Cores.linha,
+              ),
             ),
             child: InkWell(
               borderRadius: BorderRadius.circular(10),
@@ -437,8 +491,7 @@ class _WizardScreenState extends State<WizardScreen> {
                       f.origem == o.nome
                           ? Icons.radio_button_checked
                           : Icons.radio_button_unchecked,
-                      color:
-                          f.origem == o.nome ? Cores.energia : Cores.tinta2,
+                      color: f.origem == o.nome ? Cores.energia : Cores.tinta2,
                       size: 20,
                     ),
                     const SizedBox(width: 12),
@@ -449,30 +502,46 @@ class _WizardScreenState extends State<WizardScreen> {
                           Row(
                             children: [
                               Expanded(
-                                child: Text(o.nome,
-                                    style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 15)),
+                                child: Text(
+                                  o.nome,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 15,
+                                  ),
+                                ),
                               ),
                               if (o.fonte != 'Livro de Regras')
-                                Text(o.fonte,
-                                    style: const TextStyle(
-                                        fontSize: 10, color: Cores.tinta2)),
+                                Text(
+                                  o.fonte,
+                                  style: const TextStyle(
+                                    fontSize: 10,
+                                    color: Cores.tinta2,
+                                  ),
+                                ),
                             ],
                           ),
-                          Text('Treina ${o.periciasTexto}',
-                              style: const TextStyle(
-                                  fontSize: 12, color: Cores.tinta2)),
-                          Text(o.poder,
-                              style: const TextStyle(
-                                  fontSize: 12,
-                                  color: Cores.conhecimento,
-                                  fontWeight: FontWeight.bold)),
+                          Text(
+                            'Treina ${o.periciasTexto}',
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Cores.tinta2,
+                            ),
+                          ),
+                          Text(
+                            o.poder,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Cores.conhecimento,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                           if (f.origem == o.nome && o.poderDescricao.isNotEmpty)
                             Padding(
                               padding: const EdgeInsets.only(top: 4),
-                              child: Text(o.poderDescricao,
-                                  style: const TextStyle(fontSize: 12)),
+                              child: Text(
+                                o.poderDescricao,
+                                style: const TextStyle(fontSize: 12),
+                              ),
                             ),
                         ],
                       ),
@@ -510,16 +579,23 @@ class _WizardScreenState extends State<WizardScreen> {
               children: [
                 Row(
                   children: [
-                    const Text('NEX',
-                        style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 1.5,
-                            fontSize: 12,
-                            color: Cores.energiaViva)),
+                    const Text(
+                      'NEX',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 1.5,
+                        fontSize: 12,
+                        color: Cores.energiaViva,
+                      ),
+                    ),
                     const Spacer(),
-                    Text('${f.nex}%',
-                        style: const TextStyle(
-                            fontSize: 20, fontWeight: FontWeight.bold)),
+                    Text(
+                      '${f.nex}%',
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ],
                 ),
                 Slider(
@@ -541,6 +617,7 @@ class _WizardScreenState extends State<WizardScreen> {
                       } else if (eraCivil) {
                         _trocarClasse('Combatente');
                       }
+                      _ajustarRituaisAoNex();
                     });
                   },
                 ),
@@ -556,12 +633,15 @@ class _WizardScreenState extends State<WizardScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('ESTÁGIO',
-                      style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 1.5,
-                          fontSize: 12,
-                          color: Cores.energiaViva)),
+                  const Text(
+                    'ESTÁGIO',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 1.5,
+                      fontSize: 12,
+                      color: Cores.energiaViva,
+                    ),
+                  ),
                   const SizedBox(height: 6),
                   Row(
                     children: [
@@ -570,10 +650,8 @@ class _WizardScreenState extends State<WizardScreen> {
                           child: GestureDetector(
                             onTap: () => setState(() => f.estagio = e),
                             child: Container(
-                              margin:
-                                  const EdgeInsets.symmetric(horizontal: 3),
-                              padding:
-                                  const EdgeInsets.symmetric(vertical: 8),
+                              margin: const EdgeInsets.symmetric(horizontal: 3),
+                              padding: const EdgeInsets.symmetric(vertical: 8),
                               alignment: Alignment.center,
                               decoration: BoxDecoration(
                                 color: e <= f.estagio
@@ -582,13 +660,15 @@ class _WizardScreenState extends State<WizardScreen> {
                                 border: Border.all(color: Cores.linha),
                                 borderRadius: BorderRadius.circular(6),
                               ),
-                              child: Text('$e',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    color: e <= f.estagio
-                                        ? Cores.tinta
-                                        : Cores.tinta2,
-                                  )),
+                              child: Text(
+                                '$e',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: e <= f.estagio
+                                      ? Cores.tinta
+                                      : Cores.tinta2,
+                                ),
+                              ),
                             ),
                           ),
                         ),
@@ -613,7 +693,8 @@ class _WizardScreenState extends State<WizardScreen> {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(10),
                 side: BorderSide(
-                    color: f.classe == c.nome ? Cores.energia : Cores.linha),
+                  color: f.classe == c.nome ? Cores.energia : Cores.linha,
+                ),
               ),
               child: InkWell(
                 borderRadius: BorderRadius.circular(10),
@@ -636,31 +717,48 @@ class _WizardScreenState extends State<WizardScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(c.nome,
-                                style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 15)),
-                            Text(c.descricao,
-                                style: const TextStyle(
-                                    fontSize: 12, color: Cores.tinta2)),
+                            Text(
+                              c.nome,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 15,
+                              ),
+                            ),
+                            Text(
+                              c.descricao,
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: Cores.tinta2,
+                              ),
+                            ),
                             if (c.proficiencias.isNotEmpty)
                               Text(
-                                  'Proficiências: '
-                                  '${c.proficiencias.join(', ')}',
-                                  style: const TextStyle(
-                                      fontSize: 12, color: Cores.tinta2)),
+                                'Proficiências: '
+                                '${c.proficiencias.join(', ')}',
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: Cores.tinta2,
+                                ),
+                              ),
                             if (c.habilidades.isNotEmpty)
                               Text(
-                                  [for (final h in c.habilidades) h.nome]
-                                      .join(' · '),
-                                  style: const TextStyle(
-                                      fontSize: 12,
-                                      color: Cores.conhecimento,
-                                      fontWeight: FontWeight.bold)),
+                                [
+                                  for (final h in c.habilidades) h.nome,
+                                ].join(' · '),
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: Cores.conhecimento,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
                             if (c.fonte != 'Livro de Regras')
-                              Text(c.fonte,
-                                  style: const TextStyle(
-                                      fontSize: 11, color: Cores.tinta2)),
+                              Text(
+                                c.fonte,
+                                style: const TextStyle(
+                                  fontSize: 11,
+                                  color: Cores.tinta2,
+                                ),
+                              ),
                           ],
                         ),
                       ),
@@ -670,32 +768,95 @@ class _WizardScreenState extends State<WizardScreen> {
               ),
             ),
         const SizedBox(height: 12),
-        Row(children: [
-          Expanded(
-            child: TextFormField(
-              initialValue: f.trilha,
-              decoration: const InputDecoration(
+        Row(
+          children: [
+            Expanded(
+              child: TextFormField(
+                initialValue: f.trilha,
+                decoration: const InputDecoration(
                   labelText: 'Trilha (a partir do NEX 10%)',
-                  hintText: 'Ex.: Aniquilador'),
-              onChanged: (v) => f.trilha = v,
+                  hintText: 'Ex.: Aniquilador',
+                ),
+                onChanged: (v) => f.trilha = v,
+              ),
             ),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: DropdownButtonFormField<String>(
-              initialValue: f.patente,
-              decoration: const InputDecoration(labelText: 'Patente'),
-              dropdownColor: Cores.carta2,
-              items: [
-                for (final p in DadosOP.patentes)
-                  DropdownMenuItem(value: p.nome, child: Text(p.nome)),
-              ],
-              onChanged: (v) => setState(() => f.patente = v ?? 'Recruta'),
+            const SizedBox(width: 10),
+            Expanded(
+              child: DropdownButtonFormField<String>(
+                initialValue: f.patente,
+                decoration: const InputDecoration(labelText: 'Patente'),
+                dropdownColor: Cores.carta2,
+                items: [
+                  for (final p in DadosOP.patentes)
+                    DropdownMenuItem(value: p.nome, child: Text(p.nome)),
+                ],
+                onChanged: (v) => setState(() => f.patente = v ?? 'Recruta'),
+              ),
             ),
-          ),
-        ]),
+          ],
+        ),
+        if (_ocultista) ..._secaoRituais(),
       ],
     );
+  }
+
+  Future<void> _ritualDoCatalogo() async {
+    final escolhido = await Navigator.of(context).push<Map<String, dynamic>>(
+      MaterialPageRoute(
+        builder: (_) => CatalogoScreen(
+          escolhendo: true,
+          circuloMaximo: _livre ? null : _circuloMaximo,
+          nomesExcluidos: {for (final r in _rituais) r['nome'] as String},
+        ),
+      ),
+    );
+    if (escolhido == null || !mounted) return;
+    setState(() => _rituais.add(escolhido));
+  }
+
+  /// Escolhido pelo Outro Lado: 3 rituais de 1º círculo em 5% e mais um a
+  /// cada NEX, com círculos novos em 25%, 55% e 85%.
+  List<Widget> _secaoRituais() {
+    final n = _rituaisDisponiveis;
+    final cheio = !_livre && _rituais.length >= n;
+    return [
+      const SizedBox(height: 12),
+      const FaixaSecao('Rituais'),
+      _Explicacao(
+        _livre
+            ? 'Regras frouxas: ponha quantos rituais quiser, de qualquer círculo.'
+            : 'Em NEX ${f.nex}% o Ocultista conhece $n ritual(is), até o '
+                  '$_circuloMaximoº círculo. Escolhidos: ${_rituais.length} de $n.',
+      ),
+      for (var i = 0; i < _rituais.length; i++)
+        Card(
+          child: ListTile(
+            dense: true,
+            title: Text(
+              _rituais[i]['nome'] as String,
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+            subtitle: Text(
+              '${_rituais[i]['circulo']} círculo · ${_rituais[i]['custo']}',
+              style: const TextStyle(fontSize: 12, color: Cores.tinta2),
+            ),
+            trailing: IconButton(
+              icon: const Icon(Icons.close, size: 18),
+              tooltip: 'Remover',
+              onPressed: () => setState(() => _rituais.removeAt(i)),
+            ),
+          ),
+        ),
+      const SizedBox(height: 6),
+      Align(
+        alignment: Alignment.centerLeft,
+        child: FilledButton.tonalIcon(
+          onPressed: cheio ? null : _ritualDoCatalogo,
+          icon: const Icon(Icons.auto_awesome, size: 16),
+          label: const Text('Do catálogo de rituais'),
+        ),
+      ),
+    ];
   }
 
   Widget _passoAtributos() {
@@ -714,43 +875,48 @@ class _WizardScreenState extends State<WizardScreen> {
         _Explicacao(
           _livre
               ? 'Modo livre: ponha o valor que a ficha pedir, até 20. É '
-                  'assim que se monta criatura e NPC — as fichas de ameaça '
-                  'do livro não cabem no orçamento de um agente.'
+                    'assim que se monta criatura e NPC — as fichas de ameaça '
+                    'do livro não cabem no orçamento de um agente.'
               : 'Todos começam em 1. Você tem ${classe.pontosAtributo} '
-                  'pontos para distribuir, e nenhum atributo passa de 3 na '
-                  'criação. Pode zerar UM atributo para ganhar 1 ponto a '
-                  'mais — mas um atributo 0 rola 2d20 e fica com o pior '
-                  'resultado.',
+                    'pontos para distribuir, e nenhum atributo passa de 3 na '
+                    'criação. Pode zerar UM atributo para ganhar 1 ponto a '
+                    'mais — mas um atributo 0 rola 2d20 e fica com o pior '
+                    'resultado.',
         ),
         const SizedBox(height: 14),
-        if (!_livre) Card(
-          color: restantes == 0 ? Cores.carta : Cores.carta2,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-            side: BorderSide(
-                color: restantes == 0 ? Cores.estavel : Cores.conhecimento),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(14),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text('$restantes',
+        if (!_livre)
+          Card(
+            color: restantes == 0 ? Cores.carta : Cores.carta2,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+              side: BorderSide(
+                color: restantes == 0 ? Cores.estavel : Cores.conhecimento,
+              ),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(14),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    '$restantes',
                     style: TextStyle(
-                        fontSize: 26,
-                        fontWeight: FontWeight.bold,
-                        color: restantes == 0
-                            ? Cores.estavel
-                            : Cores.conhecimento)),
-                const SizedBox(width: 8),
-                Text(
-                  restantes == 1 ? 'ponto restante' : 'pontos restantes',
-                  style: const TextStyle(color: Cores.tinta2),
-                ),
-              ],
+                      fontSize: 26,
+                      fontWeight: FontWeight.bold,
+                      color: restantes == 0
+                          ? Cores.estavel
+                          : Cores.conhecimento,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    restantes == 1 ? 'ponto restante' : 'pontos restantes',
+                    style: const TextStyle(color: Cores.tinta2),
+                  ),
+                ],
+              ),
             ),
           ),
-        ),
         const SizedBox(height: 8),
         for (final s in siglas) _linhaAtributo(s, nomes[s]!),
       ],
@@ -759,10 +925,16 @@ class _WizardScreenState extends State<WizardScreen> {
 
   Widget _linhaAtributo(String sigla, String nome) {
     final valor = f.atributo(sigla);
-    final jaTemZero = ['AGI', 'FOR', 'INT', 'PRE', 'VIG']
-        .any((x) => x != sigla && f.atributo(x) == 0);
-    final podeSubir =
-        _livre ? valor < 20 : (valor < 3 && _pontosAtributoRestantes > 0);
+    final jaTemZero = [
+      'AGI',
+      'FOR',
+      'INT',
+      'PRE',
+      'VIG',
+    ].any((x) => x != sigla && f.atributo(x) == 0);
+    final podeSubir = _livre
+        ? valor < 20
+        : (valor < 3 && _pontosAtributoRestantes > 0);
     final podeDescer = valor > 0 && (_livre || !(valor == 1 && jaTemZero));
 
     return Card(
@@ -772,11 +944,14 @@ class _WizardScreenState extends State<WizardScreen> {
           children: [
             SizedBox(
               width: 44,
-              child: Text(sigla,
-                  style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 1,
-                      color: Cores.energiaViva)),
+              child: Text(
+                sigla,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1,
+                  color: Cores.energiaViva,
+                ),
+              ),
             ),
             Expanded(child: Text(nome)),
             IconButton(
@@ -788,12 +963,15 @@ class _WizardScreenState extends State<WizardScreen> {
             ),
             SizedBox(
               width: 34,
-              child: Text('$valor',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                      color: valor == 0 ? Cores.sangue : Cores.tinta)),
+              child: Text(
+                '$valor',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: valor == 0 ? Cores.sangue : Cores.tinta,
+                ),
+              ),
             ),
             IconButton(
               icon: const Icon(Icons.add_circle_outline),
@@ -820,15 +998,15 @@ class _WizardScreenState extends State<WizardScreen> {
         _Explicacao(
           _livre
               ? 'Modo livre: marque as perícias que a ficha precisar, sem '
-                  'limite. Treinada dá +5 no teste; o grau (veterano, '
-                  'expert) você ajusta depois, na ficha.'
+                    'limite. Treinada dá +5 no teste; o grau (veterano, '
+                    'expert) você ajusta depois, na ficha.'
               : 'A origem e a classe já treinam algumas. Depois disso você '
-                  'escolhe $_livresDisponiveis perícia(s) — '
-                  '${classe.periciasLivresBase} da classe + '
-                  '${f.atributo('INT')} do Intelecto. Treinada dá +5 no '
-                  'teste. Na criação toda perícia entra como treinada: '
-                  'repetir a mesma não vira veterano (+10) — isso vem de '
-                  'subir de NEX ou de treino narrativo.',
+                    'escolhe $_livresDisponiveis perícia(s) — '
+                    '${classe.periciasLivresBase} da classe + '
+                    '${f.atributo('INT')} do Intelecto. Treinada dá +5 no '
+                    'teste. Na criação toda perícia entra como treinada: '
+                    'repetir a mesma não vira veterano (+10) — isso vem de '
+                    'subir de NEX ou de treino narrativo.',
         ),
         const SizedBox(height: 12),
         if (daOrigem.isNotEmpty || fixasClasse.isNotEmpty) ...[
@@ -840,16 +1018,22 @@ class _WizardScreenState extends State<WizardScreen> {
               for (final p in daOrigem)
                 Chip(
                   label: Text(p),
-                  avatar: const Icon(Icons.lock_outline,
-                      size: 16, color: Cores.tinta2),
+                  avatar: const Icon(
+                    Icons.lock_outline,
+                    size: 16,
+                    color: Cores.tinta2,
+                  ),
                   backgroundColor: Cores.carta2,
                   side: const BorderSide(color: Cores.linha),
                 ),
               for (final p in fixasClasse)
                 Chip(
                   label: Text(p),
-                  avatar: const Icon(Icons.lock_outline,
-                      size: 16, color: Cores.tinta2),
+                  avatar: const Icon(
+                    Icons.lock_outline,
+                    size: 16,
+                    color: Cores.tinta2,
+                  ),
                   backgroundColor: Cores.carta2,
                   side: const BorderSide(color: Cores.linha),
                 ),
@@ -865,9 +1049,10 @@ class _WizardScreenState extends State<WizardScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(classe.periciasEscolha[i].join(' ou '),
-                        style: const TextStyle(
-                            fontSize: 12, color: Cores.tinta2)),
+                    Text(
+                      classe.periciasEscolha[i].join(' ou '),
+                      style: const TextStyle(fontSize: 12, color: Cores.tinta2),
+                    ),
                     const SizedBox(height: 6),
                     Wrap(
                       spacing: 8,
@@ -876,8 +1061,7 @@ class _WizardScreenState extends State<WizardScreen> {
                           ChoiceChip(
                             label: Text(nome),
                             selected: _escolhasDeClasse[i] == nome,
-                            selectedColor:
-                                Cores.energia.withValues(alpha: .22),
+                            selectedColor: Cores.energia.withValues(alpha: .22),
                             backgroundColor: Cores.carta2,
                             side: const BorderSide(color: Cores.linha),
                             onSelected: (_) => setState(() {
@@ -892,13 +1076,15 @@ class _WizardScreenState extends State<WizardScreen> {
               ),
             ),
         ],
-        FaixaSecao(_livre
-            ? 'Perícias (${_livres.length} marcadas)'
-            : faltam > 0
-                ? 'Escolha mais $faltam'
-                : faltam < 0
-                    ? 'Desmarque ${-faltam}'
-                    : 'Perícias livres — completo'),
+        FaixaSecao(
+          _livre
+              ? 'Perícias (${_livres.length} marcadas)'
+              : faltam > 0
+              ? 'Escolha mais $faltam'
+              : faltam < 0
+              ? 'Desmarque ${-faltam}'
+              : 'Perícias livres — completo',
+        ),
         for (final p in DadosOP.pericias)
           _linhaPericiaEscolha(p, daOrigem, escolhidasClasse, fixasClasse),
         const SizedBox(height: 20),
@@ -906,14 +1092,18 @@ class _WizardScreenState extends State<WizardScreen> {
     );
   }
 
-  Widget _linhaPericiaEscolha(Pericia p, Set<String> daOrigem,
-      Set<String> escolhidasClasse, Set<String> fixasClasse) {
-    final jaTreinada = daOrigem.contains(p.nome) ||
+  Widget _linhaPericiaEscolha(
+    Pericia p,
+    Set<String> daOrigem,
+    Set<String> escolhidasClasse,
+    Set<String> fixasClasse,
+  ) {
+    final jaTreinada =
+        daOrigem.contains(p.nome) ||
         escolhidasClasse.contains(p.nome) ||
         fixasClasse.contains(p.nome);
     final marcada = _livres.contains(p.nome);
-    final podeMarcar =
-        _livre || marcada || _livres.length < _livresDisponiveis;
+    final podeMarcar = _livre || marcada || _livres.length < _livresDisponiveis;
 
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 2),
@@ -924,21 +1114,22 @@ class _WizardScreenState extends State<WizardScreen> {
           jaTreinada
               ? Icons.lock_outline
               : marcada
-                  ? Icons.check_box
-                  : Icons.check_box_outline_blank,
+              ? Icons.check_box
+              : Icons.check_box_outline_blank,
           color: jaTreinada
               ? Cores.tinta2
               : marcada
-                  ? Cores.estavel
-                  : (podeMarcar ? Cores.tinta2 : Cores.linha),
+              ? Cores.estavel
+              : (podeMarcar ? Cores.tinta2 : Cores.linha),
           size: 20,
         ),
         title: Text(
           p.nome + (p.soTreinada ? ' *' : ''),
           style: TextStyle(
             fontSize: 14,
-            fontWeight:
-                jaTreinada || marcada ? FontWeight.bold : FontWeight.normal,
+            fontWeight: jaTreinada || marcada
+                ? FontWeight.bold
+                : FontWeight.normal,
             color: jaTreinada ? Cores.tinta2 : Cores.tinta,
           ),
         ),
@@ -951,12 +1142,12 @@ class _WizardScreenState extends State<WizardScreen> {
         onTap: jaTreinada || !podeMarcar
             ? null
             : () => setState(() {
-                  if (marcada) {
-                    _livres.remove(p.nome);
-                  } else {
-                    _livres.add(p.nome);
-                  }
-                }),
+                if (marcada) {
+                  _livres.remove(p.nome);
+                } else {
+                  _livres.add(p.nome);
+                }
+              }),
       ),
     );
   }
@@ -972,8 +1163,7 @@ class _WizardScreenState extends State<WizardScreen> {
       ...classe.periciasFixas,
       ..._escolhasDeClasse.values,
       ..._livres,
-    }.toList()
-      ..sort();
+    }.toList()..sort();
 
     return ListView(
       padding: const EdgeInsets.all(16),
@@ -995,9 +1185,13 @@ class _WizardScreenState extends State<WizardScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(f.nome.isEmpty ? 'Sem nome' : f.nome,
-                          style: const TextStyle(
-                              fontSize: 18, fontWeight: FontWeight.bold)),
+                      Text(
+                        f.nome.isEmpty ? 'Sem nome' : f.nome,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                       Text(
                         [
                           f.classe,
@@ -1008,17 +1202,26 @@ class _WizardScreenState extends State<WizardScreen> {
                             'NEX ${f.nex}%',
                         ].join(' · '),
                         style: const TextStyle(
-                            fontSize: 13, color: Cores.tinta2),
+                          fontSize: 13,
+                          color: Cores.tinta2,
+                        ),
                       ),
                       if (f.ehNpc)
-                        const Text('NPC — não vai para a mesa online',
-                            style: TextStyle(
-                                fontSize: 12,
-                                color: Cores.sangue,
-                                fontWeight: FontWeight.bold)),
-                      Text(f.patente,
-                          style: const TextStyle(
-                              fontSize: 12, color: Cores.conhecimento)),
+                        const Text(
+                          'NPC — não vai para a mesa online',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Cores.sangue,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      Text(
+                        f.patente,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: Cores.conhecimento,
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -1027,23 +1230,29 @@ class _WizardScreenState extends State<WizardScreen> {
           ),
         ),
         const FaixaSecao('Recursos'),
-        Row(children: [
-          _quadro('VIDA', '$pv', Cores.sangue),
-          const SizedBox(width: 8),
-          _quadro('SANIDADE', '$san', Cores.energia),
-          const SizedBox(width: 8),
-          _quadro('ESFORÇO', '$pe', Cores.conhecimento),
-        ]),
+        Row(
+          children: [
+            _quadro('VIDA', '$pv', Cores.sangue),
+            const SizedBox(width: 8),
+            _quadro('SANIDADE', '$san', Cores.energia),
+            const SizedBox(width: 8),
+            _quadro('ESFORÇO', '$pe', Cores.conhecimento),
+          ],
+        ),
         const SizedBox(height: 8),
-        Row(children: [
-          _quadro('DEFESA', '${10 + f.atributo('AGI')}', Cores.tinta2),
-          const SizedBox(width: 8),
-          _quadro('CARGA',
+        Row(
+          children: [
+            _quadro('DEFESA', '${10 + f.atributo('AGI')}', Cores.tinta2),
+            const SizedBox(width: 8),
+            _quadro(
+              'CARGA',
               '${f.atributo('FOR') <= 0 ? 2 : 5 * f.atributo('FOR')}',
-              Cores.tinta2),
-          const SizedBox(width: 8),
-          _quadro('PE/TURNO', '${classe.limitePe(f.nex)}', Cores.tinta2),
-        ]),
+              Cores.tinta2,
+            ),
+            const SizedBox(width: 8),
+            _quadro('PE/TURNO', '${classe.limitePe(f.nex)}', Cores.tinta2),
+          ],
+        ),
         const FaixaSecao('Atributos'),
         Card(
           child: Padding(
@@ -1054,16 +1263,23 @@ class _WizardScreenState extends State<WizardScreen> {
                 for (final s in ['AGI', 'FOR', 'INT', 'PRE', 'VIG'])
                   Column(
                     children: [
-                      Text(s,
-                          style: const TextStyle(
-                              fontSize: 11, color: Cores.tinta2)),
-                      Text('${f.atributo(s)}',
-                          style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                              color: f.atributo(s) == 0
-                                  ? Cores.sangue
-                                  : Cores.tinta)),
+                      Text(
+                        s,
+                        style: const TextStyle(
+                          fontSize: 11,
+                          color: Cores.tinta2,
+                        ),
+                      ),
+                      Text(
+                        '${f.atributo(s)}',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: f.atributo(s) == 0
+                              ? Cores.sangue
+                              : Cores.tinta,
+                        ),
+                      ),
                     ],
                   ),
               ],
@@ -1120,12 +1336,22 @@ class _WizardScreenState extends State<WizardScreen> {
         ),
         child: Column(
           children: [
-            Text(valor,
-                style: TextStyle(
-                    fontSize: 20, fontWeight: FontWeight.bold, color: cor)),
-            Text(rotulo,
-                style: const TextStyle(
-                    fontSize: 10, letterSpacing: 1.2, color: Cores.tinta2)),
+            Text(
+              valor,
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: cor,
+              ),
+            ),
+            Text(
+              rotulo,
+              style: const TextStyle(
+                fontSize: 10,
+                letterSpacing: 1.2,
+                color: Cores.tinta2,
+              ),
+            ),
           ],
         ),
       ),
@@ -1153,8 +1379,10 @@ class _Explicacao extends StatelessWidget {
           const Icon(Icons.info_outline, size: 18, color: Cores.energiaViva),
           const SizedBox(width: 10),
           Expanded(
-            child: Text(texto,
-                style: const TextStyle(fontSize: 13, color: Cores.tinta2)),
+            child: Text(
+              texto,
+              style: const TextStyle(fontSize: 13, color: Cores.tinta2),
+            ),
           ),
         ],
       ),

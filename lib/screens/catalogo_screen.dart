@@ -24,10 +24,18 @@ class CatalogoScreen extends StatefulWidget {
   /// Abre direto na aba de armas.
   final bool comecarEmArmas;
 
+  /// Só mostra rituais até este círculo (null = todos).
+  final int? circuloMaximo;
+
+  /// Rituais já na ficha — ficam de fora da lista.
+  final Set<String> nomesExcluidos;
+
   const CatalogoScreen({
     super.key,
     this.escolhendo = false,
     this.comecarEmArmas = false,
+    this.circuloMaximo,
+    this.nomesExcluidos = const {},
   });
 
   @override
@@ -51,32 +59,34 @@ class _CatalogoScreenState extends State<CatalogoScreen> {
   Future<void> _carregar() async {
     try {
       final r = jsonDecode(
-          await rootBundle.loadString('assets/catalogo/rituais.json'));
+        await rootBundle.loadString('assets/catalogo/rituais.json'),
+      );
       final a = jsonDecode(
-          await rootBundle.loadString('assets/catalogo/armas.json'));
+        await rootBundle.loadString('assets/catalogo/armas.json'),
+      );
       setState(() {
         _rituais = [
           for (final x in (r['rituais'] as List))
-            (x as Map).cast<String, dynamic>()
+            (x as Map).cast<String, dynamic>(),
         ];
         _armas = [
           for (final x in (a['armas'] as List))
-            (x as Map).cast<String, dynamic>()
+            (x as Map).cast<String, dynamic>(),
         ];
         _protecoes = [
           for (final x in (a['protecoes'] as List))
-            (x as Map).cast<String, dynamic>()
+            (x as Map).cast<String, dynamic>(),
         ];
         _tiposDano = (a['tiposDeDano'] as Map).map(
-            (k, v) => MapEntry(k as String, v as String));
+          (k, v) => MapEntry(k as String, v as String),
+        );
       });
     } catch (e) {
       setState(() => _erro = '$e');
     }
   }
 
-  bool _casa(String texto) =>
-      _filtro.isEmpty || casaBusca(texto, _filtro);
+  bool _casa(String texto) => _filtro.isEmpty || casaBusca(texto, _filtro);
 
   @override
   Widget build(BuildContext context) {
@@ -87,50 +97,61 @@ class _CatalogoScreenState extends State<CatalogoScreen> {
         appBar: AppBar(
           title: Text(widget.escolhendo ? 'Escolher do catálogo' : 'Catálogo'),
           bottom: const TabBar(
-            tabs: [Tab(text: 'Rituais'), Tab(text: 'Armas')],
+            tabs: [
+              Tab(text: 'Rituais'),
+              Tab(text: 'Armas'),
+            ],
           ),
         ),
         body: _erro.isNotEmpty
             ? Center(
                 child: Padding(
                   padding: const EdgeInsets.all(24),
-                  child: Text('Não consegui abrir o catálogo.\n\n$_erro',
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(color: Cores.tinta2)),
+                  child: Text(
+                    'Não consegui abrir o catálogo.\n\n$_erro',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(color: Cores.tinta2),
+                  ),
                 ),
               )
             : _rituais == null
-                ? const Center(child: CircularProgressIndicator())
-                : Column(
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(14, 10, 14, 4),
-                        child: TextField(
-                          decoration: const InputDecoration(
-                            isDense: true,
-                            prefixIcon: Icon(Icons.search, size: 18),
-                            labelText: 'Procurar',
-                          ),
-                          onChanged: (v) => setState(() => _filtro = v),
-                        ),
+            ? const Center(child: CircularProgressIndicator())
+            : Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(14, 10, 14, 4),
+                    child: TextField(
+                      decoration: const InputDecoration(
+                        isDense: true,
+                        prefixIcon: Icon(Icons.search, size: 18),
+                        labelText: 'Procurar',
                       ),
-                      Expanded(
-                        child: TabBarView(
-                          children: [_abaRituais(), _abaArmas()],
-                        ),
-                      ),
-                    ],
+                      onChanged: (v) => setState(() => _filtro = v),
+                    ),
                   ),
+                  Expanded(
+                    child: TabBarView(children: [_abaRituais(), _abaArmas()]),
+                  ),
+                ],
+              ),
       ),
     );
   }
 
   Widget _abaRituais() {
+    final max = widget.circuloMaximo;
     final lista = _rituais!
-        .where((r) =>
-            _casa(r['nome'] as String) ||
-            _casa(r['elemento'] as String) ||
-            _casa(r['efeito'] as String))
+        .where(
+          (r) =>
+              (max == null || (r['circulo'] as int) <= max) &&
+              !widget.nomesExcluidos.contains(r['nome']),
+        )
+        .where(
+          (r) =>
+              _casa(r['nome'] as String) ||
+              _casa(r['elemento'] as String) ||
+              _casa(r['efeito'] as String),
+        )
         .toList();
     if (lista.isEmpty) return const _Vazio('Nenhum ritual com esse nome.');
 
@@ -157,10 +178,11 @@ class _CatalogoScreenState extends State<CatalogoScreen> {
       child: ExpansionTile(
         key: ValueKey('${r['nome']}-${_filtro.isNotEmpty}'),
         shape: const Border(),
-        initiallyExpanded:
-            _filtro.isNotEmpty && _casa(r['nome'] as String),
-        title: Text(r['nome'] as String,
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+        initiallyExpanded: _filtro.isNotEmpty && _casa(r['nome'] as String),
+        title: Text(
+          r['nome'] as String,
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+        ),
         subtitle: Text(
           '${r['custo']} PE · ${r['execucao']} · ${r['alcance']}'
           '${(r['alvo'] as String).isEmpty ? '' : ' · ${r['alvo']}'}',
@@ -175,20 +197,26 @@ class _CatalogoScreenState extends State<CatalogoScreen> {
                 _linha('Duração', r['duracao'] as String),
                 _linha('Resistência', r['resistencia'] as String),
                 const SizedBox(height: 6),
-                Text(r['efeito'] as String,
-                    style: const TextStyle(fontSize: 13, height: 1.4)),
+                Text(
+                  r['efeito'] as String,
+                  style: const TextStyle(fontSize: 13, height: 1.4),
+                ),
                 for (final a in ampliacoes) ...[
                   const SizedBox(height: 8),
                   RichText(
                     text: TextSpan(
-                      style: const TextStyle(fontSize: 12.5, height: 1.35,
-                          color: Cores.tinta2),
+                      style: const TextStyle(
+                        fontSize: 12.5,
+                        height: 1.35,
+                        color: Cores.tinta2,
+                      ),
                       children: [
                         TextSpan(
                           text: '${a['nome']} (+${a['custo']} PE): ',
                           style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: Cores.energiaViva),
+                            fontWeight: FontWeight.bold,
+                            color: Cores.energiaViva,
+                          ),
                         ),
                         TextSpan(text: a['efeito'] as String),
                       ],
@@ -220,7 +248,7 @@ class _CatalogoScreenState extends State<CatalogoScreen> {
     final ampliacoes = (r['ampliacoes'] as List).cast<Map>();
     final extras = [
       for (final a in ampliacoes)
-        '${a['nome']} (+${a['custo']} PE): ${a['efeito']}'
+        '${a['nome']} (+${a['custo']} PE): ${a['efeito']}',
     ].join('\n');
     return {
       'nome': r['nome'],
@@ -241,13 +269,16 @@ class _CatalogoScreenState extends State<CatalogoScreen> {
 
   Widget _abaArmas() {
     final armas = _armas!
-        .where((a) =>
-            _casa(a['nome'] as String) ||
-            _casa(a['familia'] as String) ||
-            _casa(a['uso'] as String))
+        .where(
+          (a) =>
+              _casa(a['nome'] as String) ||
+              _casa(a['familia'] as String) ||
+              _casa(a['uso'] as String),
+        )
         .toList();
-    final protecoes =
-        _protecoes!.where((p) => _casa(p['nome'] as String)).toList();
+    final protecoes = _protecoes!
+        .where((p) => _casa(p['nome'] as String))
+        .toList();
     if (armas.isEmpty && protecoes.isEmpty) {
       return const _Vazio('Nenhuma arma com esse nome.');
     }
@@ -269,8 +300,10 @@ class _CatalogoScreenState extends State<CatalogoScreen> {
             Card(
               child: ListTile(
                 dense: true,
-                title: Text(p['nome'] as String,
-                    style: const TextStyle(fontWeight: FontWeight.bold)),
+                title: Text(
+                  p['nome'] as String,
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
                 subtitle: Text(
                   'Defesa ${p['defesa']} · categoria ${p['categoria']} · '
                   '${p['espacos']} espaço(s)',
@@ -297,18 +330,23 @@ class _CatalogoScreenState extends State<CatalogoScreen> {
     return Card(
       child: ListTile(
         dense: true,
-        title: Text(a['nome'] as String,
-            style: const TextStyle(fontWeight: FontWeight.bold)),
-        subtitle: Text('${a['uso']}\n$detalhe',
-            style: const TextStyle(fontSize: 12, color: Cores.tinta2)),
+        title: Text(
+          a['nome'] as String,
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
+        subtitle: Text(
+          '${a['uso']}\n$detalhe',
+          style: const TextStyle(fontSize: 12, color: Cores.tinta2),
+        ),
         isThreeLine: true,
         trailing: widget.escolhendo
             ? IconButton(
                 tooltip: 'Pôr na ficha',
-                icon: const Icon(Icons.add_circle_outline,
-                    color: Cores.energiaViva),
-                onPressed: () =>
-                    Navigator.of(context).pop(_armaParaFicha(a)),
+                icon: const Icon(
+                  Icons.add_circle_outline,
+                  color: Cores.energiaViva,
+                ),
+                onPressed: () => Navigator.of(context).pop(_armaParaFicha(a)),
               )
             : null,
       ),
@@ -345,8 +383,9 @@ class _CatalogoScreenState extends State<CatalogoScreen> {
           style: const TextStyle(fontSize: 12.5, color: Cores.tinta2),
           children: [
             TextSpan(
-                text: '$rotulo: ',
-                style: const TextStyle(fontWeight: FontWeight.bold)),
+              text: '$rotulo: ',
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
             TextSpan(text: valor),
           ],
         ),
@@ -362,11 +401,13 @@ class _Vazio extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Center(
-        child: Padding(
-          padding: const EdgeInsets.all(28),
-          child: Text(texto,
-              textAlign: TextAlign.center,
-              style: const TextStyle(color: Cores.tinta2)),
-        ),
-      );
+    child: Padding(
+      padding: const EdgeInsets.all(28),
+      child: Text(
+        texto,
+        textAlign: TextAlign.center,
+        style: const TextStyle(color: Cores.tinta2),
+      ),
+    ),
+  );
 }

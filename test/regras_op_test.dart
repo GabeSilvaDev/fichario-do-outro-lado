@@ -57,6 +57,25 @@ void main() {
     });
   });
 
+  group('rituais do ocultista por NEX', () {
+    test('3 em 5%, +1 a cada NEX', () {
+      expect(DadosOP.rituaisPorNex(0), 0);
+      expect(DadosOP.rituaisPorNex(5), 3);
+      expect(DadosOP.rituaisPorNex(10), 4);
+      expect(DadosOP.rituaisPorNex(25), 7);
+      expect(DadosOP.rituaisPorNex(99), 21);
+    });
+    test('círculo máximo: 2º em 25%, 3º em 55%, 4º em 85%', () {
+      expect(DadosOP.circuloMaximoPorNex(5), 1);
+      expect(DadosOP.circuloMaximoPorNex(20), 1);
+      expect(DadosOP.circuloMaximoPorNex(25), 2);
+      expect(DadosOP.circuloMaximoPorNex(54), 2);
+      expect(DadosOP.circuloMaximoPorNex(55), 3);
+      expect(DadosOP.circuloMaximoPorNex(85), 4);
+      expect(DadosOP.circuloMaximoPorNex(99), 4);
+    });
+  });
+
   group('mundano (NEX 0%)', () {
     test('8+Vigor de PV, 1+Presença de PE, 8 de Sanidade', () {
       expect(mundano.pvMax(0, 1), 9);
@@ -104,53 +123,60 @@ void main() {
     setUp(() {
       DadosOP.origens = const [
         Origem(
-            nome: 'Desgarrado',
-            pericias: ['Fortitude', 'Sobrevivência'],
-            periciasTexto: '',
-            poder: 'Calejado',
-            poderDescricao: '',
-            modificadores: {'pvPorNivel': 1}),
+          nome: 'Desgarrado',
+          pericias: ['Fortitude', 'Sobrevivência'],
+          periciasTexto: '',
+          poder: 'Calejado',
+          poderDescricao: '',
+          modificadores: {'pvPorNivel': 1},
+        ),
         Origem(
-            nome: 'Vítima',
-            pericias: ['Reflexos', 'Vontade'],
-            periciasTexto: '',
-            poder: 'Cicatrizes Psicológicas',
-            poderDescricao: '',
-            modificadores: {'sanPorNivel': 1}),
+          nome: 'Vítima',
+          pericias: ['Reflexos', 'Vontade'],
+          periciasTexto: '',
+          poder: 'Cicatrizes Psicológicas',
+          poderDescricao: '',
+          modificadores: {'sanPorNivel': 1},
+        ),
         Origem(
-            nome: 'Policial',
-            pericias: ['Percepção', 'Pontaria'],
-            periciasTexto: '',
-            poder: 'Patrulha',
-            poderDescricao: '',
-            modificadores: {'defesa': 2}),
+          nome: 'Policial',
+          pericias: ['Percepção', 'Pontaria'],
+          periciasTexto: '',
+          poder: 'Patrulha',
+          poderDescricao: '',
+          modificadores: {'defesa': 2},
+        ),
         Origem(
-            nome: 'Universitário',
-            pericias: ['Atualidades', 'Investigação'],
-            periciasTexto: '',
-            poder: 'Dedicação',
-            poderDescricao: '',
-            modificadores: {'pe': 1, 'pePorNivelImpar': 1, 'limitePe': 1}),
+          nome: 'Universitário',
+          pericias: ['Atualidades', 'Investigação'],
+          periciasTexto: '',
+          poder: 'Dedicação',
+          poderDescricao: '',
+          modificadores: {'pe': 1, 'pePorNivelImpar': 1, 'limitePe': 1},
+        ),
         Origem(
-            nome: 'Cultista Arrependido',
-            pericias: ['Ocultismo', 'Religião'],
-            periciasTexto: '',
-            poder: 'Traços do Outro Lado',
-            poderDescricao: '',
-            modificadores: {'sanMetade': true}),
+          nome: 'Cultista Arrependido',
+          pericias: ['Ocultismo', 'Religião'],
+          periciasTexto: '',
+          poder: 'Traços do Outro Lado',
+          poderDescricao: '',
+          modificadores: {'sanMetade': true},
+        ),
         Origem(
-            nome: 'Mergulhador',
-            pericias: ['Atletismo', 'Fortitude'],
-            periciasTexto: '',
-            poder: 'Fôlego de Nadador',
-            poderDescricao: '',
-            modificadores: {'pv': 5}),
+          nome: 'Mergulhador',
+          pericias: ['Atletismo', 'Fortitude'],
+          periciasTexto: '',
+          poder: 'Fôlego de Nadador',
+          poderDescricao: '',
+          modificadores: {'pv': 5},
+        ),
         Origem(
-            nome: 'Militar',
-            pericias: ['Pontaria', 'Tática'],
-            periciasTexto: '',
-            poder: 'Para Bellum',
-            poderDescricao: ''),
+          nome: 'Militar',
+          pericias: ['Pontaria', 'Tática'],
+          periciasTexto: '',
+          poder: 'Para Bellum',
+          poderDescricao: '',
+        ),
       ];
     });
 
@@ -191,11 +217,17 @@ void main() {
     test('Dedicação: +1 PE e mais 1 a cada NEX ímpar', () {
       expect(agente('Universitário', nex: 5).peMax, combatente.peMax(5, 1) + 1);
       expect(
-          agente('Universitário', nex: 10).peMax, combatente.peMax(10, 1) + 1);
+        agente('Universitário', nex: 10).peMax,
+        combatente.peMax(10, 1) + 1,
+      );
       expect(
-          agente('Universitário', nex: 15).peMax, combatente.peMax(15, 1) + 2);
+        agente('Universitário', nex: 15).peMax,
+        combatente.peMax(15, 1) + 2,
+      );
       expect(
-          agente('Universitário', nex: 25).peMax, combatente.peMax(25, 1) + 3);
+        agente('Universitário', nex: 25).peMax,
+        combatente.peMax(25, 1) + 3,
+      );
     });
 
     test('Dedicação também sobe o limite de PE por turno', () {
@@ -218,8 +250,11 @@ void main() {
   group('caixas de características (conferidas no livro)', () {
     test('proficiências de cada classe', () {
       expect(mundano.proficiencias, ['Armas simples']);
-      expect(combatente.proficiencias,
-          ['Armas simples', 'Armas táticas', 'Proteções leves']);
+      expect(combatente.proficiencias, [
+        'Armas simples',
+        'Armas táticas',
+        'Proteções leves',
+      ]);
       expect(especialista.proficiencias, ['Armas simples', 'Proteções leves']);
       expect(ocultista.proficiencias, ['Armas simples']);
     });
@@ -354,7 +389,10 @@ void main() {
     });
 
     test('ficha antiga, sem os campos novos, mantém 10+Agilidade', () {
-      final f = FichaOP({'id': 'x', 'atributos': {'AGI': 3}});
+      final f = FichaOP({
+        'id': 'x',
+        'atributos': {'AGI': 3},
+      });
       expect(f.protecaoDefesa, 0);
       expect(f.escudo, isFalse);
       expect(f.defesa, 13);
@@ -372,11 +410,12 @@ void main() {
 
   group('atributo trocado na perícia', () {
     const atletismo = Pericia(
-        nome: 'Atletismo',
-        atributo: 'FOR',
-        soTreinada: false,
-        sofreCarga: true,
-        usaKit: false);
+      nome: 'Atletismo',
+      atributo: 'FOR',
+      soTreinada: false,
+      sofreCarga: true,
+      usaKit: false,
+    );
 
     test('sem troca, rola o atributo do livro', () {
       final f = FichaOP.nova('t');
@@ -424,11 +463,12 @@ void main() {
 
   group('teste de perícia', () {
     const luta = Pericia(
-        nome: 'Luta',
-        atributo: 'FOR',
-        soTreinada: false,
-        sofreCarga: false,
-        usaKit: false);
+      nome: 'Luta',
+      atributo: 'FOR',
+      soTreinada: false,
+      sofreCarga: false,
+      usaKit: false,
+    );
 
     test('rola tantos d20 quanto o atributo, pegando o melhor', () {
       final f = FichaOP.nova('p');
@@ -482,32 +522,43 @@ void _assets() {
 
   group('assets do sistema', () {
     test('as 28 perícias com atributo-base válido', () {
-      final lista = jsonDecode(
-          File('assets/data/pericias.json').readAsStringSync()) as List;
+      final lista =
+          jsonDecode(File('assets/data/pericias.json').readAsStringSync())
+              as List;
       expect(lista.length, 28);
       final pericias = [for (final j in lista) Pericia.fromJson(comoMapa(j))];
       expect(pericias.map((p) => p.nome), contains('Ocultismo'));
       for (final p in pericias) {
-        expect(['AGI', 'FOR', 'INT', 'PRE', 'VIG'], contains(p.atributo),
-            reason: '${p.nome} tem atributo-base inválido');
+        expect(
+          ['AGI', 'FOR', 'INT', 'PRE', 'VIG'],
+          contains(p.atributo),
+          reason: '${p.nome} tem atributo-base inválido',
+        );
       }
     });
 
     test('as 46 origens — 26 do básico e 20 de Sobrevivendo ao Horror', () {
-      final lista = jsonDecode(
-          File('assets/data/origens.json').readAsStringSync()) as List;
+      final lista =
+          jsonDecode(File('assets/data/origens.json').readAsStringSync())
+              as List;
       final origens = [for (final j in lista) Origem.fromJson(comoMapa(j))];
       expect(origens.length, 46);
       expect(origens.where((o) => o.fonte == 'Livro de Regras').length, 26);
       expect(
-          origens.where((o) => o.fonte == 'Sobrevivendo ao Horror').length, 20);
-      expect(origens.map((o) => o.nome).toSet().length, 46,
-          reason: 'origem repetida entre os dois livros');
+        origens.where((o) => o.fonte == 'Sobrevivendo ao Horror').length,
+        20,
+      );
+      expect(
+        origens.map((o) => o.nome).toSet().length,
+        46,
+        reason: 'origem repetida entre os dois livros',
+      );
 
       final nomesDePericia = {
-        for (final j in jsonDecode(
-            File('assets/data/pericias.json').readAsStringSync()) as List)
-          Pericia.fromJson(comoMapa(j)).nome
+        for (final j
+            in jsonDecode(File('assets/data/pericias.json').readAsStringSync())
+                as List)
+          Pericia.fromJson(comoMapa(j)).nome,
       };
       const parciais = {'Amnésico', 'Profetizado'};
       for (final o in origens) {
@@ -516,25 +567,31 @@ void _assets() {
           expect(o.pericias.length, 2, reason: o.nome);
         }
         for (final p in o.pericias) {
-          expect(nomesDePericia, contains(p),
-              reason: '${o.nome} treina perícia inexistente: $p');
+          expect(
+            nomesDePericia,
+            contains(p),
+            reason: '${o.nome} treina perícia inexistente: $p',
+          );
         }
       }
     });
 
     test('os poderes conferidos no livro não voltam ao texto antigo', () {
       final origens = {
-        for (final j in jsonDecode(
-            File('assets/data/origens.json').readAsStringSync()) as List)
-          (comoMapa(j)['nome'] as String): Origem.fromJson(comoMapa(j))
+        for (final j
+            in jsonDecode(File('assets/data/origens.json').readAsStringSync())
+                as List)
+          (comoMapa(j)['nome'] as String): Origem.fromJson(comoMapa(j)),
       };
       expect(origens['Mercenário']!.poderDescricao, contains('movimento'));
       expect(origens['Policial']!.poderDescricao, contains('Defesa'));
       expect(origens['Religioso']!.poderDescricao, contains('Sanidade'));
       expect(origens['Desgarrado']!.poderDescricao, contains('PV'));
       expect(origens['Vítima']!.poderDescricao, contains('Sanidade'));
-      expect(origens['Teórico da Conspiração']!.poderDescricao,
-          contains('dano mental'));
+      expect(
+        origens['Teórico da Conspiração']!.poderDescricao,
+        contains('dano mental'),
+      );
       expect(origens['Servidor Público']!.poderDescricao, contains('ajudar'));
       expect(origens['Agente de Saúde']!.poderDescricao, contains('Intelecto'));
 
@@ -547,19 +604,21 @@ void _assets() {
     });
 
     test('as perícias com kit são só as quatro da Tabela 2.1', () {
-      final lista = jsonDecode(
-          File('assets/data/pericias.json').readAsStringSync()) as List;
+      final lista =
+          jsonDecode(File('assets/data/pericias.json').readAsStringSync())
+              as List;
       final comKit = {
         for (final j in lista)
           if (Pericia.fromJson(comoMapa(j)).usaKit)
-            Pericia.fromJson(comoMapa(j)).nome
+            Pericia.fromJson(comoMapa(j)).nome,
       };
       expect(comKit, {'Crime', 'Enganação', 'Medicina', 'Tecnologia'});
     });
 
     test('as 5 patentes em ordem de prestígio', () {
-      final lista = jsonDecode(
-          File('assets/data/patentes.json').readAsStringSync()) as List;
+      final lista =
+          jsonDecode(File('assets/data/patentes.json').readAsStringSync())
+              as List;
       final patentes = [for (final j in lista) Patente.fromJson(comoMapa(j))];
       expect(patentes.map((p) => p.nome).toList(), [
         'Recruta',
@@ -603,8 +662,12 @@ void _criacao() {
       f.classe = 'Combatente';
       f.aplicarClasse(DadosOP.classePorNome('Combatente')!);
       expect(f.proficiencias, contains('Armas táticas'));
-      expect(f.habilidades.any((h) => (h['nome'] as String).contains('Ataque Especial')),
-          isTrue);
+      expect(
+        f.habilidades.any(
+          (h) => (h['nome'] as String).contains('Ataque Especial'),
+        ),
+        isTrue,
+      );
     });
 
     test('ocultista treina Ocultismo e Vontade', () {
@@ -626,8 +689,10 @@ void _criacao() {
       f.aplicarOrigem(militar);
       expect(f.grauPericia('Pontaria'), 5);
       expect(f.grauPericia('Tática'), 5);
-      expect(f.habilidades.any((h) => (h['nome'] as String).contains('Para Bellum')),
-          isTrue);
+      expect(
+        f.habilidades.any((h) => (h['nome'] as String).contains('Para Bellum')),
+        isTrue,
+      );
     });
 
     test('aplicar de novo não duplica a habilidade', () {
@@ -661,8 +726,10 @@ void _criacao() {
       );
       f.aplicarOrigem(mercenario);
       expect(f.habilidades.length, 1);
-      expect(f.habilidades.first['descricao'],
-          '1 ação de movimento extra no 1º turno do combate.');
+      expect(
+        f.habilidades.first['descricao'],
+        '1 ação de movimento extra no 1º turno do combate.',
+      );
     });
   });
 
@@ -682,7 +749,6 @@ void _criacao() {
     });
   });
 }
-
 
 /// NPC e modo livre — o que o mestre precisa para montar ficha à vontade.
 void _npcELivre() {
@@ -748,10 +814,15 @@ void _npcELivre() {
 
   group('licença da comunidade', () {
     test('o selo está no repositório e declarado como asset', () {
-      expect(File('assets/licenca/selo-comunidade.png').existsSync(), isTrue,
-          reason: 'o selo tem que ser exibido na "capa" do app');
-      expect(File('pubspec.yaml').readAsStringSync(),
-          contains('assets/licenca/'));
+      expect(
+        File('assets/licenca/selo-comunidade.png').existsSync(),
+        isTrue,
+        reason: 'o selo tem que ser exibido na "capa" do app',
+      );
+      expect(
+        File('pubspec.yaml').readAsStringSync(),
+        contains('assets/licenca/'),
+      );
     });
 
     test('o nome público do app não usa a marca', () {
@@ -763,23 +834,31 @@ void _npcELivre() {
       for (final texto in publicos) {
         for (final linha in texto.split('\n')) {
           if (!linha.contains('Ordem Paranormal')) continue;
-          expect(linha, contains('Licença da Comunidade'),
-              reason: 'linha usa a marca fora do aviso: $linha');
+          expect(
+            linha,
+            contains('Licença da Comunidade'),
+            reason: 'linha usa a marca fora do aviso: $linha',
+          );
         }
       }
       expect(
-          File('android/app/src/main/AndroidManifest.xml').readAsStringSync(),
-          contains('android:label="Fichário do Outro Lado"'));
+        File('android/app/src/main/AndroidManifest.xml').readAsStringSync(),
+        contains('android:label="Fichário do Outro Lado"'),
+      );
     });
 
     test('poder de origem é notação de regra, não texto de livro', () {
-      final origens = jsonDecode(
-          File('assets/data/origens.json').readAsStringSync()) as List;
+      final origens =
+          jsonDecode(File('assets/data/origens.json').readAsStringSync())
+              as List;
       for (final o in origens) {
         final d = (o as Map)['poderDescricao'] as String;
         expect(d, isNotEmpty, reason: '${o['nome']} sem efeito descrito');
-        expect(d.length, lessThanOrEqualTo(130),
-            reason: '${o['nome']}: descrição longa demais, virou prosa');
+        expect(
+          d.length,
+          lessThanOrEqualTo(130),
+          reason: '${o['nome']}: descrição longa demais, virou prosa',
+        );
       }
     });
   });

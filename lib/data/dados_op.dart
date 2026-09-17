@@ -19,12 +19,12 @@ class Pericia {
   });
 
   factory Pericia.fromJson(Map<String, dynamic> j) => Pericia(
-        nome: j['nome'] as String,
-        atributo: j['atributo'] as String,
-        soTreinada: (j['soTreinada'] ?? false) as bool,
-        sofreCarga: (j['sofreCarga'] ?? false) as bool,
-        usaKit: (j['usaKit'] ?? false) as bool,
-      );
+    nome: j['nome'] as String,
+    atributo: j['atributo'] as String,
+    soTreinada: (j['soTreinada'] ?? false) as bool,
+    sofreCarga: (j['sofreCarga'] ?? false) as bool,
+    usaKit: (j['usaKit'] ?? false) as bool,
+  );
 }
 
 /// Uma habilidade que a classe dá de saída.
@@ -101,17 +101,17 @@ class ClasseOP {
   });
 
   factory ClasseOP.fromJson(Map<String, dynamic> j) => ClasseOP(
-        nome: j['nome'] as String,
-        pvIni: j['pvIni'] as int,
-        pvPorNivel: j['pvPorNivel'] as int,
-        pvNivelAtributo: (j['pvNivelAtributo'] ?? false) as bool,
-        peIni: j['peIni'] as int,
-        pePorNivel: j['pePorNivel'] as int,
-        peNivelAtributo: (j['peNivelAtributo'] ?? false) as bool,
-        sanIni: j['sanIni'] as int,
-        sanPorNivel: j['sanPorNivel'] as int,
-        descricao: (j['descricao'] ?? '') as String,
-      );
+    nome: j['nome'] as String,
+    pvIni: j['pvIni'] as int,
+    pvPorNivel: j['pvPorNivel'] as int,
+    pvNivelAtributo: (j['pvNivelAtributo'] ?? false) as bool,
+    peIni: j['peIni'] as int,
+    pePorNivel: j['pePorNivel'] as int,
+    peNivelAtributo: (j['peNivelAtributo'] ?? false) as bool,
+    sanIni: j['sanIni'] as int,
+    sanPorNivel: j['sanPorNivel'] as int,
+    descricao: (j['descricao'] ?? '') as String,
+  );
 
   /// Quantos passos de progressão a ficha já deu. Classe normal conta pelo
   /// NEX; o Sobrevivente conta pelo estágio, que vai de 1 a 5.
@@ -195,17 +195,17 @@ class Origem {
   bool flag(String chave) => modificadores[chave] == true;
 
   factory Origem.fromJson(Map<String, dynamic> j) => Origem(
-        nome: j['nome'] as String,
-        pericias: [
-          for (final p in (j['pericias'] ?? const []) as List) p as String
-        ],
-        periciasTexto: (j['periciasTexto'] ?? '') as String,
-        poder: (j['poder'] ?? '') as String,
-        poderDescricao: (j['poderDescricao'] ?? '') as String,
-        fonte: (j['fonte'] ?? 'Livro de Regras') as String,
-        modificadores:
-            ((j['modificadores'] ?? const {}) as Map).cast<String, dynamic>(),
-      );
+    nome: j['nome'] as String,
+    pericias: [
+      for (final p in (j['pericias'] ?? const []) as List) p as String,
+    ],
+    periciasTexto: (j['periciasTexto'] ?? '') as String,
+    poder: (j['poder'] ?? '') as String,
+    poderDescricao: (j['poderDescricao'] ?? '') as String,
+    fonte: (j['fonte'] ?? 'Livro de Regras') as String,
+    modificadores: ((j['modificadores'] ?? const {}) as Map)
+        .cast<String, dynamic>(),
+  );
 }
 
 class Patente {
@@ -222,12 +222,13 @@ class Patente {
   });
 
   factory Patente.fromJson(Map<String, dynamic> j) => Patente(
-        nome: j['nome'] as String,
-        pp: j['pp'] as int,
-        credito: (j['credito'] ?? '') as String,
-        limites: ((j['limites'] ?? const {}) as Map)
-            .map((k, v) => MapEntry(k as String, v as int)),
-      );
+    nome: j['nome'] as String,
+    pp: j['pp'] as int,
+    credito: (j['credito'] ?? '') as String,
+    limites: ((j['limites'] ?? const {}) as Map).map(
+      (k, v) => MapEntry(k as String, v as int),
+    ),
+  );
 }
 
 /// Dados do sistema. As classes são constantes — as fórmulas de PV/PE/SAN
@@ -235,6 +236,18 @@ class Patente {
 /// máximos caírem para o valor atual sem avisar ninguém. O resto (listas
 /// longas de perícias, origens e patentes) vem dos assets.
 class DadosOP {
+  /// Ocultista: 3 rituais em NEX 5% e mais 1 a cada NEX (5%).
+  static int rituaisPorNex(int nex) => nex < 5 ? 0 : 3 + (nex - 5) ~/ 5;
+
+  /// Círculo mais alto que o Ocultista conhece: 2º em 25%, 3º em 55%,
+  /// 4º em 85%.
+  static int circuloMaximoPorNex(int nex) {
+    if (nex >= 85) return 4;
+    if (nex >= 55) return 3;
+    if (nex >= 25) return 2;
+    return 1;
+  }
+
   static List<Pericia> pericias = const [];
   static List<Origem> origens = const [];
   static List<Patente> patentes = const [];
@@ -243,10 +256,16 @@ class DadosOP {
   static const List<ClasseOP> classes = [
     ClasseOP(
       nome: 'Mundano',
-      pvIni: 8, pvPorNivel: 0, pvNivelAtributo: false,
-      peIni: 1, pePorNivel: 0, peNivelAtributo: false,
-      sanIni: 8, sanPorNivel: 0,
-      descricao: 'Pessoa comum, NEX 0%. Ao virar agente (NEX 5%), '
+      pvIni: 8,
+      pvPorNivel: 0,
+      pvNivelAtributo: false,
+      peIni: 1,
+      pePorNivel: 0,
+      peNivelAtributo: false,
+      sanIni: 8,
+      sanPorNivel: 0,
+      descricao:
+          'Pessoa comum, NEX 0%. Ao virar agente (NEX 5%), '
           'escolha uma classe.',
       proficiencias: ['Armas simples'],
       periciasLivresBase: 1,
@@ -256,10 +275,16 @@ class DadosOP {
     ),
     ClasseOP(
       nome: 'Combatente',
-      pvIni: 20, pvPorNivel: 4, pvNivelAtributo: true,
-      peIni: 2, pePorNivel: 2, peNivelAtributo: true,
-      sanIni: 12, sanPorNivel: 3,
-      descricao: 'PV 20+Vig (+4+Vig/NEX) · PE 2+Pre (+2+Pre/NEX) · '
+      pvIni: 20,
+      pvPorNivel: 4,
+      pvNivelAtributo: true,
+      peIni: 2,
+      pePorNivel: 2,
+      peNivelAtributo: true,
+      sanIni: 12,
+      sanPorNivel: 3,
+      descricao:
+          'PV 20+Vig (+4+Vig/NEX) · PE 2+Pre (+2+Pre/NEX) · '
           'SAN 12 (+3/NEX)',
       proficiencias: ['Armas simples', 'Armas táticas', 'Proteções leves'],
       periciasEscolha: [
@@ -269,53 +294,76 @@ class DadosOP {
       periciasLivresBase: 1,
       habilidades: [
         HabilidadeClasse(
-            'Ataque Especial',
-            '2 PE → +5 no ataque OU no dano; +1 PE por mais +5, até o teto '
-                'do seu NEX (3 PE/+10 em 25%, 4 PE/+15 em 55%, 5 PE/+20 em '
-                '85%).'),
+          'Ataque Especial',
+          '2 PE → +5 no ataque OU no dano; +1 PE por mais +5, até o teto '
+              'do seu NEX (3 PE/+10 em 25%, 4 PE/+15 em 55%, 5 PE/+20 em '
+              '85%).',
+        ),
       ],
     ),
     ClasseOP(
       nome: 'Especialista',
-      pvIni: 16, pvPorNivel: 3, pvNivelAtributo: true,
-      peIni: 3, pePorNivel: 3, peNivelAtributo: true,
-      sanIni: 16, sanPorNivel: 4,
-      descricao: 'PV 16+Vig (+3+Vig/NEX) · PE 3+Pre (+3+Pre/NEX) · '
+      pvIni: 16,
+      pvPorNivel: 3,
+      pvNivelAtributo: true,
+      peIni: 3,
+      pePorNivel: 3,
+      peNivelAtributo: true,
+      sanIni: 16,
+      sanPorNivel: 4,
+      descricao:
+          'PV 16+Vig (+3+Vig/NEX) · PE 3+Pre (+3+Pre/NEX) · '
           'SAN 16 (+4/NEX)',
       proficiencias: ['Armas simples', 'Proteções leves'],
       periciasLivresBase: 7,
       habilidades: [
-        HabilidadeClasse('Eclético',
-            '2 PE → conta como treinado na perícia do teste que está fazendo.'),
         HabilidadeClasse(
-            'Perito',
-            '2 perícias treinadas à escolha (exceto Luta e Pontaria): 2 PE → '
-                '+1d6 no teste; +1 PE aumenta o dado conforme o NEX.'),
+          'Eclético',
+          '2 PE → conta como treinado na perícia do teste que está fazendo.',
+        ),
+        HabilidadeClasse(
+          'Perito',
+          '2 perícias treinadas à escolha (exceto Luta e Pontaria): 2 PE → '
+              '+1d6 no teste; +1 PE aumenta o dado conforme o NEX.',
+        ),
       ],
     ),
     ClasseOP(
       nome: 'Ocultista',
-      pvIni: 12, pvPorNivel: 2, pvNivelAtributo: true,
-      peIni: 4, pePorNivel: 4, peNivelAtributo: true,
-      sanIni: 20, sanPorNivel: 5,
-      descricao: 'PV 12+Vig (+2+Vig/NEX) · PE 4+Pre (+4+Pre/NEX) · '
+      pvIni: 12,
+      pvPorNivel: 2,
+      pvNivelAtributo: true,
+      peIni: 4,
+      pePorNivel: 4,
+      peNivelAtributo: true,
+      sanIni: 20,
+      sanPorNivel: 5,
+      descricao:
+          'PV 12+Vig (+2+Vig/NEX) · PE 4+Pre (+4+Pre/NEX) · '
           'SAN 20 (+5/NEX)',
       proficiencias: ['Armas simples'],
       periciasFixas: ['Ocultismo', 'Vontade'],
       periciasLivresBase: 3,
       habilidades: [
         HabilidadeClasse(
-            'Escolhido pelo Outro Lado',
-            'Começa com 3 rituais de 1º círculo e aprende 1 ritual a cada '
-                'NEX. Círculos: 2º em 25%, 3º em 55%, 4º em 85%.'),
+          'Escolhido pelo Outro Lado',
+          'Começa com 3 rituais de 1º círculo e aprende 1 ritual a cada '
+              'NEX. Círculos: 2º em 25%, 3º em 55%, 4º em 85%.',
+        ),
       ],
     ),
     ClasseOP(
       nome: 'Sobrevivente',
-      pvIni: 8, pvPorNivel: 2, pvNivelAtributo: false,
-      peIni: 2, pePorNivel: 1, peNivelAtributo: false,
-      sanIni: 8, sanPorNivel: 2,
-      descricao: 'PV 8+Vig (+2/estágio) · PE 2+Pre (+1/estágio) · '
+      pvIni: 8,
+      pvPorNivel: 2,
+      pvNivelAtributo: false,
+      peIni: 2,
+      pePorNivel: 1,
+      peNivelAtributo: false,
+      sanIni: 8,
+      sanPorNivel: 2,
+      descricao:
+          'PV 8+Vig (+2/estágio) · PE 2+Pre (+1/estágio) · '
           'SAN 8 (+2/estágio). Limite de PE sempre 1.',
       proficiencias: ['Armas simples'],
       periciasLivresBase: 1,
@@ -334,15 +382,15 @@ class DadosOP {
 
     pericias = [
       for (final j in await le('pericias.json'))
-        Pericia.fromJson((j as Map).cast<String, dynamic>())
+        Pericia.fromJson((j as Map).cast<String, dynamic>()),
     ];
     origens = [
       for (final j in await le('origens.json'))
-        Origem.fromJson((j as Map).cast<String, dynamic>())
+        Origem.fromJson((j as Map).cast<String, dynamic>()),
     ];
     patentes = [
       for (final j in await le('patentes.json'))
-        Patente.fromJson((j as Map).cast<String, dynamic>())
+        Patente.fromJson((j as Map).cast<String, dynamic>()),
     ];
   }
 
