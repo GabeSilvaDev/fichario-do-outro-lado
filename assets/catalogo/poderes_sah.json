@@ -1,0 +1,2795 @@
+{
+ "versao": 1,
+ "aviso": "Poderes e trilhas de Sobrevivendo ao Horror em notação de mesa. O texto do livro não entra.",
+ "trilhas": [
+  {
+   "nome": "Agente Secreto",
+   "classe": "Combatente",
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 15
+  },
+  {
+   "nome": "Caçador",
+   "classe": "Combatente",
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 16
+  },
+  {
+   "nome": "Monstruoso",
+   "classe": "Combatente",
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 17
+  },
+  {
+   "nome": "Bibliotecário",
+   "classe": "Especialista",
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 23
+  },
+  {
+   "nome": "Perseverante",
+   "classe": "Especialista",
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 24
+  },
+  {
+   "nome": "Muambeiro",
+   "classe": "Especialista",
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 25
+  },
+  {
+   "nome": "Exorcista",
+   "classe": "Ocultista",
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 27
+  },
+  {
+   "nome": "Possuído",
+   "classe": "Ocultista",
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 28
+  },
+  {
+   "nome": "Parapsicólogo",
+   "classe": "Ocultista",
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 29
+  },
+  {
+   "nome": "Durão",
+   "classe": "Sobrevivente",
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 31
+  },
+  {
+   "nome": "Esperto",
+   "classe": "Sobrevivente",
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 32
+  },
+  {
+   "nome": "Esotérico",
+   "classe": "Sobrevivente",
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 32
+  }
+ ],
+ "poderes": [
+  {
+   "nome": "Apego Angustiado",
+   "tipo": "classe",
+   "classe": "Combatente",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "Não fica inconsciente por estar morrendo; ao fim de cada rodada morrendo e consciente, perde 2 SAN.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 14
+  },
+  {
+   "nome": "Caminho para Forca",
+   "tipo": "classe",
+   "classe": "Combatente",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "Perseguição, ação sacrifício: 1 PE dá +1d20 extra (total +2d20) aos outros. Furtividade, chamar atenção: 1 PE, visibilidade dos aliados próximos -2 (não -1).",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 14
+  },
+  {
+   "nome": "Ciente das Cicatrizes",
+   "tipo": "classe",
+   "classe": "Combatente",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "",
+   "requisitos": "Treinado em Luta ou Pontaria",
+   "efeito": "Teste para achar pista ligada a armas ou ferimentos (necropsia, identificar arma amaldiçoada): usa Luta ou Pontaria no lugar da perícia original.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 14
+  },
+  {
+   "nome": "Correria Desesperada",
+   "tipo": "classe",
+   "classe": "Combatente",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "+3m de deslocamento. +1d20 em testes de perícia para fugir em perseguição (p. 90).",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {
+    "deslocamento": 3
+   },
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 14
+  },
+  {
+   "nome": "Engolir o Choro",
+   "tipo": "classe",
+   "classe": "Combatente",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "Não sofre penalidades por condições em testes de perícia para fugir e em testes de Furtividade.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 14
+  },
+  {
+   "nome": "Instinto de Fuga",
+   "tipo": "classe",
+   "classe": "Combatente",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "",
+   "requisitos": "Treinado em Intuição",
+   "requisitosRegra": {
+    "treinadas": [
+     "Intuição"
+    ]
+   },
+   "efeito": "Quando uma cena de perseguição (ou semelhante) começa: +2 em todos os testes de perícia durante a cena.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 14
+  },
+  {
+   "nome": "Mochileiro",
+   "tipo": "classe",
+   "classe": "Combatente",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "",
+   "requisitos": "Vig 2",
+   "requisitosRegra": {
+    "atributos": {
+     "VIG": 2
+    }
+   },
+   "efeito": "+5 espaços no limite de carga; pode se beneficiar de uma vestimenta adicional.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {
+    "carga": 5
+   },
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 14
+  },
+  {
+   "nome": "Paranoia Defensiva",
+   "tipo": "classe",
+   "classe": "Combatente",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "1/cena, 1 rodada + 3 PE: você e cada aliado presente escolhem +5 na Defesa contra o próximo ataque na cena ou +5 em um teste de perícia até o fim da cena.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 15
+  },
+  {
+   "nome": "Sacrificar os Joelhos",
+   "tipo": "classe",
+   "classe": "Combatente",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "",
+   "requisitos": "Treinado em Atletismo",
+   "requisitosRegra": {
+    "treinadas": [
+     "Atletismo"
+    ]
+   },
+   "efeito": "1/cena de perseguição, ao usar esforço extra: 2 PE para passar automaticamente no teste de perícia.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 15
+  },
+  {
+   "nome": "Sem Tempo, Irmão",
+   "tipo": "classe",
+   "classe": "Combatente",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "1/cena de investigação, ao facilitar investigação: passa automaticamente no teste de ajuda, mas faz rolagem extra na tabela de eventos (p. 82).",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 15
+  },
+  {
+   "nome": "Valentão",
+   "tipo": "classe",
+   "classe": "Combatente",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "Usa Força no lugar de Presença para Intimidação. 1/cena, 1 PE: teste de Intimidação para assustar como ação livre.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 15
+  },
+  {
+   "nome": "Carteirada",
+   "tipo": "trilha",
+   "classe": "Combatente",
+   "trilha": "Agente Secreto",
+   "nex": 10,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "Treina Diplomacia ou Enganação (+2 se já treinado). Começa cada missão com documentos de privilégio jurídico (efeitos a critério do mestre).",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 15
+  },
+  {
+   "nome": "O Sorriso",
+   "tipo": "trilha",
+   "classe": "Combatente",
+   "trilha": "Agente Secreto",
+   "nex": 40,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "+2 em Diplomacia e Enganação. Falha em uma delas: 2 PE para rerrolar (1/teste, fica com o novo). 1/cena: Diplomacia para acalmar a si mesmo.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {
+    "pericias": {
+     "Diplomacia": 2,
+     "Enganação": 2
+    }
+   },
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 16
+  },
+  {
+   "nome": "Método Investigativo",
+   "tipo": "trilha",
+   "classe": "Combatente",
+   "trilha": "Agente Secreto",
+   "nex": 65,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "Urgência das cenas de investigação +1 rodada. Rolagem na tabela de eventos: 2 PE para virar \"sem evento\" (+2 PE por uso extra na cena).",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 16
+  },
+  {
+   "nome": "Multifacetado",
+   "tipo": "trilha",
+   "classe": "Combatente",
+   "trilha": "Agente Secreto",
+   "nex": 99,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "1/cena, 5 SAN: ganha até o fim da cena as habilidades até NEX 65% de 1 trilha de combatente/especialista (1x por trilha/missão; SAN volta no fim da missão).",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 16
+  },
+  {
+   "nome": "Rastrear o Paranormal",
+   "tipo": "trilha",
+   "classe": "Combatente",
+   "trilha": "Caçador",
+   "nex": 10,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "Treina Sobrevivência (+2 se já treinado). Usa Sobrevivência no lugar de Ocultismo p/ identificar criaturas e de Investigação/Percepção p/ rastros paranormais.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {
+    "treina": [
+     "Sobrevivência"
+    ]
+   },
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 16
+  },
+  {
+   "nome": "Estudar Fraquezas",
+   "tipo": "trilha",
+   "classe": "Combatente",
+   "trilha": "Caçador",
+   "nex": 40,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "Ação de interlúdio + pista ligada a um ser: recebe 1 informação sobre ele e +1 em testes de perícia contra ele por pista, até o fim da missão.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 16
+  },
+  {
+   "nome": "Atacar das Sombras",
+   "tipo": "trilha",
+   "classe": "Combatente",
+   "trilha": "Caçador",
+   "nex": 65,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "Sem -1d20 em Furtividade ao se mover normal; atacando com arma silenciosa a penalidade em Furtividade cai p/ -1d20. Visibilidade inicial -1 em furtividade.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 17
+  },
+  {
+   "nome": "Estudar a Presa",
+   "tipo": "trilha",
+   "classe": "Combatente",
+   "trilha": "Caçador",
+   "nex": 99,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "Estudar Fraquezas define um tipo de ser como presa (1 por vez): contra ele +1d20 em testes de perícia, +1 margem de ameaça, +1 multiplicador de crítico e RD 5.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 17
+  },
+  {
+   "nome": "Progressão Monstruosa",
+   "tipo": "trilha",
+   "classe": "Combatente",
+   "trilha": "Monstruoso",
+   "nex": 10,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "Especial: usa a Progressão de NEX (p. 98) mesmo sem a regra; com Nível de Experiência, NEX dobrado ao se expor. NEX 75%: perturbado permanente, sem a Ordem.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 17
+  },
+  {
+   "nome": "Ser Amaldiçoado",
+   "tipo": "trilha",
+   "classe": "Combatente",
+   "trilha": "Monstruoso",
+   "nex": 10,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "Treina Ocultismo (+2 se já). Escolhe Sangue, Morte, Conhecimento ou Energia; 1/dia etapa ritualística dá os efeitos até o fim do dia, senão fome e sede.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {
+    "treina": [
+     "Ocultismo"
+    ]
+   },
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 17
+  },
+  {
+   "nome": "Ser Amaldiçoado (Sangue)",
+   "tipo": "trilha",
+   "classe": "Combatente",
+   "trilha": "Monstruoso",
+   "nex": 10,
+   "elemento": "Sangue",
+   "requisitos": "Elemento da trilha: Sangue",
+   "efeito": "Após a etapa ritualística: RD balístico e Sangue 5, faro, soma Vig no dano de contra-ataque bem-sucedido; -1d20 em Ciências e Intuição.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 17
+  },
+  {
+   "nome": "Ser Amaldiçoado (Morte)",
+   "tipo": "trilha",
+   "classe": "Combatente",
+   "trilha": "Monstruoso",
+   "nex": 10,
+   "elemento": "Morte",
+   "requisitos": "Elemento da trilha: Morte",
+   "efeito": "Após a etapa ritualística: RD perfuração e Morte 5, imune a fadiga, soma For no total de PV; -1d20 em Diplomacia e Enganação.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 18
+  },
+  {
+   "nome": "Ser Amaldiçoado (Conhecimento)",
+   "tipo": "trilha",
+   "classe": "Combatente",
+   "trilha": "Monstruoso",
+   "nex": 10,
+   "elemento": "Conhecimento",
+   "requisitos": "Elemento da trilha: Conhecimento",
+   "efeito": "Após a etapa ritualística: RD balístico e Conhecimento 5, visão no escuro, soma Int na Defesa; -1d20 em Atletismo e Acrobacia.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 18
+  },
+  {
+   "nome": "Ser Amaldiçoado (Energia)",
+   "tipo": "trilha",
+   "classe": "Combatente",
+   "trilha": "Monstruoso",
+   "nex": 10,
+   "elemento": "Energia",
+   "requisitos": "Elemento da trilha: Energia",
+   "efeito": "Após a etapa ritualística: RD corte, eletricidade, fogo e Energia 5, soma Agi na RD de bloqueio bem-sucedido; -1d20 em Investigação e Percepção.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 18
+  },
+  {
+   "nome": "Ser Macabro",
+   "tipo": "trilha",
+   "classe": "Combatente",
+   "trilha": "Monstruoso",
+   "nex": 40,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "RD da etapa ritualística sobe p/ 10; penalidade em perícias sobe p/ -2d20. A etapa ritualística passa a dar também os efeitos extras do elemento.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 18
+  },
+  {
+   "nome": "Ser Macabro (Sangue)",
+   "tipo": "trilha",
+   "classe": "Combatente",
+   "trilha": "Monstruoso",
+   "nex": 40,
+   "elemento": "Sangue",
+   "requisitos": "Elemento da trilha: Sangue",
+   "efeito": "Usa For (em vez de Pre) para calcular PE. Ação de movimento + 1 ou mais PE (limite For): recupera 1d8 PV por PE gasto.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 18
+  },
+  {
+   "nome": "Ser Macabro (Morte)",
+   "tipo": "trilha",
+   "classe": "Combatente",
+   "trilha": "Monstruoso",
+   "nex": 40,
+   "elemento": "Morte",
+   "requisitos": "Elemento da trilha: Morte",
+   "efeito": "+1d20 em Intimidação; usa Vig (em vez de Pre) para calcular PE. Só morre após 4 turnos morrendo na cena; não precisa comer nem beber (fome da trilha continua).",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 18
+  },
+  {
+   "nome": "Ser Macabro (Conhecimento)",
+   "tipo": "trilha",
+   "classe": "Combatente",
+   "trilha": "Monstruoso",
+   "nex": 40,
+   "elemento": "Conhecimento",
+   "requisitos": "Elemento da trilha: Conhecimento",
+   "efeito": "Int +1. Usa Int como atributo-chave de Enganação e para calcular PE (em vez de Pre).",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 18
+  },
+  {
+   "nome": "Ser Macabro (Energia)",
+   "tipo": "trilha",
+   "classe": "Combatente",
+   "trilha": "Monstruoso",
+   "nex": 40,
+   "elemento": "Energia",
+   "requisitos": "Elemento da trilha: Energia",
+   "efeito": "Usa Agi (em vez de Pre) para calcular PE. Ao acertar corpo a corpo: 1 ou mais PE (limite Agi), +1d6 de dano de Energia por PE.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 18
+  },
+  {
+   "nome": "Ser Assustador",
+   "tipo": "trilha",
+   "classe": "Combatente",
+   "trilha": "Monstruoso",
+   "nex": 65,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "RD da etapa ritualística sobe p/ 15; Presença reduzida permanentemente a 1. A etapa ritualística dá também os efeitos extras do elemento.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 19
+  },
+  {
+   "nome": "Ser Assustador (Sangue)",
+   "tipo": "trilha",
+   "classe": "Combatente",
+   "trilha": "Monstruoso",
+   "nex": 65,
+   "elemento": "Sangue",
+   "requisitos": "Elemento da trilha: Sangue",
+   "efeito": "50% de ignorar dano extra de crítico ou ataque furtivo. Mordida (1d8, x2, perfuração); 1/rodada ao agredir com outra arma, 1 PE: ataque extra de mordida.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 19
+  },
+  {
+   "nome": "Ser Assustador (Morte)",
+   "tipo": "trilha",
+   "classe": "Combatente",
+   "trilha": "Monstruoso",
+   "nex": 65,
+   "elemento": "Morte",
+   "requisitos": "Elemento da trilha: Morte",
+   "efeito": "No início do turno morrendo: Vigor DT 15 encerra morrendo com 1 PV. Ao fazer crítico ou reduzir inimigo a 0 PV: recupera 2 PE.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 19
+  },
+  {
+   "nome": "Ser Assustador (Conhecimento)",
+   "tipo": "trilha",
+   "classe": "Combatente",
+   "trilha": "Monstruoso",
+   "nex": 65,
+   "elemento": "Conhecimento",
+   "requisitos": "Elemento da trilha: Conhecimento",
+   "efeito": "Pode perder o treino em perícias p/ ganhar dados de bônus = Int; até o fim da cena gasta 1 p/ +1d20 num teste. Treinos voltam no fim do próximo interlúdio.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 19
+  },
+  {
+   "nome": "Ser Assustador (Energia)",
+   "tipo": "trilha",
+   "classe": "Combatente",
+   "trilha": "Monstruoso",
+   "nex": 65,
+   "elemento": "Energia",
+   "requisitos": "Elemento da trilha: Energia",
+   "efeito": "RD também contra dano químico. Ação de movimento tocando fonte elétrica: recupera 1d4 PE (portátil), 2d4 (grande) ou 4d4 (casa); a fonte queima.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 19
+  },
+  {
+   "nome": "Ser Aterrorizante",
+   "tipo": "trilha",
+   "classe": "Combatente",
+   "trilha": "Monstruoso",
+   "nex": 99,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "Efeitos da etapa ritualística ficam permanentes (ainda a executa p/ evitar fome); conta como criatura paranormal; RD da trilha 20. Ganha os efeitos do elemento.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 20
+  },
+  {
+   "nome": "Ser Aterrorizante (Sangue)",
+   "tipo": "trilha",
+   "classe": "Combatente",
+   "trilha": "Monstruoso",
+   "nex": 99,
+   "elemento": "Sangue",
+   "requisitos": "Elemento da trilha: Sangue",
+   "efeito": "Int -1, For +1. Dano com mordida: recupera 5 PV (x no crítico). Aprende Forma Monstruosa; ao sofrer dano, Vontade DT 10+dano ou conjura-a na próxima ação.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 20
+  },
+  {
+   "nome": "Ser Aterrorizante (Morte)",
+   "tipo": "trilha",
+   "classe": "Combatente",
+   "trilha": "Monstruoso",
+   "nex": 99,
+   "elemento": "Morte",
+   "requisitos": "Elemento da trilha: Morte",
+   "efeito": "Pre -1, Vig +1. Imune a dano de Morte; imortal (volta no dia seguinte), exceto se reduzido a 0 PV por fogo ou Energia. Aprende Fim Inevitável.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 20
+  },
+  {
+   "nome": "Ser Aterrorizante (Conhecimento)",
+   "tipo": "trilha",
+   "classe": "Combatente",
+   "trilha": "Monstruoso",
+   "nex": 99,
+   "elemento": "Conhecimento",
+   "requisitos": "Elemento da trilha: Conhecimento",
+   "efeito": "For -1, Int +1. Percepção às Cegas; aprende 1 ritual de Conhecimento de 4º círculo. Ao conjurar ritual, esquece tudo desde o início da cena.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 21
+  },
+  {
+   "nome": "Ser Aterrorizante (Energia)",
+   "tipo": "trilha",
+   "classe": "Combatente",
+   "trilha": "Monstruoso",
+   "nex": 99,
+   "elemento": "Energia",
+   "requisitos": "Elemento da trilha: Energia",
+   "efeito": "For -1, Agi +1. Paira (12m); imune a queda e paralisia física; passa onde Minúsculo passa; aprende Deflagração de Energia. Sem vestidos; mente move objetos.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 21
+  },
+  {
+   "nome": "Transformação Final",
+   "tipo": "trilha",
+   "classe": "Combatente",
+   "trilha": "Monstruoso",
+   "nex": 99,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "Quadro p. 21. NEX 99%: SAN reduzida a 1; enlouquecendo fica confuso em vez de efeito de insanidade; enlouquecer a 99% torna-o criatura do Outro Lado.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 21
+  },
+  {
+   "nome": "Acolher o Terror",
+   "tipo": "classe",
+   "classe": "Especialista",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "Pode se entregar para o medo (p. 88) uma vez adicional por sessão de jogo.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 22
+  },
+  {
+   "nome": "Contatos Oportunos",
+   "tipo": "classe",
+   "classe": "Especialista",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "",
+   "requisitos": "Treinado em Crime",
+   "requisitosRegra": {
+    "treinadas": [
+     "Crime"
+    ]
+   },
+   "efeito": "Ação de interlúdio: recebe aliado de um tipo à escolha (OPRPG p. 170) até o fim da missão ou dispensá-lo; 1 por vez, disponibilidade a critério do mestre.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 22
+  },
+  {
+   "nome": "Disfarce Sutil",
+   "tipo": "classe",
+   "classe": "Especialista",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "",
+   "requisitos": "Pre 2, treinado em Enganação",
+   "requisitosRegra": {
+    "atributos": {
+     "PRE": 2
+    },
+    "treinadas": [
+     "Enganação"
+    ]
+   },
+   "efeito": "Disfarce em si mesmo com Enganação: 1 PE para disfarçar-se como ação completa sem kit de disfarces (com kit, +5 no teste).",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 22
+  },
+  {
+   "nome": "Esconderijo Desesperado",
+   "tipo": "classe",
+   "classe": "Especialista",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "Sem -1d20 em Furtividade ao se mover normal. Em cenas de furtividade, passar em teste para esconder-se reduz a visibilidade em -2 (não -1).",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 22
+  },
+  {
+   "nome": "Especialista Diletante",
+   "tipo": "classe",
+   "classe": "Especialista",
+   "trilha": "",
+   "nex": 30,
+   "elemento": "",
+   "requisitos": "NEX 30%",
+   "requisitosRegra": {
+    "nex": 30
+   },
+   "efeito": "Aprende um poder de outra classe (exceto de trilha ou paranormal) cujos pré-requisitos cumpra.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 22
+  },
+  {
+   "nome": "Flashback",
+   "tipo": "classe",
+   "classe": "Especialista",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "Escolha uma origem que não seja a sua: recebe o poder dessa origem.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 22
+  },
+  {
+   "nome": "Leitura Fria",
+   "tipo": "classe",
+   "classe": "Especialista",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "",
+   "requisitos": "Treinado em Intuição",
+   "requisitosRegra": {
+    "treinadas": [
+     "Intuição"
+    ]
+   },
+   "efeito": "1/interlúdio, após minutos com/observando um NPC: faz 3 perguntas pessoais; cada uma sem resposta dá 2 PE temporários até o fim da missão. 1x por pessoa.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 22
+  },
+  {
+   "nome": "Mãos Firmes",
+   "tipo": "classe",
+   "classe": "Especialista",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "",
+   "requisitos": "Treinado em Furtividade",
+   "requisitosRegra": {
+    "treinadas": [
+     "Furtividade"
+    ]
+   },
+   "efeito": "Teste de Furtividade para esconder-se ou ação discreta manipulando objeto: 2 PE para +1d20 no teste.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 22
+  },
+  {
+   "nome": "Plano de Fuga",
+   "tipo": "classe",
+   "classe": "Especialista",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "Usa Int no lugar de For na ação criar obstáculos (p. 90) em perseguição. 1/cena, 2 PE: dispensa o teste e é bem-sucedido nessa ação.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 23
+  },
+  {
+   "nome": "Remoer Memórias",
+   "tipo": "classe",
+   "classe": "Especialista",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "",
+   "requisitos": "Int 1",
+   "requisitosRegra": {
+    "atributos": {
+     "INT": 1
+    }
+   },
+   "efeito": "1/cena, em teste de perícia baseada em Int ou Pre: 2 PE para trocar por um teste de Intelecto DT 15.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 23
+  },
+  {
+   "nome": "Resistir à Pressão",
+   "tipo": "classe",
+   "classe": "Especialista",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "",
+   "requisitos": "Treinado em Investigação",
+   "requisitosRegra": {
+    "treinadas": [
+     "Investigação"
+    ]
+   },
+   "efeito": "1/cena de investigação, 5 PE: urgência +1 rodada; nessa rodada extra todos os personagens (incluindo você) recebem +2 em testes de perícia.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 23
+  },
+  {
+   "nome": "Conhecimento Prático",
+   "tipo": "trilha",
+   "classe": "Especialista",
+   "trilha": "Bibliotecário",
+   "nex": 10,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "Teste de perícia (exceto Luta e Pontaria): 2 PE para usar Int como atributo-base. Com o poder Conhecimento Aplicado, o custo deste cai em -1 PE.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 23
+  },
+  {
+   "nome": "Leitor Contumaz",
+   "tipo": "trilha",
+   "classe": "Especialista",
+   "trilha": "Bibliotecário",
+   "nex": 40,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "Dado de bônus da ação de interlúdio ler vira 1d8 e vale em qualquer perícia. Ao usá-lo: 2 PE para +1 dado (1d8 para 2d8).",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 23
+  },
+  {
+   "nome": "Rato de Biblioteca",
+   "tipo": "trilha",
+   "classe": "Especialista",
+   "trilha": "Bibliotecário",
+   "nex": 65,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "1/cena, em local cheio de livros, alguns minutos (1 rodada em investigação): benefícios da ação de interlúdio ler ou revisar caso.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 23
+  },
+  {
+   "nome": "A Força do Saber",
+   "tipo": "trilha",
+   "classe": "Especialista",
+   "trilha": "Bibliotecário",
+   "nex": 99,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "Int +1 e soma Int no total de PE. Escolha uma perícia: o atributo-base dela passa a ser Int.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {
+    "peSomaAtributo": "INT"
+   },
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 23
+  },
+  {
+   "nome": "Soluções Improvisadas",
+   "tipo": "trilha",
+   "classe": "Especialista",
+   "trilha": "Perseverante",
+   "nex": 10,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "2 PE: rola novamente 1 dos dados de um teste recém-feito (1/teste) e fica com o melhor resultado.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 24
+  },
+  {
+   "nome": "Fuga Obstinada",
+   "tipo": "trilha",
+   "classe": "Especialista",
+   "trilha": "Perseverante",
+   "nex": 40,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "+1d20 em testes de perícia para fugir de um inimigo. Sendo a presa em perseguição, acumula até 4 falhas antes de ser pego.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 24
+  },
+  {
+   "nome": "Determinação Inquestionável",
+   "tipo": "trilha",
+   "classe": "Especialista",
+   "trilha": "Perseverante",
+   "nex": 65,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "1/cena, 5 PE + ação padrão: remove uma condição de medo, mental ou de paralisia (algumas, como paralisia por doença, não, a critério do mestre).",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 24
+  },
+  {
+   "nome": "Só Mais um Passo...",
+   "tipo": "trilha",
+   "classe": "Especialista",
+   "trilha": "Perseverante",
+   "nex": 99,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "1/rodada, ao sofrer dano que o reduziria a 0 PV: 5 PE para ficar com 1 PV. Não funciona contra dano massivo.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 24
+  },
+  {
+   "nome": "Mascate",
+   "tipo": "trilha",
+   "classe": "Especialista",
+   "trilha": "Muambeiro",
+   "nex": 10,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "Treina Profissão (armeiro, engenheiro ou químico). +5 de capacidade de carga. Item improvisado: DT reduzida em -10 (em vez de -5).",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {
+    "carga": 5
+   },
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 25
+  },
+  {
+   "nome": "Fabricação Própria",
+   "tipo": "trilha",
+   "classe": "Especialista",
+   "trilha": "Muambeiro",
+   "nex": 40,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "Metade do tempo p/ itens mundanos: 1 ação de manutenção faz 2 munições/explosivos/consumíveis ou 1 arma/proteção/equip. geral. Exceto modificados/paranormais.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 25
+  },
+  {
+   "nome": "Laboratório de Campo",
+   "tipo": "trilha",
+   "classe": "Especialista",
+   "trilha": "Muambeiro",
+   "nex": 65,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "Treina Profissão (armeiro, engenheiro ou químico), +5 se já treinado. Fabrica e conserta itens paranormais em campo (3 ações de interlúdio, p. 94).",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 25
+  },
+  {
+   "nome": "Achado Conveniente",
+   "tipo": "trilha",
+   "classe": "Especialista",
+   "trilha": "Muambeiro",
+   "nex": 99,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "Ação completa + 5 PE: \"produz\" um item de até categoria III (não paranormal), que funciona até o fim da cena.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 25
+  },
+  {
+   "nome": "Deixe os Sussurros Guiarem",
+   "tipo": "classe",
+   "classe": "Ocultista",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "1/cena, 2 PE + 1 rodada: +2 em testes de perícia para investigação até o fim da cena; enquanto ativo, cada falha em teste de perícia custa 1 SAN.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 26
+  },
+  {
+   "nome": "Domínio Esotérico",
+   "tipo": "classe",
+   "classe": "Ocultista",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "",
+   "requisitos": "Int 3",
+   "requisitosRegra": {
+    "atributos": {
+     "INT": 3
+    }
+   },
+   "efeito": "Ao lançar ritual, pode combinar os efeitos de até 2 catalisadores ritualísticos diferentes.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 26
+  },
+  {
+   "nome": "Estalos Macabros",
+   "tipo": "classe",
+   "classe": "Ocultista",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "Ação para distrair outro ser (furtividade ou fintar): 1 PE para usar Ocultismo no lugar da perícia original; +5 se o alvo for pessoa ou animal.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 26
+  },
+  {
+   "nome": "Minha Dor me Impulsiona",
+   "tipo": "classe",
+   "classe": "Ocultista",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "",
+   "requisitos": "Vig 2",
+   "requisitosRegra": {
+    "atributos": {
+     "VIG": 2
+    }
+   },
+   "efeito": "Teste de Acrobacia, Atletismo ou Furtividade: 1 PE para +1d6. Só com pelo menos 5 pontos de dano sofridos nos PV.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 26
+  },
+  {
+   "nome": "Nos Olhos do Monstro",
+   "tipo": "classe",
+   "classe": "Ocultista",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "Cena com criatura paranormal: 1 rodada + 3 PE encarando-a (vendo os \"olhos\"): +5 em testes contra ela (exceto ataque) até o fim da cena.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 26
+  },
+  {
+   "nome": "Olhar Sinistro",
+   "tipo": "classe",
+   "classe": "Ocultista",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "",
+   "requisitos": "Pre 1",
+   "requisitosRegra": {
+    "atributos": {
+     "PRE": 1
+    }
+   },
+   "efeito": "Usa Pre no lugar de Int para Ocultismo; pode usar Ocultismo para coagir (como Intimidação).",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 26
+  },
+  {
+   "nome": "Sentido Premonitório",
+   "tipo": "classe",
+   "classe": "Ocultista",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "3 PE: ativa déjà vu de 1 rodada à frente (eventos/urgência de investigação, ações em furtividade e perseguição). Sem efeito em combate. Manter: 1 PE por rodada.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 26
+  },
+  {
+   "nome": "Sincronia Paranormal",
+   "tipo": "classe",
+   "classe": "Ocultista",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "",
+   "requisitos": "Pre 2",
+   "requisitosRegra": {
+    "atributos": {
+     "PRE": 2
+    }
+   },
+   "efeito": "Ação padrão + 2 PE: sincronia c/ aliados (médio) que sobreviveram a encontro paranormal com você; cada rodada reparte Pre d20 p/ testes de Int/Pre. 1 PE/rodada.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 27
+  },
+  {
+   "nome": "Traçado Conjuratório",
+   "tipo": "classe",
+   "classe": "Ocultista",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "1 PE + ação completa: símbolo de 1,5m até o fim da cena; dentro dele +2 em Ocultismo e testes de resistência e +2 na DT dos seus rituais.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 27
+  },
+  {
+   "nome": "Revelação do Mal",
+   "tipo": "trilha",
+   "classe": "Ocultista",
+   "trilha": "Exorcista",
+   "nex": 10,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "Treina Religião (+2 se já treinado). Usa Religião no lugar de Investigação/Percepção p/ seres, rastros e pistas paranormais e no lugar de Ocultismo.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {
+    "treina": [
+     "Religião"
+    ]
+   },
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 27
+  },
+  {
+   "nome": "Poder da Fé",
+   "tipo": "trilha",
+   "classe": "Ocultista",
+   "trilha": "Exorcista",
+   "nex": 40,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "Veterano em Religião (+1d20 se já veterano). Falha em teste de resistência: 2 PE para repetir usando Religião (fica com o 2º resultado).",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 27
+  },
+  {
+   "nome": "Parareligiosidade",
+   "tipo": "trilha",
+   "classe": "Ocultista",
+   "trilha": "Exorcista",
+   "nex": 65,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "Ao conjurar ritual: +2 PE para adicionar o efeito de um catalisador ritualístico à escolha.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 27
+  },
+  {
+   "nome": "Chagas da Resistência",
+   "tipo": "trilha",
+   "classe": "Ocultista",
+   "trilha": "Exorcista",
+   "nex": 99,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "Quando a SAN é reduzida a 0: 10 PV para ficar com SAN 1.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 28
+  },
+  {
+   "nome": "Poder Não Desejado",
+   "tipo": "trilha",
+   "classe": "Ocultista",
+   "trilha": "Possuído",
+   "nex": 10,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "Novo poder de ocultista vira Transcender. Pontos de possessão: 3 + 2 por Transcender; gasta até Pre/turno; 1 PP = 10 PV ou 2 PE. +1 PP por ação dormir.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 28
+  },
+  {
+   "nome": "As Sombras Dentro de Mim",
+   "tipo": "trilha",
+   "classe": "Ocultista",
+   "trilha": "Possuído",
+   "nex": 40,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "Recupera 2 PP por ação dormir. 2 PE: +1d20 em Acrobacia, Atletismo e Furtividade por 1 rodada; em furtividade, aumento de visibilidade -1 nessa rodada.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 28
+  },
+  {
+   "nome": "Ele Me Ensina",
+   "tipo": "trilha",
+   "classe": "Ocultista",
+   "trilha": "Possuído",
+   "nex": 65,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "Escolhe entre Transcender ou o primeiro poder de uma trilha de ocultista que não a sua (cumprindo pré-requisitos).",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 28
+  },
+  {
+   "nome": "Tornamo-nos Um",
+   "tipo": "trilha",
+   "classe": "Ocultista",
+   "trilha": "Possuído",
+   "nex": 99,
+   "elemento": "",
+   "requisitos": "Afinidade com um elemento",
+   "requisitosRegra": {
+    "afinidade": true
+   },
+   "efeito": "Recebe um Presente conforme o elemento de afinidade.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 28
+  },
+  {
+   "nome": "Presente da Obsessão",
+   "tipo": "trilha",
+   "classe": "Ocultista",
+   "trilha": "Possuído",
+   "nex": 99,
+   "elemento": "Sangue",
+   "requisitos": "Tornamo-nos Um; afinidade com Sangue",
+   "requisitosRegra": {
+    "poderes": [
+     "Tornamo-nos Um"
+    ],
+    "afinidade": true
+   },
+   "efeito": "1/rodada, 6 PE: recupera 50 PV; até seu próximo turno bônus de treino em perícias de For/Vig e Intimidação vira +35, outras de Pre -10. Usável inconsciente.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 28
+  },
+  {
+   "nome": "Presente do Tempo",
+   "tipo": "trilha",
+   "classe": "Ocultista",
+   "trilha": "Possuído",
+   "nex": 99,
+   "elemento": "Morte",
+   "requisitos": "Tornamo-nos Um; afinidade com Morte",
+   "requisitosRegra": {
+    "poderes": [
+     "Tornamo-nos Um"
+    ],
+    "afinidade": true
+   },
+   "efeito": "1/rodada, 6 PE: turno adicional na última contagem de iniciativa da rodada. Usável inconsciente.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 28
+  },
+  {
+   "nome": "Presente do Saber",
+   "tipo": "trilha",
+   "classe": "Ocultista",
+   "trilha": "Possuído",
+   "nex": 99,
+   "elemento": "Conhecimento",
+   "requisitos": "Tornamo-nos Um; afinidade com Conhecimento",
+   "requisitosRegra": {
+    "poderes": [
+     "Tornamo-nos Um"
+    ],
+    "afinidade": true
+   },
+   "efeito": "1/cena, 6 PE: recebe um poder qualquer até o fim da cena (pré-requisitos; não NEX 99% de trilha). Vontade DT 15+5/uso na missão; falha: 1d6 SAN por uso.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 28
+  },
+  {
+   "nome": "Presente do Espaço",
+   "tipo": "trilha",
+   "classe": "Ocultista",
+   "trilha": "Possuído",
+   "nex": 99,
+   "elemento": "Energia",
+   "requisitos": "Tornamo-nos Um; afinidade com Energia",
+   "requisitosRegra": {
+    "poderes": [
+     "Tornamo-nos Um"
+    ],
+    "afinidade": true
+   },
+   "efeito": "1/rodada, 6 PE: teletransporte para ponto em alcance médio, sem precisar conhecer nem ver; se ocupado, vai ao espaço livre mais próximo.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 29
+  },
+  {
+   "nome": "Terapia",
+   "tipo": "trilha",
+   "classe": "Ocultista",
+   "trilha": "Parapsicólogo",
+   "nex": 10,
+   "elemento": "",
+   "requisitos": "Trilha exige treinado em Profissão (psicólogo)",
+   "requisitosRegra": {
+    "treinadas": [
+     "Profissão (psicólogo)"
+    ]
+   },
+   "efeito": "Usa Prof. (psicólogo) como Diplomacia. 1/rodada, você/aliado (curto) falha em resist. vs dano mental: 2 PE p/ usar Prof. (psicólogo). Repetida: -1 PE e +2.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 29
+  },
+  {
+   "nome": "Palavras-chave",
+   "tipo": "trilha",
+   "classe": "Ocultista",
+   "trilha": "Parapsicólogo",
+   "nex": 40,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "Ao passar em teste para acalmar (OPRPG p. 44): gasta PE até seu limite; cada PE recupera 1 SAN do alvo (1 PE no Jogando sem Sanidade).",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 29
+  },
+  {
+   "nome": "Reprogramação Mental",
+   "tipo": "trilha",
+   "classe": "Ocultista",
+   "trilha": "Parapsicólogo",
+   "nex": 65,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "5 PE + interlúdio: voluntário (curto; gasta interlúdio) ganha até o próximo interlúdio 1 poder geral, da classe dele ou 1º de trilha alheia (pré-requisitos).",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 29
+  },
+  {
+   "nome": "A Sanidade Está Lá Fora",
+   "tipo": "trilha",
+   "classe": "Ocultista",
+   "trilha": "Parapsicólogo",
+   "nex": 99,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "Ação de movimento + 5 PE: remove todas as condições de medo ou mentais de uma pessoa adjacente (incluindo você).",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 29
+  },
+  {
+   "nome": "Empenho",
+   "tipo": "habilidade",
+   "classe": "Sobrevivente",
+   "trilha": "",
+   "nex": 0,
+   "estagio": 1,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "Ao fazer um teste de perícia: 1 PE para +2 no teste.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 31
+  },
+  {
+   "nome": "Cicatrizado",
+   "tipo": "habilidade",
+   "classe": "Sobrevivente",
+   "trilha": "",
+   "nex": 0,
+   "estagio": 5,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "1 elemento: -1d20 em resistência contra ele. 1/sessão, reação: -1 PV perm. p/ ignorar dano mental ou gasto de PE, ou -1 PE perm. p/ dano físico pà metade.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 31
+  },
+  {
+   "nome": "Treinamento Especial",
+   "tipo": "habilidade",
+   "classe": "Sobrevivente",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "Por decisão da história, no lugar do próximo estágio vira NEX 5% de Combatente, Especialista ou Ocultista; mantém as habilidades. Bônus: ver transicaoTexto.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "efeitosAfinidade": {},
+   "transicao": {
+    "Combatente": {
+     "pvFixo": 8,
+     "treinaPericias": 2
+    },
+    "Especialista": {
+     "pvFixo": 4,
+     "peFixo": 1,
+     "sanFixo": 4,
+     "treinaPericias": 6
+    },
+    "Ocultista": {
+     "peFixo": 2,
+     "sanFixo": 8,
+     "treina": [
+      "Ocultismo",
+      "Vontade"
+     ],
+     "treinaPericias": 2
+    }
+   },
+   "transicaoTexto": {
+    "Combatente": "+8 PV; perícias: Fortitude ou Reflexos e Luta ou Pontaria; prof.: armas táticas e proteções leves; habilidade: Ataque Especial.",
+    "Especialista": "+4 PV, +1 PE, +4 SAN; 6 perícias à escolha; prof.: proteções leves; habilidades: Eclético e Perito.",
+    "Ocultista": "+2 PE, +8 SAN; perícias: Ocultismo e Vontade + 2 à escolha; prof.: nenhuma; habilidade: Escolhido pelo Outro Lado."
+   },
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 32
+  },
+  {
+   "nome": "Durão",
+   "tipo": "trilha",
+   "classe": "Sobrevivente",
+   "trilha": "Durão",
+   "nex": 0,
+   "estagio": 2,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "+4 PV.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {
+    "pvFixo": 4
+   },
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 31
+  },
+  {
+   "nome": "Durão (estágio 3)",
+   "tipo": "trilha",
+   "classe": "Sobrevivente",
+   "trilha": "Durão",
+   "nex": 0,
+   "estagio": 3,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "+2 PV ao subir para o 3º estágio.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {
+    "pvFixo": 2
+   },
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 31
+  },
+  {
+   "nome": "Pancada Forte",
+   "tipo": "trilha",
+   "classe": "Sobrevivente",
+   "trilha": "Durão",
+   "nex": 0,
+   "estagio": 4,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "Ao atacar: 1 PE para +1d20 no teste de ataque. Virando combatente (Treinamento Especial), perde isto e Ataque Especial custa -1 PE.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 31
+  },
+  {
+   "nome": "Esperto",
+   "tipo": "trilha",
+   "classe": "Sobrevivente",
+   "trilha": "Esperto",
+   "nex": 0,
+   "estagio": 2,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "Treinado em uma perícia adicional à escolha.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {
+    "treinaPericias": 1
+   },
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 32
+  },
+  {
+   "nome": "Entendido",
+   "tipo": "trilha",
+   "classe": "Sobrevivente",
+   "trilha": "Esperto",
+   "nex": 0,
+   "estagio": 4,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "Escolhe 2 perícias treinadas (exceto Luta e Pontaria); nelas, 1 PE para +1d4 no teste. Virando especialista, perde isto e Perito custa -1 PE.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 32
+  },
+  {
+   "nome": "Esotérico",
+   "tipo": "trilha",
+   "classe": "Sobrevivente",
+   "trilha": "Esotérico",
+   "nex": 0,
+   "estagio": 2,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "Ação padrão + 1 PE: sente energias paranormais em alcance curto (pistas ou alerta de perigo, a critério do mestre).",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 32
+  },
+  {
+   "nome": "Iniciado",
+   "tipo": "trilha",
+   "classe": "Sobrevivente",
+   "trilha": "Esotérico",
+   "nex": 0,
+   "estagio": 4,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "Aprende e pode conjurar 1 ritual de 1º círculo à escolha. Virando ocultista, soma este ritual aos 3 de Escolhido pelo Outro Lado.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 32
+  },
+  {
+   "nome": "Acrobático",
+   "tipo": "geral",
+   "classe": "",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "",
+   "requisitos": "Agi 2",
+   "requisitosRegra": {
+    "atributos": {
+     "AGI": 2
+    }
+   },
+   "efeito": "Treina Acrobacia (+2 se já treinado). Terreno difícil não reduz seu deslocamento nem impede investidas.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {
+    "treina": [
+     "Acrobacia"
+    ]
+   },
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 33
+  },
+  {
+   "nome": "Ás do Volante",
+   "tipo": "geral",
+   "classe": "",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "",
+   "requisitos": "Agi 2",
+   "requisitosRegra": {
+    "atributos": {
+     "AGI": 2
+    }
+   },
+   "efeito": "Treina Pilotagem (+2 se já treinado). 1/rodada, veículo que pilota sofre dano: Pilotagem vs resultado do ataque ou DT do efeito; se passar, evita o dano.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {
+    "treina": [
+     "Pilotagem"
+    ]
+   },
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 33
+  },
+  {
+   "nome": "Atlético",
+   "tipo": "geral",
+   "classe": "",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "",
+   "requisitos": "For 2",
+   "requisitosRegra": {
+    "atributos": {
+     "FOR": 2
+    }
+   },
+   "efeito": "Treina Atletismo (+2 se já treinado). +3m de deslocamento.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {
+    "treina": [
+     "Atletismo"
+    ],
+    "deslocamento": 3
+   },
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 33
+  },
+  {
+   "nome": "Atraente",
+   "tipo": "geral",
+   "classe": "",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "",
+   "requisitos": "Pre 2",
+   "requisitosRegra": {
+    "atributos": {
+     "PRE": 2
+    }
+   },
+   "efeito": "+5 em Artes, Diplomacia, Enganação e Intimidação contra pessoas que possam se sentir fisicamente atraídas por você.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 33
+  },
+  {
+   "nome": "Dedos Ágeis",
+   "tipo": "geral",
+   "classe": "",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "",
+   "requisitos": "Agi 2",
+   "requisitosRegra": {
+    "atributos": {
+     "AGI": 2
+    }
+   },
+   "efeito": "Treina Crime (+2 se já treinado). Arrombar: ação padrão; furtar: ação livre (1/rodada); sabotar: ação completa.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {
+    "treina": [
+     "Crime"
+    ]
+   },
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 33
+  },
+  {
+   "nome": "Detector de Mentiras",
+   "tipo": "geral",
+   "classe": "",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "",
+   "requisitos": "Pre 2",
+   "requisitosRegra": {
+    "atributos": {
+     "PRE": 2
+    }
+   },
+   "efeito": "Treina Intuição (+2 se já treinado). Outros seres sofrem -10 em Enganação para mentir para você.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {
+    "treina": [
+     "Intuição"
+    ]
+   },
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 33
+  },
+  {
+   "nome": "Especialista em Emergências",
+   "tipo": "geral",
+   "classe": "",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "",
+   "requisitos": "Int 2",
+   "requisitosRegra": {
+    "atributos": {
+     "INT": 2
+    }
+   },
+   "efeito": "Treina Medicina (+2 se já treinado). Aplica cicatrizantes e medicamentos como ação de movimento; 1/rodada saca um deles como ação livre.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {
+    "treina": [
+     "Medicina"
+    ]
+   },
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 33
+  },
+  {
+   "nome": "Estigmado",
+   "tipo": "geral",
+   "classe": "",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "Dano mental de efeitos de medo pode ser convertido em perda de PV de mesmo valor.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 33
+  },
+  {
+   "nome": "Foco em Perícia",
+   "tipo": "geral",
+   "classe": "",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "",
+   "requisitos": "Treinado na perícia escolhida",
+   "efeito": "Escolha uma perícia (exceto Luta e Pontaria): rola +1d20 nos testes dela. Repetível para perícias diferentes.",
+   "afinidade": "",
+   "repetivel": true,
+   "efeitos": {},
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 33
+  },
+  {
+   "nome": "Inventário Organizado",
+   "tipo": "geral",
+   "classe": "",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "",
+   "requisitos": "Int 2",
+   "requisitosRegra": {
+    "atributos": {
+     "INT": 2
+    }
+   },
+   "efeito": "Soma Int no limite de espaços de carga. Itens de 0,5 espaço ocupam 0,25.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {
+    "cargaSomaInt": true
+   },
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 33
+  },
+  {
+   "nome": "Informado",
+   "tipo": "geral",
+   "classe": "",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "",
+   "requisitos": "Int 2",
+   "requisitosRegra": {
+    "atributos": {
+     "INT": 2
+    }
+   },
+   "efeito": "Treina Atualidades (+2 se já treinado). Pode usar Atualidades no lugar de qualquer perícia em testes envolvendo informações (aprovação do mestre).",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {
+    "treina": [
+     "Atualidades"
+    ]
+   },
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 34
+  },
+  {
+   "nome": "Interrogador",
+   "tipo": "geral",
+   "classe": "",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "",
+   "requisitos": "For 2",
+   "requisitosRegra": {
+    "atributos": {
+     "FOR": 2
+    }
+   },
+   "efeito": "Treina Intimidação (+2 se já treinado). Coagir com Intimidação como ação padrão, 1/cena contra a mesma pessoa.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {
+    "treina": [
+     "Intimidação"
+    ]
+   },
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 34
+  },
+  {
+   "nome": "Mentiroso Nato",
+   "tipo": "geral",
+   "classe": "",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "",
+   "requisitos": "Pre 2",
+   "requisitosRegra": {
+    "atributos": {
+     "PRE": 2
+    }
+   },
+   "efeito": "Treina Enganação (+2 se já treinado). Penalidade por mentiras implausíveis diminui para -1d20.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {
+    "treina": [
+     "Enganação"
+    ]
+   },
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 34
+  },
+  {
+   "nome": "Observador",
+   "tipo": "geral",
+   "classe": "",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "",
+   "requisitos": "Int 2",
+   "requisitosRegra": {
+    "atributos": {
+     "INT": 2
+    }
+   },
+   "efeito": "Treina Investigação (+2 se já treinado). Soma Int em Intuição.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {
+    "treina": [
+     "Investigação"
+    ]
+   },
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 34
+  },
+  {
+   "nome": "Pai de Pet",
+   "tipo": "geral",
+   "classe": "",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "",
+   "requisitos": "Pre 2",
+   "requisitosRegra": {
+    "atributos": {
+     "PRE": 2
+    }
+   },
+   "efeito": "Treina Adestramento (+2 se já treinado). Tem animal de estimação aliado: +2 em duas perícias à escolha (exceto Luta e Pontaria; aprovação do mestre).",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {
+    "treina": [
+     "Adestramento"
+    ]
+   },
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 34
+  },
+  {
+   "nome": "Palavras de Devoção",
+   "tipo": "geral",
+   "classe": "",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "",
+   "requisitos": "Pre 2",
+   "requisitosRegra": {
+    "atributos": {
+     "PRE": 2
+    }
+   },
+   "efeito": "Treina Religião (+2 se já treinado). 1/cena, 3 PE + ação completa: oração para até 2x Pre pessoas, que recebem RD mental 5 até o fim da cena.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {
+    "treina": [
+     "Religião"
+    ]
+   },
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 35
+  },
+  {
+   "nome": "Parceiro",
+   "tipo": "geral",
+   "classe": "",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "",
+   "requisitos": "Treinado em Diplomacia, NEX 30%",
+   "requisitosRegra": {
+    "treinadas": [
+     "Diplomacia"
+    ],
+    "nex": 30
+   },
+   "efeito": "Recebe um parceiro: aliado de um tipo à escolha (OPRPG p. 171). Se perdê-lo, gasta uma folga da Ordem (p. 94) para receber outro.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 35
+  },
+  {
+   "nome": "Pensamento Tático",
+   "tipo": "geral",
+   "classe": "",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "",
+   "requisitos": "Int 2",
+   "requisitosRegra": {
+    "atributos": {
+     "INT": 2
+    }
+   },
+   "efeito": "Treina Tática (+2 se já treinado). Passou em Tática p/ analisar terreno: você e aliados (médio) ganham 1 ação de movimento na 1ª rodada de combate lá (no dia).",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {
+    "treina": [
+     "Tática"
+    ]
+   },
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 35
+  },
+  {
+   "nome": "Personalidade Esotérica",
+   "tipo": "geral",
+   "classe": "",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "",
+   "requisitos": "Int 2",
+   "requisitosRegra": {
+    "atributos": {
+     "INT": 2
+    }
+   },
+   "efeito": "+3 PE. Treina Ocultismo (+2 se já treinado).",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {
+    "peFixo": 3,
+    "treina": [
+     "Ocultismo"
+    ]
+   },
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 35
+  },
+  {
+   "nome": "Persuasivo",
+   "tipo": "geral",
+   "classe": "",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "",
+   "requisitos": "Pre 2",
+   "requisitosRegra": {
+    "atributos": {
+     "PRE": 2
+    }
+   },
+   "efeito": "Treina Diplomacia (+2 se já treinado). Em testes de persuasão, penalidade por pedir coisas custosas ou perigosas diminui em -5.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {
+    "treina": [
+     "Diplomacia"
+    ]
+   },
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 35
+  },
+  {
+   "nome": "Pesquisador Científico",
+   "tipo": "geral",
+   "classe": "",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "",
+   "requisitos": "Int 2",
+   "requisitosRegra": {
+    "atributos": {
+     "INT": 2
+    }
+   },
+   "efeito": "Treina Ciências (+2 se já treinado). Usa Ciências no lugar de Ocultismo e de Sobrevivência para identificar criaturas e animais, respectivamente.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {
+    "treina": [
+     "Ciências"
+    ]
+   },
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 35
+  },
+  {
+   "nome": "Proativo",
+   "tipo": "geral",
+   "classe": "",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "",
+   "requisitos": "Agi 2",
+   "requisitosRegra": {
+    "atributos": {
+     "AGI": 2
+    }
+   },
+   "efeito": "Treina Iniciativa (+2 se já treinado). Ao rolar 19 ou 20 em um dos dados de Iniciativa: ação padrão adicional no seu primeiro turno.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {
+    "treina": [
+     "Iniciativa"
+    ]
+   },
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 35
+  },
+  {
+   "nome": "Provisões de Emergência",
+   "tipo": "geral",
+   "classe": "",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "1/missão, ação de interlúdio: recupera o esconderijo; recebe novos equipamentos equivalentes à sua patente (como nova preparação de missão).",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 35
+  },
+  {
+   "nome": "Racionalidade Inflexível",
+   "tipo": "geral",
+   "classe": "",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "",
+   "requisitos": "Int 3",
+   "requisitosRegra": {
+    "atributos": {
+     "INT": 3
+    }
+   },
+   "efeito": "Usa Int no lugar de Pre como atributo-chave de Vontade e para calcular PE.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {
+    "peSomaAtributo": "INT"
+   },
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 35
+  },
+  {
+   "nome": "Rato de Computador",
+   "tipo": "geral",
+   "classe": "",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "",
+   "requisitos": "Int 2",
+   "requisitosRegra": {
+    "atributos": {
+     "INT": 2
+    }
+   },
+   "efeito": "Treina Tecnologia (+2 se já treinado). Hackear/localizar/operar: ação completa. 1/cena de investigação, com computador: Tecnologia por pistas sem gastar rodada.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {
+    "treina": [
+     "Tecnologia"
+    ]
+   },
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 36
+  },
+  {
+   "nome": "Resposta Rápida",
+   "tipo": "geral",
+   "classe": "",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "",
+   "requisitos": "Agi 2",
+   "requisitosRegra": {
+    "atributos": {
+     "AGI": 2
+    }
+   },
+   "efeito": "Treina Reflexos (+2 se já treinado). Falhou em Percepção p/ evitar ficar desprevenido: 2 PE para rolar de novo usando Reflexos.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {
+    "treina": [
+     "Reflexos"
+    ]
+   },
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 36
+  },
+  {
+   "nome": "Talentoso",
+   "tipo": "geral",
+   "classe": "",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "",
+   "requisitos": "Pre 2",
+   "requisitosRegra": {
+    "atributos": {
+     "PRE": 2
+    }
+   },
+   "efeito": "Treina Artes (+2 se já treinado). Teste de Artes para impressionar: o bônus dado em perícias sobe +1 a cada 5 pontos acima da DT.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {
+    "treina": [
+     "Artes"
+    ]
+   },
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 36
+  },
+  {
+   "nome": "Teimosia Obstinada",
+   "tipo": "geral",
+   "classe": "",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "",
+   "requisitos": "Pre 2",
+   "requisitosRegra": {
+    "atributos": {
+     "PRE": 2
+    }
+   },
+   "efeito": "Treina Vontade (+2 se já treinado). Teste de Vontade contra condição mental ou mudança de atitude (ex.: Enfeitiçar): 2 PE para +5.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {
+    "treina": [
+     "Vontade"
+    ]
+   },
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 36
+  },
+  {
+   "nome": "Tenacidade",
+   "tipo": "geral",
+   "classe": "",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "",
+   "requisitos": "Vig 2",
+   "requisitosRegra": {
+    "atributos": {
+     "VIG": 2
+    }
+   },
+   "efeito": "Treina Fortitude (+2 se já treinado). Morrendo mas consciente: ação livre, Fortitude DT 20 (+10 por teste anterior na cena); se passar, encerra morrendo.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {
+    "treina": [
+     "Fortitude"
+    ]
+   },
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 36
+  },
+  {
+   "nome": "Sentidos Aguçados",
+   "tipo": "geral",
+   "classe": "",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "",
+   "requisitos": "Pre 2",
+   "requisitosRegra": {
+    "atributos": {
+     "PRE": 2
+    }
+   },
+   "efeito": "Treina Percepção (+2 se já treinado). Não fica desprevenido contra inimigos que não vê; ao errar por camuflagem, rola de novo o dado de chance de falha.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {
+    "treina": [
+     "Percepção"
+    ]
+   },
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 36
+  },
+  {
+   "nome": "Sobrevivencialista",
+   "tipo": "geral",
+   "classe": "",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "",
+   "requisitos": "Int 2",
+   "requisitosRegra": {
+    "atributos": {
+     "INT": 2
+    }
+   },
+   "efeito": "Treina Sobrevivência (+2 se já treinado). +2 em testes contra efeitos de clima; terreno difícil natural não reduz deslocamento nem impede investidas.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {
+    "treina": [
+     "Sobrevivência"
+    ]
+   },
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 36
+  },
+  {
+   "nome": "Sorrateiro",
+   "tipo": "geral",
+   "classe": "",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "",
+   "requisitos": "Agi 2",
+   "requisitosRegra": {
+    "atributos": {
+     "AGI": 2
+    }
+   },
+   "efeito": "Treina Furtividade (+2 se já treinado). Sem penalidade por se mover normalmente furtivo, nem por seguir alguém em ambiente sem esconderijo ou sem movimento.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {
+    "treina": [
+     "Furtividade"
+    ]
+   },
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 36
+  },
+  {
+   "nome": "Vitalidade Reforçada",
+   "tipo": "geral",
+   "classe": "",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "",
+   "requisitos": "Vig 2",
+   "requisitosRegra": {
+    "atributos": {
+     "VIG": 2
+    }
+   },
+   "efeito": "+1 PV por 5% de NEX (ou por nível). +2 em Fortitude.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {
+    "pvPorNivel": 1,
+    "pericias": {
+     "Fortitude": 2
+    }
+   },
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 36
+  },
+  {
+   "nome": "Vontade Inabalável",
+   "tipo": "geral",
+   "classe": "",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "",
+   "requisitos": "Pre 2",
+   "requisitosRegra": {
+    "atributos": {
+     "PRE": 2
+    }
+   },
+   "efeito": "+1 PE por 10% de NEX (ou a cada 2 níveis). +2 em Vontade.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {
+    "pericias": {
+     "Vontade": 2
+    },
+    "pePorDoisNiveis": 1
+   },
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 36
+  },
+  {
+   "nome": "Espreitar da Besta",
+   "tipo": "paranormal",
+   "classe": "",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "Sangue",
+   "requisitos": "",
+   "efeito": "+5 em Furtividade. Perseguição, sendo o caçador: usa Furtividade no lugar de Atletismo. Furtividade: ações discretas com só -1d20 de penalidade.",
+   "afinidade": "Bônus em Furtividade sobe para +10.",
+   "repetivel": false,
+   "efeitos": {
+    "pericias": {
+     "Furtividade": 5
+    }
+   },
+   "efeitosAfinidade": {
+    "pericias": {
+     "Furtividade": 5
+    }
+   },
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 46
+  },
+  {
+   "nome": "Instintos Sanguinários",
+   "tipo": "paranormal",
+   "classe": "",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "Sangue",
+   "requisitos": "",
+   "efeito": "Visão no escuro e faro.",
+   "afinidade": "Não pode ser flanqueado nem fica desprevenido; +5 em testes de resistência contra armadilhas (mundanas ou paranormais).",
+   "repetivel": false,
+   "efeitos": {},
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 46
+  },
+  {
+   "nome": "Antecipar Vitalidade",
+   "tipo": "paranormal",
+   "classe": "",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "Morte",
+   "requisitos": "",
+   "efeito": "Ao fazer teste: acumula 1 carga de antecipação p/ +1d20 (máx. cargas = Vig). Com carga, a próxima ação dormir remove 1 carga em vez de recuperar PV.",
+   "afinidade": "Limite de cargas +2; cada ação dormir remove 2 cargas.",
+   "repetivel": false,
+   "efeitos": {},
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 46
+  },
+  {
+   "nome": "Aura de Pavor",
+   "tipo": "paranormal",
+   "classe": "",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "Morte",
+   "requisitos": "",
+   "efeito": "2 PE + ação de movimento: pessoa ou animal (médio) fica apavorado (Vontade DT Pre: abalado) até o fim da cena ou sair do alcance. 1x por dia por alvo.",
+   "afinidade": "DT +5; afeta quaisquer pessoas ou animais escolhidos no alcance.",
+   "repetivel": false,
+   "efeitos": {},
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 46
+  },
+  {
+   "nome": "Absorver Conhecimento",
+   "tipo": "paranormal",
+   "classe": "",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "Conhecimento",
+   "requisitos": "",
+   "efeito": "Empunhando fonte escrita: 1 PE + ação completa, faz 1 pergunta; se a resposta estiver nela, obtém. Junto de ler, dado de bônus sobe 1 passo.",
+   "afinidade": "Ritual de Conhecimento com alvo 1 pessoa (não você) que possa tocar: custo -1 PE.",
+   "repetivel": false,
+   "efeitos": {},
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 46
+  },
+  {
+   "nome": "Apatia Herege",
+   "tipo": "paranormal",
+   "classe": "",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "Conhecimento",
+   "requisitos": "Conhecimento 1",
+   "requisitosRegra": {
+    "elemento": {
+     "Conhecimento": 1
+    }
+   },
+   "efeito": "Teste contra condição de medo: 2 PE para rolar de novo (fica com o 2º resultado).",
+   "afinidade": "Pode usar após saber se passou; fica com a melhor rolagem.",
+   "repetivel": false,
+   "efeitos": {},
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 47
+  },
+  {
+   "nome": "Conexão Empática",
+   "tipo": "paranormal",
+   "classe": "",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "Energia",
+   "requisitos": "Energia 1",
+   "requisitosRegra": {
+    "elemento": {
+     "Energia": 1
+    }
+   },
+   "efeito": "Ação completa + 2 PE tocando objeto elétrico ligado: conversa com ele até o fim da cena (atitude indiferente; Vontade 1 a 3). Depois, fica hostil a você.",
+   "afinidade": "+5 em testes de perícias baseadas em Int ou Pre com o item.",
+   "repetivel": false,
+   "efeitos": {},
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 47
+  },
+  {
+   "nome": "Valer-se do Caos",
+   "tipo": "paranormal",
+   "classe": "",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "Energia",
+   "requisitos": "",
+   "efeito": "Ao fazer teste, pode controlar o caos: +1d20. Se falhar ou o d20 extra der 5 ou menos, perde 1d4 SAN.",
+   "afinidade": "Só perde SAN se falhar ou se o d20 extra der 1 ou 2.",
+   "repetivel": false,
+   "efeitos": {},
+   "efeitosAfinidade": {},
+   "fonte": "Sobrevivendo ao Horror",
+   "pagina": 47
+  }
+ ]
+}

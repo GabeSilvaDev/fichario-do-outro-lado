@@ -15,26 +15,30 @@ class Rolagem {
     required int dados,
     required bool melhor,
     required int bonus,
+    int margem = 20,
   }) {
     final n = dados.clamp(1, 10);
     final rolados = [for (var i = 0; i < n; i++) _dado(20)];
     final escolhido =
         melhor ? rolados.reduce(max) : rolados.reduce(min);
     final formula =
-        '${n}d20${melhor ? '↑' : '↓'}${bonus > 0 ? '+$bonus' : ''}';
+        '${n}d20${melhor ? '↑' : '↓'}${bonus > 0 ? '+$bonus' : bonus < 0 ? '$bonus' : ''}';
     return ResultadoRolagem(
       titulo: titulo,
       formula: formula,
       rolados: rolados,
       escolhido: escolhido,
       total: escolhido + bonus,
-      critico: escolhido == 20,
+      critico: escolhido >= margem,
       desastre: escolhido == 1,
     );
   }
 
   /// Expressão de dano: termos NdM e números, com + e −. Null se inválida.
-  static ResultadoRolagem? expressao(String titulo, String bruta) {
+  /// [multiplicarDados]: crítico — só os dados da arma multiplicam, o
+  /// bônus fixo não (OPRPG p. 54).
+  static ResultadoRolagem? expressao(String titulo, String bruta,
+      {int multiplicarDados = 1}) {
     final limpa = bruta.toLowerCase().replaceAll('–', '-').replaceAll(' ', '');
     if (limpa.isEmpty) return null;
     if (!RegExp(r'^[+-]?(\d*d\d+|\d+)([+-](\d*d\d+|\d+))*$').hasMatch(limpa)) {
@@ -47,8 +51,9 @@ class Rolagem {
         .allMatches(limpa)) {
       if (m.group(3) != null) {
         final sinal = m.group(1) == '-' ? -1 : 1;
-        final n = (m.group(2)!.isEmpty ? 1 : int.parse(m.group(2)!))
-            .clamp(1, 40);
+        final n = ((m.group(2)!.isEmpty ? 1 : int.parse(m.group(2)!)) *
+                multiplicarDados)
+            .clamp(1, 80);
         final faces = int.parse(m.group(3)!).clamp(2, 1000);
         var soma = 0;
         final estes = <int>[];

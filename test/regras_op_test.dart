@@ -63,7 +63,8 @@ void main() {
       expect(DadosOP.rituaisPorNex(5), 3);
       expect(DadosOP.rituaisPorNex(10), 4);
       expect(DadosOP.rituaisPorNex(25), 7);
-      expect(DadosOP.rituaisPorNex(99), 21);
+      expect(DadosOP.rituaisPorNex(95), 21);
+      expect(DadosOP.rituaisPorNex(99), 22);
     });
     test('círculo máximo: 2º em 25%, 3º em 55%, 4º em 85%', () {
       expect(DadosOP.circuloMaximoPorNex(5), 1);
