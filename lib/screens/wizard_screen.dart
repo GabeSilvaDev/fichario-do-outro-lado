@@ -51,6 +51,13 @@ class _WizardScreenState extends State<WizardScreen> {
   final Map<int, String> _escolhasDeClasse = {};
   final Set<String> _livres = {};
 
+  /// Grau de Treinamento distribuído no assistente: quantos graus cada
+  /// perícia treinada sobe (1 = veterana, 2 = expert).
+  final Map<String, int> _graus = {};
+
+  /// O que baixar o NEX tirou, para avisar quando soltar a régua.
+  final Set<String> _cortadoPeloNex = {};
+
   /// Rituais do Ocultista, no formato que a ficha guarda em `rituais`.
   final List<Map<String, dynamic>> _rituais = [];
 
@@ -86,6 +93,10 @@ class _WizardScreenState extends State<WizardScreen> {
   /// Perícias que a origem treina — não contam no limite da classe.
   Set<String> get _daOrigem => {...(origem?.pericias ?? const [])};
 
+  /// Aumentos de Atributo que o NEX escolhido já deu (20%, 50%, 80%, 95%).
+  int get _aumentos =>
+      _livre ? 0 : classe.aumentosAtributo(f.nex, estagio: f.estagio);
+
   int get _pontosAtributoTotais {
     final zerado = [
       'AGI',
@@ -94,7 +105,17 @@ class _WizardScreenState extends State<WizardScreen> {
       'PRE',
       'VIG',
     ].any((s) => f.atributo(s) == 0);
-    return classe.pontosAtributo + (zerado ? 1 : 0);
+    return classe.pontosAtributo + (zerado ? 1 : 0) + _aumentos;
+  }
+
+  /// Quanto os atributos passam de 3 — só os aumentos levam além disso.
+  int get _acimaDe3 {
+    var soma = 0;
+    for (final s in ['AGI', 'FOR', 'INT', 'PRE', 'VIG']) {
+      final v = f.atributo(s);
+      if (v > 3) soma += v - 3;
+    }
+    return soma;
   }
 
   int get _pontosAtributoGastos {
@@ -108,28 +129,91 @@ class _WizardScreenState extends State<WizardScreen> {
   int get _pontosAtributoRestantes =>
       _pontosAtributoTotais - _pontosAtributoGastos;
 
-  int get _livresDisponiveis => classe.periciasLivresBase + f.atributo('INT');
+  /// Origem que dá menos de duas perícias (Amnésico, Profetizado): as que
+  /// faltam o jogador escolhe aqui, combinando com o mestre.
+  int get _faltamDaOrigem {
+    final o = origem;
+    if (o == null) return 0;
+    final n = 2 - o.pericias.length;
+    return n < 0 ? 0 : n;
+  }
+
+  int get _livresDisponiveis =>
+      classe.periciasLivresBase + f.atributo('INT') + _faltamDaOrigem;
+
+  /// Graus de Treinamento que o NEX já deu (35% e 70%).
+  int get _eventosGrau => _livre ? 0 : classe.grausTreinamento(f.nex);
+
+  /// Perícias por Grau de Treinamento: base da classe + Intelecto.
+  int get _periciasPorGrau => classe.periciasPorGrau + f.atributo('INT');
+
+  int get _grausTotais => _eventosGrau * _periciasPorGrau;
+
+  int get _grausUsados => _graus.values.fold(0, (a, b) => a + b);
+
+  Set<String> get _treinadas => {
+    ..._daOrigem,
+    ...classe.periciasFixas,
+    ..._escolhasDeClasse.values,
+    ..._livres,
+  };
+
+  /// Solta o grau de quem deixou de ser treinada ou passou do que o NEX dá.
+  void _ajustarGraus() {
+    final treinadas = _treinadas;
+    _graus.removeWhere((p, g) => !treinadas.contains(p) || g > _eventosGrau);
+    var experts = _graus.values.where((g) => g == 2).length;
+    for (final p in _graus.keys.toList().reversed) {
+      if (experts <= _periciasPorGrau) break;
+      if (_graus[p] == 2) {
+        _graus[p] = 1;
+        experts--;
+      }
+    }
+    while (_grausUsados > _grausTotais && _graus.isNotEmpty) {
+      _graus.remove(_graus.keys.last);
+    }
+  }
+
+  /// O próximo grau desta perícia, ou 0 se não cabe mais. Cada Grau de
+  /// Treinamento sobe perícias diferentes, então só [_periciasPorGrau]
+  /// delas chegam a expert.
+  int _proximoGrau(String pericia) {
+    final atual = _graus[pericia] ?? 0;
+    final novo = atual + 1;
+    if (novo > _eventosGrau || _grausUsados >= _grausTotais) return 0;
+    if (novo == 2) {
+      final experts = _graus.values.where((g) => g == 2).length;
+      if (experts >= _periciasPorGrau) return 0;
+    }
+    return novo;
+  }
 
   /// O passo atual está fechado? É o que libera o botão "Próximo".
   ///
   /// No modo livre nada trava: os limites viram aviso, e quem monta a ficha
   /// decide. É assim que se monta uma criatura com Vigor 8 ou um NPC sem
   /// origem nenhuma.
-  bool get _passoCompleto {
+  bool get _passoCompleto => _completoEm(passo);
+
+  bool _completoEm(int p) {
     if (_livre) return true;
-    switch (passo) {
+    switch (p) {
       case 0:
         return f.nome.trim().isNotEmpty;
       case 1:
         return f.origem.isNotEmpty;
       case 2:
         return f.classe.isNotEmpty &&
-            (!_ocultista || _rituais.length == _rituaisDisponiveis);
+            (!_ocultista ||
+                (_rituais.length == _rituaisDisponiveis &&
+                    _rituais.every((r) => _circuloDe(r) <= _circuloMaximo)));
       case 3:
-        return _pontosAtributoRestantes == 0;
+        return _pontosAtributoRestantes == 0 && _acimaDe3 <= _aumentos;
       case 4:
         return _escolhasDeClasse.length == classe.periciasEscolha.length &&
-            _livres.length == _livresDisponiveis;
+            _livres.length == _livresDisponiveis &&
+            _grausUsados == _grausTotais;
       default:
         return true;
     }
@@ -156,6 +240,10 @@ class _WizardScreenState extends State<WizardScreen> {
         final r = _pontosAtributoRestantes;
         if (r > 0) return 'Ainda faltam $r ponto(s) para distribuir.';
         if (r < 0) return 'Você passou ${-r} ponto(s) do limite.';
+        final acima = _acimaDe3 - _aumentos;
+        if (acima > 0) {
+          return 'Acima de 3 só com Aumento de Atributo: tire $acima.';
+        }
         return null;
       case 4:
         final faltamEscolhas =
@@ -166,6 +254,8 @@ class _WizardScreenState extends State<WizardScreen> {
         final faltam = _livresDisponiveis - _livres.length;
         if (faltam > 0) return 'Escolha mais $faltam perícia(s).';
         if (faltam < 0) return 'Desmarque ${-faltam} perícia(s).';
+        final graus = _grausTotais - _grausUsados;
+        if (graus > 0) return 'Grau de Treinamento: suba mais $graus.';
         return null;
       default:
         return null;
@@ -173,22 +263,55 @@ class _WizardScreenState extends State<WizardScreen> {
   }
 
   void _trocarClasse(String nome) {
+    final perdeu =
+        _escolhasDeClasse.isNotEmpty ||
+        _livres.isNotEmpty ||
+        _rituais.isNotEmpty ||
+        _graus.isNotEmpty;
     setState(() {
       f.classe = nome;
       _escolhasDeClasse.clear();
       _livres.clear();
       _rituais.clear();
+      _graus.clear();
+      if (!DadosOP.trilhasDe(nome).any((t) => t.nome == f.trilha)) {
+        f.trilha = '';
+      }
     });
+    if (perdeu) {
+      _avisar(
+        'Classe trocada para $nome: escolhas de perícia, graus e '
+        'rituais recomeçam.',
+      );
+    }
+  }
+
+  void _avisar(String texto) {
+    ScaffoldMessenger.maybeOf(context)
+      ?..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(texto)));
   }
 
   void _trocarOrigem(String nome) {
     setState(() {
       f.origem = nome;
       _livres.removeWhere(_daOrigem.contains);
+      _ajustarGraus();
     });
   }
 
   Future<void> _criar() async {
+    // Ligar e desligar o modo livre no meio do caminho não pode criar
+    // ficha ilegal: tudo é conferido de novo aqui.
+    if (!_livre) {
+      for (var p = 0; p < 5; p++) {
+        if (!_completoEm(p)) {
+          setState(() => passo = p);
+          _avisar('Falta resolver: ${_titulos[p]}.');
+          return;
+        }
+      }
+    }
     f.aplicarClasse(classe);
     if (origem != null) f.aplicarOrigem(origem!);
 
@@ -198,10 +321,18 @@ class _WizardScreenState extends State<WizardScreen> {
     for (final nome in _livres) {
       f.definirGrauPericia(nome, 5);
     }
+    _ajustarGraus();
+    for (final e in _graus.entries) {
+      f.definirGrauPericia(e.key, 5 + 5 * e.value);
+    }
     for (final r in _rituais) {
       f.adicionarEm('rituais', r);
     }
 
+    if (!_livre && !(f.porEstagio ? f.estagio >= 2 : f.nex >= 10)) {
+      f.trilha = '';
+    }
+    f.sincronizarTrilha();
     f.pv = f.pvMax;
     f.san = f.sanMax;
     f.pe = f.peMax;
@@ -605,8 +736,18 @@ class _WizardScreenState extends State<WizardScreen> {
                   divisions: 20,
                   activeColor: Cores.energia,
                   label: '${f.nex}%',
+                  onChangeEnd: (_) {
+                    if (_cortadoPeloNex.isEmpty) return;
+                    _avisar(
+                      'NEX ${f.nex}%: ${_cortadoPeloNex.join(' e ')} '
+                      'saíram (não cabem mais).',
+                    );
+                    _cortadoPeloNex.clear();
+                  },
                   onChanged: (v) {
                     final passoNex = v.round();
+                    final rituaisAntes = _rituais.length;
+                    final grausAntes = _grausUsados;
                     setState(() {
                       f.nex = passoNex >= 100 ? 99 : passoNex;
                       if (_livre) return;
@@ -618,6 +759,13 @@ class _WizardScreenState extends State<WizardScreen> {
                         _trocarClasse('Combatente');
                       }
                       _ajustarRituaisAoNex();
+                      _ajustarGraus();
+                      if (_rituais.length < rituaisAntes) {
+                        _cortadoPeloNex.add('rituais');
+                      }
+                      if (_grausUsados < grausAntes) {
+                        _cortadoPeloNex.add('graus de treinamento');
+                      }
                     });
                   },
                 ),
@@ -770,33 +918,63 @@ class _WizardScreenState extends State<WizardScreen> {
         const SizedBox(height: 12),
         Row(
           children: [
-            Expanded(
-              child: TextFormField(
-                initialValue: f.trilha,
-                decoration: const InputDecoration(
-                  labelText: 'Trilha (a partir do NEX 10%)',
-                  hintText: 'Ex.: Aniquilador',
-                ),
-                onChanged: (v) => f.trilha = v,
-              ),
-            ),
+            Expanded(child: _campoTrilha()),
             const SizedBox(width: 10),
-            Expanded(
-              child: DropdownButtonFormField<String>(
-                initialValue: f.patente,
-                decoration: const InputDecoration(labelText: 'Patente'),
-                dropdownColor: Cores.carta2,
-                items: [
-                  for (final p in DadosOP.patentes)
-                    DropdownMenuItem(value: p.nome, child: Text(p.nome)),
-                ],
-                onChanged: (v) => setState(() => f.patente = v ?? 'Recruta'),
+            // Mundano e Sobrevivente não têm patente (p. 171; SAH p. 31).
+            if (!_ehCivil(classe) && DadosOP.patentes.isNotEmpty)
+              Expanded(
+                child: DropdownButtonFormField<String>(
+                  isExpanded: true,
+                  initialValue: DadosOP.patentePorNome(f.patente) != null
+                      ? f.patente
+                      : DadosOP.patentes.first.nome,
+                  decoration: const InputDecoration(labelText: 'Patente'),
+                  dropdownColor: Cores.carta2,
+                  items: [
+                    for (final p in DadosOP.patentes)
+                      DropdownMenuItem(value: p.nome, child: Text(p.nome)),
+                  ],
+                  onChanged: (v) => setState(() => f.patente = v ?? 'Recruta'),
+                ),
               ),
-            ),
           ],
         ),
         if (_ocultista) ..._secaoRituais(),
       ],
+    );
+  }
+
+  /// Trilha do catálogo da classe; só abre quando o NEX (ou o estágio do
+  /// sobrevivente) já dá trilha. As habilidades entram sozinhas ao criar.
+  Widget _campoTrilha() {
+    final opcoes = DadosOP.trilhasDe(f.classe);
+    final libera = f.porEstagio ? f.estagio >= 2 : f.nex >= 10;
+    if (opcoes.isEmpty || _livre) {
+      return TextFormField(
+        initialValue: f.trilha,
+        decoration: const InputDecoration(
+          labelText: 'Trilha (a partir do NEX 10%)',
+          hintText: 'Ex.: Aniquilador',
+        ),
+        onChanged: (v) => f.trilha = v,
+      );
+    }
+    return DropdownButtonFormField<String>(
+      key: ValueKey('trilha-${f.classe}-$libera'),
+      isExpanded: true,
+      initialValue: opcoes.any((t) => t.nome == f.trilha) ? f.trilha : '',
+      decoration: InputDecoration(
+        labelText: libera
+            ? 'Trilha'
+            : (f.porEstagio ? 'Trilha (estágio 2)' : 'Trilha (NEX 10%)'),
+      ),
+      dropdownColor: Cores.carta2,
+      items: [
+        const DropdownMenuItem(value: '', child: Text('—')),
+        for (final t in opcoes)
+          DropdownMenuItem(value: t.nome, child: Text(t.nome)),
+      ],
+      onChanged: libera ? (v) => setState(() => f.trilha = v ?? '') : null,
     );
   }
 
@@ -883,6 +1061,16 @@ class _WizardScreenState extends State<WizardScreen> {
                     'mais — mas um atributo 0 rola 2d20 e fica com o pior '
                     'resultado.',
         ),
+        if (_aumentos > 0) ...[
+          const SizedBox(height: 8),
+          _Explicacao(
+            '${f.porEstagio ? 'No estágio ${f.estagio}' : 'Em NEX ${f.nex}%'} '
+            'você já ganhou $_aumentos Aumento(s) de Atributo '
+            '(NEX 20%, 50%, 80% e 95%; estágio 3 no Sobrevivente): '
+            '+$_aumentos ponto(s), cada um +1 em um atributo. '
+            '${f.porEstagio ? 'No Sobrevivente, nem assim passa de 3.' : 'Só eles passam de 3, até 5. Acima de 3 agora: $_acimaDe3 de $_aumentos.'}',
+          ),
+        ],
         const SizedBox(height: 14),
         if (!_livre)
           Card(
@@ -934,7 +1122,9 @@ class _WizardScreenState extends State<WizardScreen> {
     ].any((x) => x != sigla && f.atributo(x) == 0);
     final podeSubir = _livre
         ? valor < 20
-        : (valor < 3 && _pontosAtributoRestantes > 0);
+        : _pontosAtributoRestantes > 0 &&
+              (valor < 3 ||
+                  (valor < classe.tetoAumento && _acimaDe3 < _aumentos));
     final podeDescer = valor > 0 && (_livre || !(valor == 1 && jaTemZero));
 
     return Card(
@@ -958,7 +1148,10 @@ class _WizardScreenState extends State<WizardScreen> {
               icon: const Icon(Icons.remove_circle_outline),
               color: podeDescer ? Cores.tinta2 : Cores.linha,
               onPressed: podeDescer
-                  ? () => setState(() => f.definirAtributo(sigla, valor - 1))
+                  ? () => setState(() {
+                      f.definirAtributo(sigla, valor - 1);
+                      _ajustarGraus();
+                    })
                   : null,
             ),
             SizedBox(
@@ -977,7 +1170,10 @@ class _WizardScreenState extends State<WizardScreen> {
               icon: const Icon(Icons.add_circle_outline),
               color: podeSubir ? Cores.energiaViva : Cores.linha,
               onPressed: podeSubir
-                  ? () => setState(() => f.definirAtributo(sigla, valor + 1))
+                  ? () => setState(() {
+                      f.definirAtributo(sigla, valor + 1);
+                      _ajustarGraus();
+                    })
                   : null,
             ),
           ],
@@ -1004,10 +1200,13 @@ class _WizardScreenState extends State<WizardScreen> {
                     'escolhe $_livresDisponiveis perícia(s) — '
                     '${classe.periciasLivresBase} da classe + '
                     '${f.atributo('INT')} do Intelecto. Treinada dá +5 no '
-                    'teste. Na criação toda perícia entra como treinada: '
-                    'repetir a mesma não vira veterano (+10) — isso vem de '
-                    'subir de NEX ou de treino narrativo.',
+                    'teste.${_faltamDaOrigem > 0 ? ' A origem ${f.origem} dá só ${origem!.pericias.length} perícia(s): mais $_faltamDaOrigem entra(m) aqui, à escolha do mestre.' : ''} '
+                    'Veterana (+10) e expert (+15) vêm do Grau de '
+                    'Treinamento, em NEX 35% e 70%: a cada um, '
+                    '${classe.periciasPorGrau} + Intelecto perícias treinadas '
+                    'sobem um grau.',
         ),
+        if (_eventosGrau > 0) ...[const SizedBox(height: 8), _cartaoGrau()],
         const SizedBox(height: 12),
         if (daOrigem.isNotEmpty || fixasClasse.isNotEmpty) ...[
           const FaixaSecao('Já vêm treinadas'),
@@ -1067,6 +1266,7 @@ class _WizardScreenState extends State<WizardScreen> {
                             onSelected: (_) => setState(() {
                               _escolhasDeClasse[i] = nome;
                               _livres.remove(nome);
+                              _ajustarGraus();
                             }),
                           ),
                       ],
@@ -1104,6 +1304,7 @@ class _WizardScreenState extends State<WizardScreen> {
         fixasClasse.contains(p.nome);
     final marcada = _livres.contains(p.nome);
     final podeMarcar = _livre || marcada || _livres.length < _livresDisponiveis;
+    final grau = _graus[p.nome] ?? 0;
 
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 2),
@@ -1135,15 +1336,34 @@ class _WizardScreenState extends State<WizardScreen> {
         ),
         subtitle: Text(
           jaTreinada
-              ? 'já treinada · na criação não sobe para veterano'
+              ? 'já treinada'
               : '${p.atributo}${p.soTreinada ? ' · só treinada' : ''}',
           style: const TextStyle(fontSize: 11),
         ),
+        trailing: _eventosGrau > 0 && (jaTreinada || marcada)
+            ? ActionChip(
+                label: Text(const ['+5', 'V +10', 'E +15'][grau]),
+                tooltip: 'Grau de Treinamento',
+                backgroundColor: grau > 0
+                    ? Cores.energia.withValues(alpha: .22)
+                    : Cores.carta2,
+                side: BorderSide(color: grau > 0 ? Cores.energia : Cores.linha),
+                onPressed: () => setState(() {
+                  final novo = _proximoGrau(p.nome);
+                  if (novo == 0) {
+                    _graus.remove(p.nome);
+                  } else {
+                    _graus[p.nome] = novo;
+                  }
+                }),
+              )
+            : null,
         onTap: jaTreinada || !podeMarcar
             ? null
             : () => setState(() {
                 if (marcada) {
                   _livres.remove(p.nome);
+                  _ajustarGraus();
                 } else {
                   _livres.add(p.nome);
                 }
@@ -1152,18 +1372,72 @@ class _WizardScreenState extends State<WizardScreen> {
     );
   }
 
+  /// Resumo do Grau de Treinamento que o NEX escolhido já deu.
+  Widget _cartaoGrau() {
+    final faltam = _grausTotais - _grausUsados;
+    return Card(
+      color: faltam == 0 ? Cores.carta : Cores.carta2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(10),
+        side: BorderSide(
+          color: faltam == 0 ? Cores.estavel : Cores.conhecimento,
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'GRAU DE TREINAMENTO · $_grausUsados de $_grausTotais',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                letterSpacing: 1.2,
+                fontSize: 12,
+                color: faltam == 0 ? Cores.estavel : Cores.conhecimento,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              _eventosGrau == 1
+                  ? 'NEX 35%: $_periciasPorGrau perícias treinadas viram '
+                        'veteranas (+10). Toque no +5 de uma perícia treinada '
+                        'da lista.'
+                  : 'NEX 35% e 70%: duas vezes $_periciasPorGrau perícias '
+                        'sobem um grau. Toque no +5 para veterana (+10) e de '
+                        'novo para expert (+15) — até $_periciasPorGrau '
+                        'experts.',
+              style: const TextStyle(fontSize: 12, color: Cores.tinta2),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _passoConferir() {
-    final vig = f.atributo('VIG');
-    final pre = f.atributo('PRE');
-    final pv = classe.pvMax(f.nex, vig, estagio: f.estagio);
-    final san = classe.sanMax(f.nex, estagio: f.estagio);
-    final pe = classe.peMax(f.nex, pre, estagio: f.estagio);
-    final treinadas = <String>{
-      ..._daOrigem,
-      ...classe.periciasFixas,
-      ..._escolhasDeClasse.values,
-      ..._livres,
-    }.toList()..sort();
+    final pv = f.pvMax;
+    final san = f.sanMax;
+    final pe = f.peMax;
+    final treinadas = _treinadas.toList()..sort();
+    // O que o assistente já aplicou sozinho não entra na lista de anotar.
+    final aAnotar = <String>[
+      for (final m in classe.marcosEntre(5, f.nex).values)
+        for (final g in m)
+          if (!g.startsWith('Aumento de Atributo') &&
+              !g.startsWith('Grau de Treinamento') &&
+              !g.startsWith('Rituais de') &&
+              !g.startsWith('Engenhosidade') &&
+              // Trilha escolhida: as habilidades dela entram sozinhas.
+              !(f.trilha.isNotEmpty &&
+                  (g.startsWith('Trilha') || g == 'Poder de trilha')) &&
+              g != '+1 ritual')
+            g,
+    ];
+    final contagem = <String, int>{};
+    for (final g in aAnotar) {
+      contagem[g] = (contagem[g] ?? 0) + 1;
+    }
 
     return ListView(
       padding: const EdgeInsets.all(16),
@@ -1242,7 +1516,7 @@ class _WizardScreenState extends State<WizardScreen> {
         const SizedBox(height: 8),
         Row(
           children: [
-            _quadro('DEFESA', '${10 + f.atributo('AGI')}', Cores.tinta2),
+            _quadro('DEFESA', '${f.defesa}', Cores.tinta2),
             const SizedBox(width: 8),
             _quadro(
               'CARGA',
@@ -1296,7 +1570,7 @@ class _WizardScreenState extends State<WizardScreen> {
               children: [
                 for (final p in treinadas)
                   Chip(
-                    label: Text('$p +5'),
+                    label: Text('$p +${5 + 5 * (_graus[p] ?? 0)}'),
                     backgroundColor: Cores.carta2,
                     side: const BorderSide(color: Cores.linha),
                   ),
@@ -1321,6 +1595,29 @@ class _WizardScreenState extends State<WizardScreen> {
             ),
           ),
         ),
+        if (contagem.isNotEmpty) ...[
+          const FaixaSecao('Anote na ficha'),
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  for (final e in contagem.entries)
+                    Text('• ${e.value > 1 ? '${e.value}× ' : ''}${e.key}'),
+                  const SizedBox(height: 6),
+                  Text(
+                    'Ganhos até NEX ${f.nex}%. Atributos, Grau de '
+                    'Treinamento e rituais já estão na '
+                    'ficha. Poderes são escolha sua: entram na aba de '
+                    'habilidades.',
+                    style: const TextStyle(fontSize: 12, color: Cores.tinta2),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
         const SizedBox(height: 20),
       ],
     );
