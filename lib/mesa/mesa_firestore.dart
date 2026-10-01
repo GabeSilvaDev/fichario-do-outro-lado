@@ -409,6 +409,8 @@ class MesaFirestore implements MesaService {
         }
       }
       await _mapa(mesaId).delete();
+      // Senão a imagem da sessão passada pula na tela de todos na próxima.
+      await _mural(mesaId).delete();
     } on FirebaseException catch (e) {
       if (e.code == 'permission-denied') throw SemPermissao();
       rethrow;

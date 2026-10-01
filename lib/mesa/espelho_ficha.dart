@@ -44,7 +44,9 @@ class EspelhoFicha {
     _pendente = f;
     _timer ??= Timer(janela, () {
       _timer = null;
-      enviarAgora();
+      // Sem rede a escrita fica na fila do Firestore; erro aqui não pode
+      // derrubar nada — a ficha local já está salva.
+      enviarAgora().catchError((_) {});
     });
   }
 

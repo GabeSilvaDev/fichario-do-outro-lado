@@ -8,12 +8,14 @@ import 'package:share_plus/share_plus.dart';
 import 'package:uuid/uuid.dart';
 
 import '../mesa/mesa_store.dart';
+import '../mesa/sessao_mesa.dart';
 import '../mesa/modelos.dart';
 import '../mesa/ouvinte_mapa.dart';
 import '../mesa/ouvinte_mural.dart';
 import '../mesa/ponte_rolagens.dart';
 import '../mesa/telas/mesa_aba.dart';
 import '../models/ficha_op.dart';
+import '../regras/pendencias.dart';
 import '../store/ficha_store.dart';
 import '../theme.dart';
 import '../widgets/retrato.dart';
@@ -33,6 +35,13 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _aba = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    // Espelho da ficha e presença seguem a mesa em qualquer aba.
+    SessaoMesa.iniciar();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -322,7 +331,19 @@ class _ListaFichasState extends State<_ListaFichas> {
       ].where((x) => x.isNotEmpty).join(' · ');
       return 'VD ${f.vd}${tipo.isEmpty ? '' : ' · $tipo'}';
     }
-    return '${f.classe} · NEX ${f.nex}% · ${f.patente}';
+    final c = f.classeOP;
+    final pendencias = pendenciasDe(f)
+        .where((p) => p.gravidade != Gravidade.info)
+        .length;
+    return [
+      f.classe,
+      if (c?.porEstagio ?? false)
+        'estágio ${f.estagio}'
+      else if (c?.agente ?? true) ...['NEX ${f.nex}%', f.patente],
+      if (f.morto) 'morto' else if (f.morrendo) 'morrendo',
+      if (f.insano) 'insano' else if (f.enlouquecendo) 'enlouquecendo',
+      if (pendencias > 0) '$pendencias pendência(s)',
+    ].join(' · ');
   }
 
   /// Criatura não tem Sanidade nem Esforço: mostrar "SAN 0/0" só ocuparia

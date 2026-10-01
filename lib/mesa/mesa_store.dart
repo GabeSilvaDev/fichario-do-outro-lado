@@ -149,6 +149,14 @@ class MesaStore {
     await _box.put(_chaveConhecidas, jsonEncode(restantes.toList()));
   }
 
+  /// Quando foi posta a última imagem do mural que este aparelho já abriu.
+  /// Guardado no disco: reiniciar o app não reabre a mesma imagem.
+  static DateTime? muralVisto(String mesaId) =>
+      DateTime.tryParse(_box.get('mural:$mesaId') ?? '');
+
+  static Future<void> marcarMuralVisto(String mesaId, DateTime em) =>
+      _box.put('mural:$mesaId', em.toIso8601String());
+
   static String? chaveDe(String mesaId) {
     for (final m in conhecidas()) {
       if (m.mesaId == mesaId) return m.chave;

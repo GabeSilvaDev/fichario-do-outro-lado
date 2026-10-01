@@ -83,15 +83,27 @@ class _MapaDaCenaState extends State<MapaDaCena> {
       setState(() => _erroImagem = true);
       return;
     }
-    final bytes = base64Decode(b64);
-    final descritor = await ui.ImageDescriptor.encoded(
-        await ui.ImmutableBuffer.fromUint8List(bytes));
-    if (!mounted) return;
-    setState(() {
-      _bytes = bytes;
-      _tamanho = Size(descritor.width.toDouble(), descritor.height.toDouble());
-    });
-    descritor.dispose();
+    // Só o tamanho interessa aqui. `ImageDescriptor` não existe no Flutter
+    // web — o mestre no navegador ficava preso no carregando; o codec
+    // funciona nos dois.
+    try {
+      final bytes = base64Decode(b64);
+      final codec = await ui.instantiateImageCodec(bytes);
+      final quadro = await codec.getNextFrame();
+      final tamanho = Size(
+        quadro.image.width.toDouble(),
+        quadro.image.height.toDouble(),
+      );
+      quadro.image.dispose();
+      codec.dispose();
+      if (!mounted) return;
+      setState(() {
+        _bytes = bytes;
+        _tamanho = tamanho;
+      });
+    } catch (_) {
+      if (mounted) setState(() => _erroImagem = true);
+    }
   }
 
   void _mover(TokenMapa token, Offset nova) {

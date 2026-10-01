@@ -7,10 +7,10 @@ import '../../models/ficha_op.dart';
 import '../../store/ficha_store.dart';
 import '../../theme.dart';
 import '../../widgets/retrato.dart';
-import '../espelho_ficha.dart';
 import '../mesa_firestore.dart';
 import '../mesa_service.dart';
 import '../mesa_store.dart';
+import '../sessao_mesa.dart';
 import '../modelos.dart';
 import 'entrar_mesa_dialogo.dart';
 import 'cartao_mapa.dart';
@@ -32,9 +32,7 @@ class MesaAba extends StatefulWidget {
 
 class _MesaAbaState extends State<MesaAba> {
   late final MesaService _servico;
-  Timer? _ponto;
   bool _ocupado = false;
-  EspelhoFicha? _espelho;
 
   /// A sessão online está de pé (login feito) e dá para observar a mesa.
   bool _sessaoPronta = false;
@@ -73,39 +71,16 @@ class _MesaAbaState extends State<MesaAba> {
     }
   }
 
-  @override
-  void dispose() {
-    _ponto?.cancel();
-    _desligarEspelho();
-    super.dispose();
-  }
+  // Espelho da ficha e presença não são desta aba: vivem na [SessaoMesa],
+  // que segue o [MesaStore] em qualquer tela. Aqui só se pede para ela
+  // conferir o estado depois de cada mudança.
+  void _ligarEspelho(String mesaId, String fichaId) => SessaoMesa.reconciliar();
 
-  void _ligarEspelho(String mesaId, String fichaId) {
-    _espelho = EspelhoFicha(_servico)..ligar(mesaId, fichaId);
-    FichaStore.observador = _espelho!.aoSalvar;
-  }
+  void _desligarEspelho() => SessaoMesa.pararEspelho();
 
-  /// Espelho morto com observador vivo faz o app escrever numa mesa que já não
-  /// existe: os dois desligam juntos, sempre.
-  void _desligarEspelho() {
-    FichaStore.observador = null;
-    _espelho?.desligar();
-    _espelho = null;
-  }
+  void _ligarPonto() => SessaoMesa.reconciliar();
 
-  /// Batimento de presença enquanto o app está aberto na mesa.
-  void _ligarPonto() {
-    _ponto?.cancel();
-    _ponto = Timer.periodic(const Duration(seconds: 30), (_) {
-      final estado = MesaStore.atual;
-      if (estado != null) _servico.baterPonto(estado.mesaId);
-    });
-  }
-
-  void _desligarPonto() {
-    _ponto?.cancel();
-    _ponto = null;
-  }
+  void _desligarPonto() => SessaoMesa.parar();
 
   void _erro(Object e) {
     if (!mounted) return;
@@ -484,6 +459,30 @@ class _MesaAbaState extends State<MesaAba> {
       await MesaStore.entrar(estado.comFicha(escolhida.id));
       _ligarEspelho(estado.mesaId, escolhida.id);
     });
+  }
+
+  /// Remover tira o jogador da mesa na hora: um toque sem querer não pode
+  /// derrubar alguém no meio da cena.
+  Future<void> _removerMembro(EstadoMesa estado, Membro m) async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: Cores.carta2,
+        title: Text('Remover ${m.nome.isEmpty ? 'este jogador' : m.nome}?'),
+        content: const Text('Sai da mesa agora e a ficha dele some do painel. '
+            'Ele pode voltar com o código.'),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Cancelar')),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: const Text('Remover')),
+        ],
+      ),
+    );
+    if (ok != true) return;
+    await _comEspera(() => _servico.removerMembro(estado.mesaId, m.uid));
   }
 
   Future<void> _tirarDaMesa(EstadoMesa estado) async {
@@ -895,8 +894,7 @@ class _MesaAbaState extends State<MesaAba> {
                           tooltip: 'Remover da mesa',
                           icon: const Icon(Icons.person_remove_outlined,
                               color: Cores.tinta2),
-                          onPressed: () => _comEspera(() =>
-                              _servico.removerMembro(estado.mesaId, m.uid)),
+                          onPressed: () => _removerMembro(estado, m),
                         )
                       : null,
                 ),

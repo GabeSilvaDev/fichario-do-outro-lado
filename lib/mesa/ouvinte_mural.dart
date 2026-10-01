@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 
 import '../widgets/visualizador_imagem.dart';
 import 'mesa_service.dart';
+import 'mesa_store.dart';
 
 /// Abre em tela cheia a imagem que o mestre põe no mural.
 ///
@@ -28,6 +29,7 @@ class OuvinteMural extends StatefulWidget {
 
 class _OuvinteMuralState extends State<OuvinteMural> {
   StreamSubscription<ItemMural?>? _assinatura;
+  Timer? _novaTentativa;
 
   /// Quando a imagem que já está aberta foi posta. Sem isso a tela reabre a
   /// cada emissão do stream, inclusive na primeira, que só repete o que já
@@ -37,7 +39,16 @@ class _OuvinteMuralState extends State<OuvinteMural> {
   @override
   void initState() {
     super.initState();
+    _ultimoAberto = _visto();
     _assinar();
+  }
+
+  DateTime? _visto() {
+    try {
+      return MesaStore.muralVisto(widget.mesaId);
+    } catch (_) {
+      return null; // Hive fechado (testes): segue só em memória.
+    }
   }
 
   /// O login vem antes de observar: o app pode ter aberto já dentro da mesa,
@@ -47,6 +58,10 @@ class _OuvinteMuralState extends State<OuvinteMural> {
     try {
       await widget.servico.entrarAnonimo();
     } catch (_) {
+      // Sem rede agora: tenta de novo, senão a imagem nunca chegaria.
+      _novaTentativa = Timer(const Duration(seconds: 30), () {
+        if (mounted) _assinar();
+      });
       return;
     }
     if (!mounted) return;
@@ -58,6 +73,7 @@ class _OuvinteMuralState extends State<OuvinteMural> {
 
   @override
   void dispose() {
+    _novaTentativa?.cancel();
     _assinatura?.cancel();
     super.dispose();
   }
@@ -65,6 +81,10 @@ class _OuvinteMuralState extends State<OuvinteMural> {
   void _aoMudar(ItemMural? item) {
     if (item == null || item.imagemId.isEmpty) return;
     if (_ultimoAberto != null && !item.em.isAfter(_ultimoAberto!)) return;
+    // Marca antes de buscar a imagem: o Firestore costuma emitir o mesmo
+    // mural duas vezes (escrita local e confirmação do servidor), e as duas
+    // chegavam aqui antes da busca terminar — a imagem abria duas vezes.
+    _ultimoAberto = item.em;
     _abrir(item);
   }
 
@@ -73,7 +93,9 @@ class _OuvinteMuralState extends State<OuvinteMural> {
         await widget.servico.imagemCheia(widget.mesaId, item.imagemId);
     if (imagem == null || !mounted) return;
 
-    _ultimoAberto = item.em;
+    try {
+      MesaStore.marcarMuralVisto(widget.mesaId, item.em);
+    } catch (_) {}
 
     VisualizadorImagem.abrir(context, base64Decode(imagem), item.legenda);
   }

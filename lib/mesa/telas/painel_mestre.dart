@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../models/ficha_op.dart';
+import '../../regras/pendencias.dart';
 import '../../screens/ficha_screen.dart';
 import '../../theme.dart';
 import '../../widgets/retrato.dart';
@@ -60,8 +61,12 @@ class PainelMestre extends StatelessWidget {
       child: InkWell(
         borderRadius: BorderRadius.circular(10),
         onTap: () => Navigator.of(context).push(MaterialPageRoute(
-          builder: (_) =>
-              FichaScreen(fichaDireta: ficha, somenteLeitura: true),
+          builder: (_) => _FichaAoVivo(
+            servico: servico,
+            mesaId: mesaId,
+            donoUid: naMesa.donoUid,
+            inicial: ficha,
+          ),
         )),
         child: Padding(
           padding: const EdgeInsets.all(12),
@@ -83,12 +88,29 @@ class PainelMestre extends StatelessWidget {
                                   fontWeight: FontWeight.bold, fontSize: 16)),
                         ),
                         if (ficha.emCombate) _selo('COMBATE', Cores.conhecimento),
-                        if (ficha.morto) _selo('MORTO', Cores.sangue),
+                        if (ficha.morto)
+                          _selo('MORTO', Cores.sangue)
+                        else if (!ficha.oculto('pv') && ficha.morrendo)
+                          _selo('MORRENDO ${ficha.turnosMorrendo}/3',
+                              Cores.sangue)
+                        else if (!ficha.oculto('pv') && ficha.estaMachucado)
+                          _selo('MACHUCADO', Cores.sangue),
+                        if (!ficha.oculto('san')) ...[
+                          if (ficha.insano)
+                            _selo('INSANO', Cores.energia)
+                          else if (ficha.enlouquecendo)
+                            _selo('ENLOUQUECENDO ${ficha.turnosEnlouquecendo}/3',
+                                Cores.energia)
+                          else if (ficha.perturbado)
+                            _selo('PERTURBADO', Cores.energia),
+                        ],
                       ],
                     ),
                     Text(
-                      '${ficha.classe} · NEX ${ficha.nex}% · '
-                      'Defesa ${ficha.defesa}',
+                      '${ficha.classe} · '
+                      '${ficha.porEstagio ? 'estágio ${ficha.estagio}' : 'NEX ${ficha.nex}%'} · '
+                      'Defesa ${ficha.defesa}'
+                      '${ficha.condicoes.isEmpty ? '' : ' · ${ficha.condicoes.join(', ')}'}',
                       style: const TextStyle(
                           fontSize: 12, color: Cores.tinta2),
                     ),
@@ -99,7 +121,8 @@ class PainelMestre extends StatelessWidget {
                       children: [
                         ficha.oculto('pv')
                             ? _pilulaOculta('PV')
-                            : _pilula('PV', ficha.pv, ficha.pvMax, Cores.sangue),
+                            : _pilula('PV', ficha.pv, ficha.pvMax, Cores.sangue,
+                                extra: ficha.pvTemporario),
                         ficha.oculto('san')
                             ? _pilulaOculta('SAN')
                             : _pilula(
@@ -108,6 +131,9 @@ class PainelMestre extends StatelessWidget {
                             ? _pilulaOculta('PE')
                             : _pilula('PE', ficha.pe, ficha.peMax,
                                 Cores.conhecimento),
+                        if (pendenciasDe(ficha)
+                            .any((p) => p.gravidade == Gravidade.erro))
+                          _selo('FORA DA REGRA', Cores.sangue),
                       ],
                     ),
                     const SizedBox(height: 4),
@@ -168,7 +194,8 @@ class PainelMestre extends StatelessWidget {
     );
   }
 
-  Widget _pilula(String rotulo, int atual, int maximo, Color cor) {
+  Widget _pilula(String rotulo, int atual, int maximo, Color cor,
+      {int extra = 0}) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(
@@ -176,7 +203,7 @@ class PainelMestre extends StatelessWidget {
         borderRadius: BorderRadius.circular(99),
       ),
       child: Text(
-        '$rotulo $atual/$maximo',
+        '$rotulo $atual/$maximo${extra > 0 ? ' +$extra' : ''}',
         style: TextStyle(
             fontSize: 12, fontWeight: FontWeight.bold, color: cor),
       ),
@@ -246,5 +273,36 @@ class PainelMestre extends StatelessWidget {
     if (s < 3600) return 'há ${s ~/ 60} min';
     if (s < 86400) return 'há ${s ~/ 3600} h';
     return 'há ${s ~/ 86400} d';
+  }
+}
+
+/// A ficha de um jogador aberta pelo mestre, acompanhando o que ele muda:
+/// cada publicação nova redesenha a tela, sem precisar voltar e abrir de
+/// novo.
+class _FichaAoVivo extends StatelessWidget {
+  final MesaService servico;
+  final String mesaId;
+  final String donoUid;
+  final FichaOP inicial;
+
+  const _FichaAoVivo({
+    required this.servico,
+    required this.mesaId,
+    required this.donoUid,
+    required this.inicial,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<FichaNaMesa?>(
+      stream: servico.observarFicha(mesaId, donoUid),
+      builder: (context, snap) {
+        final naMesa = snap.data;
+        final ficha = naMesa == null
+            ? inicial
+            : FichaOP(Map<String, dynamic>.from(naMesa.ficha));
+        return FichaScreen(fichaDireta: ficha, somenteLeitura: true);
+      },
+    );
   }
 }
