@@ -13,6 +13,11 @@ class RecursoContador extends StatelessWidget {
   final ValueChanged<int>? aoMudar;
   final VoidCallback? aoEditarMaximo;
 
+  /// Pontos por cima do atual (os PV temporários) e o toque que os edita.
+  final int extra;
+  final String rotuloExtra;
+  final VoidCallback? aoEditarExtra;
+
   const RecursoContador({
     super.key,
     required this.rotulo,
@@ -22,6 +27,9 @@ class RecursoContador extends StatelessWidget {
     this.maximoManual = false,
     this.aoMudar,
     this.aoEditarMaximo,
+    this.extra = 0,
+    this.rotuloExtra = '',
+    this.aoEditarExtra,
   });
 
   @override
@@ -41,6 +49,14 @@ class RecursoContador extends StatelessWidget {
                         letterSpacing: 1.5,
                         fontSize: 12,
                         color: cor)),
+                if (aoEditarExtra != null)
+                  IconButton(
+                    icon: const Icon(Icons.add_moderator_outlined, size: 18),
+                    color: extra > 0 ? cor : Cores.tinta2,
+                    tooltip: rotuloExtra,
+                    visualDensity: VisualDensity.compact,
+                    onPressed: aoEditarExtra,
+                  ),
                 const Spacer(),
                 if (aoMudar != null)
                   _botao(context, Icons.remove, () => aoMudar!(atual - 1)),
@@ -60,12 +76,20 @@ class RecursoContador extends StatelessWidget {
                             text: ' / $maximo${maximoManual ? '*' : ''}',
                             style: const TextStyle(
                                 fontSize: 13, color: Cores.tinta2)),
+                        if (extra > 0)
+                          TextSpan(
+                              text: ' +$extra',
+                              style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.bold,
+                                  color: cor)),
                       ]),
                     ),
                   ),
                 ),
                 if (aoMudar != null)
-                  _botao(context, Icons.add, () => aoMudar!(atual + 1)),
+                  _botao(context, Icons.add,
+                      atual < maximo ? () => aoMudar!(atual + 1) : null),
               ],
             ),
             const SizedBox(height: 6),
@@ -84,7 +108,8 @@ class RecursoContador extends StatelessWidget {
     );
   }
 
-  Widget _botao(BuildContext context, IconData icone, VoidCallback aoTocar) {
+  /// [aoTocar] null = botão apagado (o + com o recurso já no máximo).
+  Widget _botao(BuildContext context, IconData icone, VoidCallback? aoTocar) {
     return InkWell(
       onTap: aoTocar,
       borderRadius: BorderRadius.circular(99),
@@ -96,7 +121,8 @@ class RecursoContador extends StatelessWidget {
           shape: BoxShape.circle,
           border: Border.all(color: Cores.linha),
         ),
-        child: Icon(icone, size: 18, color: Cores.tinta2),
+        child: Icon(icone,
+            size: 18, color: aoTocar == null ? Cores.linha : Cores.tinta2),
       ),
     );
   }

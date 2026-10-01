@@ -252,6 +252,7 @@ class _CatalogoScreenState extends State<CatalogoScreen> {
     ].join('\n');
     return {
       'nome': r['nome'],
+      'elemento': r['elemento'],
       'circulo': '${r['circulo']}º',
       'custo': '${r['custo']} PE',
       'execucao': r['execucao'],
@@ -365,12 +366,23 @@ class _CatalogoScreenState extends State<CatalogoScreen> {
       'bonus': 0,
       'dano': a['dano'],
       'tipo': _tiposDano[a['tipo']] ?? '',
-      'margem': critico.startsWith('1') ? critico : '',
-      'critico': critico.startsWith('x') ? critico : '',
+      // "19/x3" = margem 19 e multiplicador x3.
+      'margem': critico.split('/').firstWhere(
+        (c) => c.startsWith('1'),
+        orElse: () => '',
+      ),
+      'critico': critico.split('/').firstWhere(
+        (c) => c.startsWith('x'),
+        orElse: () => '',
+      ),
       'alcance': (a['alcance'] as String).isEmpty
           ? (distancia ? '' : 'Corpo a corpo')
           : a['alcance'] as String,
       'especial': '',
+      'familia': a['familia'],
+      'uso': a['uso'],
+      'categoria': a['categoria'],
+      'espacos': a['espacos'],
     };
   }
 
