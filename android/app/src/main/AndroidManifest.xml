@@ -1,4 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- A mesa online (Firebase) precisa de rede no APK de release. -->
+    <uses-permission android:name="android.permission.INTERNET"/>
     <application
         android:label="Fichário do Outro Lado"
         android:name="${applicationName}"

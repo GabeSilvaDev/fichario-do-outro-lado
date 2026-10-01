@@ -69,9 +69,12 @@ service cloud.firestore {
         allow delete: if logado() && (membroUid == uid() || souMestre(mesaId));
       }
 
+      // Só quem está na mesa publica ficha nela: sem isso, qualquer um com
+      // o id da mesa punha ficha no painel do mestre.
       match /fichas/{donoUid} {
         allow read:  if logado() && (donoUid == uid() || souMestre(mesaId));
-        allow write: if logado() && donoUid == uid();
+        allow write: if logado() && donoUid == uid() &&
+          (souMembro(mesaId) || souMestre(mesaId));
         allow delete: if souMestre(mesaId);
       }
 
