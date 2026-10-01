@@ -33,10 +33,11 @@ Unofficial fan content published under the Ordem Paranormal Community License. C
 ## Highlights
 
 - **Complete character sheet** — 6 tabs, 28 skills, attacks, abilities, rituals, inventory with load, and HP/SAN/EP maxima **calculated automatically** from class, NEX and attributes.
-- **Guided character creation** — a 6-step wizard that enforces the rulebook (origin, class, attribute points, skill quotas) and shows the final numbers before you commit.
+- **A sheet that checks itself** — every change is weighed against the rulebook (v1.3 and *Sobrevivendo ao Horror*): whatever is out of the rules or still pending shows up on the spot, and NEX gains, path abilities, Transcend, conditions and states apply on their own.
+- **Guided character creation** — a 6-step wizard that enforces the rulebook (origin, class, attribute points and increases, skill quotas, Training Grade) and shows the final numbers before you commit.
 - **Tap to roll** — skills roll `Xd20` keep-best, attacks roll test + damage, crits and fumbles flagged. A quick-dice bar accepts `2d6+3` and the official sheet's `/AGI` syntax.
 - **150-entry bestiary** — threats from the books, named NPCs from the published campaigns, allies and extras, all as full stat blocks you import as NPCs in one tap.
-- **System catalog** — all 81 rituals and the full 41-row weapon table, insertable straight into the sheet.
+- **System catalog** — all 81 rituals, the full 41-row weapon table and 278 powers/path abilities from both books, insertable straight into the sheet.
 - **Online table** — sheets and rolls mirrored to the GM in ~2 s, a full-screen image board, and a live scene map with draggable tokens. No accounts: players join with a `ORDO-XXXX` code.
 - **Offline by default** — sheets live on the device (Hive), export/import as `.json`. The online table is optional.
 - **Runs anywhere** — Android APK or installable PWA on iPhone, Android and desktop.
@@ -105,9 +106,16 @@ Unofficial fan content published under the Ordem Paranormal Community License. C
 
 - **Player or NPC** — the same sheet serves both. NPCs/creatures start in free mode and **never go to the online table**; the bestiary belongs to the GM.
 - **Free mode (GM)** — the rules toggle in the app bar lifts the rulebook limits. Warnings still show, but nothing blocks: attributes up to 20, skills without quotas, any class/NEX combination. This is how you build creatures, NPCs and characters that have outgrown creation rules.
-- **6-step creation wizard** that enforces the book: identity → origin → class & NEX → attributes (4 points for agents, 3 for civilians; zero one attribute for an extra point) → skills (origin and class picks pre-checked; you choose `base + Intellect`) → review. Each step unlocks the next only when complete, and the last screen shows HP/SAN/EP before creating. After that the sheet is yours and everything becomes free editing. The same two toggles (type and rules) live on the sheet screen: promote a character to NPC, or lift the limits on an existing sheet, whenever you want.
+- **6-step creation wizard** that enforces the book: identity → origin → class & NEX → attributes (4 points for agents, 3 for civilians; zero one attribute for an extra point) → skills (origin and class picks pre-checked; you choose `base + Intellect`) → review. Each step unlocks the next only when complete, and the last screen shows HP/SAN/EP before creating. Starting above NEX 5% already grants that NEX's **attribute increases** (20/50/80/95%, up to 5 — up to 3 for the Survivor) and **Training Grade** (35/70%: veteran +10, expert +15), the path comes from the catalog, and everything is re-checked when you hit *Create*. After that the sheet is yours and everything becomes free editing. The same two toggles (type and rules) live on the sheet screen: promote a character to NPC, or lift the limits on an existing sheet, whenever you want.
 - **Full sheet in 6 tabs** — identity (class/origin/path/rank, nationality, age), NEX, attributes, HP/SAN/EP with **auto-calculated maxima** (class + NEX + Vigor/Presence, manual override), defense and movement with encumbrance penalty, the 28 skills with training grade, attacks (damage type, crit range and multiplier, reach, special), abilities, rituals, inventory with load (5×Strength) and per-rank item limits, proficiencies, and an **About** tab (backstory, appearance, first paranormal encounter, phobias, favorites, personality, worst nightmare, notes).
-- **Picking a class or origin fills the sheet** — trained skills, proficiencies and the power/ability come in on their own, with confirmation; nothing you already had is erased.
+- **Picking a class or origin fills the sheet** — trained skills, proficiencies and the power/ability come in on their own, with confirmation. Switching offers to remove what the previous one left behind, and a Survivor becoming an agent keeps what they had (*Special Training*).
+- **Pending panel** — at the top of the sheet (and as a badge in the app bar) everything that is out of the rules or still to resolve: attribute points, skill and grade quotas, path at 10%, powers per NEX, affinity at 50%, rituals per circle, load, rank item limits, proficiencies, stale manual maxima. Each change that creates a new one warns you right away.
+- **Automatic progression** — raising NEX lists what each step gives (class power, path, attribute increase, Training Grade, versatility, affinity); current HP/SAN/EP follow the maxima keeping the damage already taken; path abilities enter and leave by themselves; each paranormal power counts as Transcend and removes that NEX's Sanity.
+- **Powers catalog** — 278 powers and 27 paths (class, general, paranormal, path abilities) in table notation, with prerequisites checked; numeric effects (Defense, HP per NEX, skill bonuses, damage resistance…) apply automatically.
+- **States and conditions** — wounded, dying (3-turn counter → dead), disturbed and going insane come from the resources; the book's 33 conditions apply their penalties to Defense, dice and movement without stacking equal effects; *End of scene* clears temporaries and conditions.
+- **Rules applied to rolls** — encumbrance and heavy armor −5, missing proficiency −2d20, Strength on melee damage, threat range and multiplier read from the weapon, a crit button that multiplies only the weapon dice; temporary HP absorbs damage first and current values never go over the maximum.
+- **Casting rituals** — spends EP, respects the EP limit, shows the DC and rolls the paranormal cost (Occultism DC 20 + cost; Fear rituals cost permanent Sanity).
+- **Optional rules** — varied ages with age disadvantages, debilitating injuries and *Playing without Sanity* (Determination points), per sheet.
 - **Table state** — mark *in combat* / *dead*, and hide HP, Sanity or Effort from the GM panel when the character plays with a secret resource.
 - **Tap to roll** — skills roll `Xd20` keep-best (attribute 0: 2d20 keep-worst) + training bonus; attacks roll test and damage. Crits and fumbles flagged. The **quick dice** bar accepts `2d6+3` and the official sheet's `/AGI` syntax.
 - **Campaign bestiary** — 150 ready stat blocks in 16 groups: the books' threats by element (Blood, Death, Knowledge, Energy), people and troops, animals, the named NPCs of *Vendeta Oculta 1 & 2*, *Casos Paranormais* and extra missions, plus the Order's allies and extras written for this table. A threat comes **complete**: VD (challenge rating), category and size, disturbing presence, senses, printed Defense and HP, resistances and vulnerabilities, block tests, every attack with the roll (`3d20+10`) and damage, and what each ability does — in table notation. Import everything, one group or one entry; all come in as NPCs in free mode. Re-importing updates the same sheet instead of duplicating it.
@@ -117,7 +125,7 @@ Unofficial fan content published under the Ordem Paranormal Community License. C
 ### For the GM — the online table
 
 - Create the table, read the code out loud (`ORDO-XXXX`) and receive a recovery key. Players join by code, no account (anonymous sign-in).
-- **Live sheets** — a player publishes their sheet and everything they mark (HP, SAN, EP, inventory…) shows in the GM panel within ~2 s, with *combat* / *dead* badges and respecting whatever the player chose to hide.
+- **Live sheets** — a player publishes their sheet and everything they mark (HP, SAN, EP, conditions, inventory…) shows in the GM panel within ~2 s — from any tab, even after reopening the app — with *combat*, *dead*, *dying*, *wounded*, *going insane* and *out of the rules* badges, respecting whatever the player chose to hide. A sheet opened from the panel follows the player live too.
 - **Latest rolls** — every roll made on a published sheet enters the table feed instantly: who rolled, what, the dice and the total.
 - **Image board** — the GM sends an image and it **opens full-screen on everyone's device**: map, NPC portrait, clue. The gallery keeps the campaign's collection between sessions.
 - **Scene map** — a separate live screen inside the table. Floor plans live in a **map library of their own**, separate from the board gallery: board images pop up in everyone's face, map plans stay up for reference. The GM uploads a plan, picks which one is in play and places tokens: **published agents come in with their sheet portrait**, **bestiary NPCs come in with their crest**, and you can add loose tokens (marker, hostage, door). Tapping a token opens **size** (0.4× to 3× — a Huge creature doesn't fit the same circle as an agent), threat mark and remove. **Only the GM moves; players only watch**, and whoever leaves the screen comes back to everything in place — positions live in Firestore, not on the device. The Firestore rules guarantee that, not just the UI.
@@ -194,13 +202,14 @@ The **`ordem-paranormal-mesa`** project is up and wired to the app:
 
 Nothing to do: creating a table in the app already writes to Firestore.
 
-**If you change the rules**, republish them — from the console (Firestore → Rules → Publish) or the CLI:
+**If you change the rules**, republish them — from the console (Firestore → Rules → Publish) or the CLI (`firebase.json` and `.firebaserc` are in the repo):
 
 ```bash
-firebase deploy --only firestore:rules --project ordem-paranormal-mesa
+npx firebase-tools login
+npx firebase-tools deploy --only firestore:rules --project ordem-paranormal-mesa
 ```
 
-`firestore.rules` is the system's only security layer: the owner writes their own sheet and the GM reads it; rolls only in your own name; gallery and board are GM-only; the table key sits in a document nobody can read.
+`firestore.rules` is the system's only security layer: only table members publish sheets, the owner writes their own and the GM reads it; rolls only in your own name; gallery and board are GM-only; the table key sits in a document nobody can read.
 
 ### Using your own Firebase project
 
@@ -230,18 +239,28 @@ lib/
 │                               ranks (assets)
 ├── models/
 │   ├── ficha_op.dart           the sheet (Map + HP/SAN/EP/load math)
+│   ├── normalizar.dart         repairs imported/old sheets on load
 │   └── rolagem.dart            dice engine (Xd20 best/worst, expressions)
+├── regras/                     the rules engine
+│   ├── pendencias.dart         what is out of the rules or pending
+│   ├── efeitos.dart            origin, powers, conditions summed up
+│   ├── condicoes.dart          the book's conditions and penalties
+│   ├── poderes.dart            powers/paths catalog model
+│   └── opcionais.dart          age, injuries, Determination
 ├── store/ficha_store.dart      sheets in Hive + mirror observer
 ├── screens/
 │   ├── home_screen.dart        Sheets | Table tabs
 │   ├── bestiario_screen.dart   the ready cast (asset) → device sheets
 │   ├── licenca_screen.dart     seal, notices and privacy
 │   ├── wizard_screen.dart      creation wizard (6 steps)
+│   ├── poderes_screen.dart     pick a power from the catalog
 │   └── ficha_screen.dart       the sheet in 6 tabs, edit and read
-├── widgets/                    portrait, HP/SAN/EP counters, image viewer
+├── widgets/                    portrait, HP/SAN/EP counters, image viewer,
+│                               pending panel
 └── mesa/                       the online table
     ├── mesa_service.dart       interface (contract = firestore.rules)
     ├── mesa_firestore.dart     real implementation
+    ├── sessao_mesa.dart        mirror + presence alive in any tab
     ├── espelho_ficha.dart      sheet → table with a 2 s window
     ├── ponte_rolagens.dart     roll → table feed
     ├── ouvinte_mural.dart      GM image opens by itself
@@ -256,6 +275,8 @@ lib/
 ## System data
 
 Only mechanics and names, no book text: 28 skills with base attribute, 26 origins (what each one trains and its power's effect), 5 ranks with per-category item limits — in `assets/data/*.json` — and the 4 classes with their HP/EP/SAN formulas per NEX, which live **in code** (`lib/data/dados_op.dart`): an asset failing to load would silently drop the maxima to the current value.
+
+Powers and paths (`assets/catalogo/poderes.json` for the core book, `poderes_sah.json` for *Sobrevivendo ao Horror*) carry the effect in table notation plus a machine block (`efeitos`) the sheet applies by itself.
 
 Power and ability effects are written in table notation — `2 PE → +5 em Ciências ou Investigação. 1×/cena.` — authored here, not copied. The license allows the system's names and terminology and forbids reproducing book text; see [LICENCA.md](LICENCA.md).
 
