@@ -150,6 +150,18 @@ void main() {
       expect(f.sanMax, antes - 3);
       expect(f.san, f.sanMax);
     });
+
+    test('Vítima também perde o +1 de SAN do NEX em que transcende', () {
+      final f = combatente()
+        ..nex = 15
+        ..origem = 'Vítima';
+      final antes = f.sanMax;
+      final paranormal = DadosOP.poderes.firstWhere(
+        (p) => p.tipo == 'paranormal',
+      );
+      f.adicionarEm('habilidades', paranormal.paraFicha());
+      expect(f.sanMax, antes - 4);
+    });
   });
 
   group('condições', () {

@@ -316,7 +316,7 @@ class FichaOP {
     var total = _baseSobrevivente('san', c) ?? c.sanMax(nex, estagio: estagio);
     total += e.sanFixo + e.sanPorNivel * nivelNex;
     // Transcender: não ganha a SAN do NEX em que transcendeu (p. 26).
-    total -= transcendencias * c.sanPorNivel;
+    total -= transcendencias * (c.sanPorNivel + e.sanPorNivel);
     if (origemAtual?.flag('sanMetade') ?? false) {
       final inicial = _sanInicial(c);
       total -= inicial - inicial ~/ 2;
