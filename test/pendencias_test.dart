@@ -164,6 +164,37 @@ void main() {
     });
   });
 
+  group('ferimentos debilitantes (SAH p. 105)', () {
+    test('dois no Vigor tiram 2 PV máx. por 5% de NEX', () {
+      final f = combatente()..nex = 50;
+      final base = f.pvMax;
+      f.ferimentos = ['VIG'];
+      expect(f.pvMax, base - 10);
+      f.ferimentos = ['VIG', 'VIG'];
+      expect(f.ferimentosEm('VIG'), 2);
+      expect(f.pvMax, base - 20);
+    });
+
+    test('cada ferimento no mesmo atributo tira mais um d20', () {
+      final f = combatente();
+      final fort = DadosOP.pericias.firstWhere((p) => p.nome == 'Fortitude');
+      f.ferimentos = ['VIG'];
+      final (um, melhorUm, _) = f.testePericia(fort);
+      f.ferimentos = ['VIG', 'VIG'];
+      final (dois, melhorDois, _) = f.testePericia(fort);
+      expect((um, melhorUm), (1, true));
+      expect((dois, melhorDois), (2, false));
+    });
+
+    test('tirar um ferimento deixa os outros do mesmo atributo', () {
+      final f = combatente()..ferimentos = ['VIG', 'VIG', 'AGI'];
+      final atuais = f.ferimentos..remove('VIG');
+      f.ferimentos = atuais;
+      expect(f.ferimentosEm('VIG'), 1);
+      expect(f.ferimentosEm('AGI'), 1);
+    });
+  });
+
   group('condições', () {
     test('vulnerável + desprevenido tira 5, não 7 (p. 313)', () {
       final f = combatente();

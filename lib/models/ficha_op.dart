@@ -303,7 +303,7 @@ class FichaOP {
         c.pvMax(nex, vig, estagio: estagio);
     total += e.pvFixo + e.pvPorNivel * n;
     // Ferimento debilitante no Vigor: −1 PV máximo por 5% de NEX (SAH p. 105).
-    if (ferimentos.contains('VIG')) total -= n;
+    total -= n * ferimentosEm('VIG');
     return total < 1 ? 1 : total;
   }
 
@@ -779,6 +779,10 @@ class FichaOP {
   List<String> get ferimentos => _textos('ferimentos');
   set ferimentos(List<String> v) =>
       _mexendoNosMaximos(() => _gravarTextos('ferimentos', v));
+
+  /// Ferimentos no mesmo atributo se acumulam (SAH p. 105).
+  int ferimentosEm(String sigla) =>
+      ferimentos.where((a) => a == sigla).length;
 
   /// Regra opcional de idade (p. 172): faixa etária e desvantagens.
   String get faixaEtaria => (dados['faixaEtaria'] ?? '') as String;

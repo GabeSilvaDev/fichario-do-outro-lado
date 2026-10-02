@@ -2627,26 +2627,14 @@ class _FichaScreenState extends State<FichaScreen> {
             ],
             const SizedBox(height: 10),
             const Text('Ferimentos debilitantes (−1 d20 no atributo; Vigor '
-                'tira 1 PV máx. por 5% de NEX):',
+                'tira 1 PV máx. por 5% de NEX; acumulam — toque para '
+                'somar, × para tirar):',
                 style: TextStyle(fontSize: 12)),
             Wrap(
               spacing: 6,
               children: [
                 for (final a in const ['AGI', 'FOR', 'INT', 'PRE', 'VIG'])
-                  FilterChip(
-                    label: Text(a, style: const TextStyle(fontSize: 12)),
-                    selected: ficha.ferimentos.contains(a),
-                    showCheckmark: false,
-                    visualDensity: VisualDensity.compact,
-                    onSelected: leitura
-                        ? null
-                        : (on) {
-                            final atuais = ficha.ferimentos;
-                            on ? atuais.add(a) : atuais.remove(a);
-                            ficha.ferimentos = atuais;
-                            _salvar();
-                          },
-                  ),
+                  _chipFerimento(a),
               ],
             ),
             SwitchListTile(
@@ -2668,6 +2656,32 @@ class _FichaScreenState extends State<FichaScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _chipFerimento(String sigla) {
+    final n = ficha.ferimentosEm(sigla);
+    return InputChip(
+      key: ValueKey('ferimento-$sigla'),
+      label: Text(n > 1 ? '$sigla ×$n' : sigla,
+          style: const TextStyle(fontSize: 12)),
+      selected: n > 0,
+      showCheckmark: false,
+      visualDensity: VisualDensity.compact,
+      onPressed: leitura
+          ? null
+          : () {
+              ficha.ferimentos = [...ficha.ferimentos, sigla];
+              _salvar();
+            },
+      onDeleted: leitura || n == 0
+          ? null
+          : () {
+              final atuais = ficha.ferimentos;
+              atuais.remove(sigla);
+              ficha.ferimentos = atuais;
+              _salvar();
+            },
     );
   }
 

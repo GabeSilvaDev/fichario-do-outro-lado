@@ -242,4 +242,38 @@ void main() {
       expect(f.atributo('VIG'), 1);
     },
   );
+  testWidgets('ferimentos no mesmo atributo acumulam pela tela', (t) async {
+    celular(t);
+    final f = FichaOP.nova('ficha-ferimento')
+      ..nome = 'Teste'
+      ..classe = 'Combatente'
+      ..nex = 5;
+    await t.pumpWidget(
+      MaterialApp(
+        theme: construirTema(),
+        home: FichaScreen(fichaDireta: f),
+      ),
+    );
+    await t.pumpAndSettle();
+    await t.ensureVisible(find.text('Sobre'));
+    await t.pumpAndSettle();
+    await t.tap(find.text('Sobre'));
+    await t.pumpAndSettle();
+
+    final vig = find.byKey(const ValueKey('ferimento-VIG'));
+    await t.ensureVisible(vig);
+    await t.tap(vig);
+    await t.pump();
+    await t.tap(vig);
+    await t.pump();
+    expect(f.ferimentosEm('VIG'), 2);
+    expect(find.text('VIG ×2'), findsOneWidget);
+
+    await t.tap(
+      find.descendant(of: vig, matching: find.byIcon(Icons.clear)),
+    );
+    await t.pump();
+    expect(f.ferimentosEm('VIG'), 1);
+    expect(find.text('VIG'), findsOneWidget);
+  });
 }
