@@ -105,16 +105,6 @@ void _classeENex(FichaOP f, ClasseOP c, _Add add) {
       'geral',
     );
   }
-  if (f.origemAtual?.flag('sanMetade') ?? false) {
-    add(
-      'cultista',
-      'Cultista Arrependido: o livro não diz se a metade vale '
-          'só para a SAN inicial; aqui ela vale para o máximo inteiro. '
-          'Combine com o mestre.',
-      Gravidade.info,
-      'geral',
-    );
-  }
 }
 
 void _atributos(FichaOP f, ClasseOP c, _Add add) {

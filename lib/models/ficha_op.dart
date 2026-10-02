@@ -317,7 +317,10 @@ class FichaOP {
     total += e.sanFixo + e.sanPorNivel * nivelNex;
     // Transcender: não ganha a SAN do NEX em que transcendeu (p. 26).
     total -= transcendencias * c.sanPorNivel;
-    if (origemAtual?.flag('sanMetade') ?? false) total = total ~/ 2;
+    if (origemAtual?.flag('sanMetade') ?? false) {
+      final inicial = _sanInicial(c);
+      total -= inicial - inicial ~/ 2;
+    }
     total -= sanPerdida;
     return total < 0 ? 0 : total;
   }
@@ -366,6 +369,16 @@ class FichaOP {
             (bonus['sanFixo'] ?? 0) +
             (n - 1) * c.sanPorNivel;
     }
+  }
+
+  /// Sanidade com que o personagem começou o jogo: a do Sobrevivente, se
+  /// ele começou assim, senão a inicial da classe.
+  int _sanInicial(ClasseOP c) {
+    if (exSobrevivente > 0 && c.agente) {
+      final sobrevivente = DadosOP.classePorNome('Sobrevivente');
+      if (sobrevivente != null) return sobrevivente.sanIni;
+    }
+    return c.sanIni;
   }
 
   /// Estágio em que o sobrevivente virou agente (0 = nunca foi).

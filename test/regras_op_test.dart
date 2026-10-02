@@ -241,6 +241,11 @@ void main() {
       expect(f.sanMax, combatente.sanMax(5) ~/ 2);
     });
 
+    test('Traços do Outro Lado não corta a Sanidade ganha por NEX', () {
+      expect(agente('Cultista Arrependido', nex: 50).sanMax, 6 + 9 * 3);
+      expect(agente('Cultista Arrependido', nex: 99).sanMax, 6 + 19 * 3);
+    });
+
     test('máximo manual continua mandando em tudo', () {
       final f = agente('Desgarrado', nex: 30);
       f.definirMaxManual('pv', 40);
