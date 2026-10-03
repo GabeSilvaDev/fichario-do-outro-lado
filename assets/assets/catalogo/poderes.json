@@ -1,0 +1,2443 @@
+{
+ "versao": 1,
+ "aviso": "Poderes e trilhas em notação de mesa. O texto do livro não entra.",
+ "trilhas": [
+  {
+   "nome": "Aniquilador",
+   "classe": "Combatente",
+   "fonte": "Livro de Regras",
+   "pagina": 26
+  },
+  {
+   "nome": "Comandante de Campo",
+   "classe": "Combatente",
+   "fonte": "Livro de Regras",
+   "pagina": 26
+  },
+  {
+   "nome": "Guerreiro",
+   "classe": "Combatente",
+   "fonte": "Livro de Regras",
+   "pagina": 27
+  },
+  {
+   "nome": "Operações Especiais",
+   "classe": "Combatente",
+   "fonte": "Livro de Regras",
+   "pagina": 27
+  },
+  {
+   "nome": "Tropa de Choque",
+   "classe": "Combatente",
+   "fonte": "Livro de Regras",
+   "pagina": 27
+  },
+  {
+   "nome": "Atirador de Elite",
+   "classe": "Especialista",
+   "fonte": "Livro de Regras",
+   "pagina": 30
+  },
+  {
+   "nome": "Infiltrador",
+   "classe": "Especialista",
+   "fonte": "Livro de Regras",
+   "pagina": 30
+  },
+  {
+   "nome": "Médico de Campo",
+   "classe": "Especialista",
+   "fonte": "Livro de Regras",
+   "pagina": 31,
+   "requisitos": "Treinado em Medicina; habilidades exigem kit de medicina",
+   "requisitosRegra": {
+    "treinadas": [
+     "Medicina"
+    ]
+   }
+  },
+  {
+   "nome": "Negociador",
+   "classe": "Especialista",
+   "fonte": "Livro de Regras",
+   "pagina": 31
+  },
+  {
+   "nome": "Técnico",
+   "classe": "Especialista",
+   "fonte": "Livro de Regras",
+   "pagina": 31
+  },
+  {
+   "nome": "Conduíte",
+   "classe": "Ocultista",
+   "fonte": "Livro de Regras",
+   "pagina": 34
+  },
+  {
+   "nome": "Flagelador",
+   "classe": "Ocultista",
+   "fonte": "Livro de Regras",
+   "pagina": 34
+  },
+  {
+   "nome": "Graduado",
+   "classe": "Ocultista",
+   "fonte": "Livro de Regras",
+   "pagina": 35
+  },
+  {
+   "nome": "Intuitivo",
+   "classe": "Ocultista",
+   "fonte": "Livro de Regras",
+   "pagina": 35
+  },
+  {
+   "nome": "Lâmina Paranormal",
+   "classe": "Ocultista",
+   "fonte": "Livro de Regras",
+   "pagina": 35
+  }
+ ],
+ "poderes": [
+  {
+   "nome": "Ataque Especial",
+   "tipo": "habilidade",
+   "classe": "Combatente",
+   "trilha": "",
+   "nex": 5,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "Ao atacar, 2 PE: +5 no ataque ou no dano. 25%: 3 PE, +10 · 55%: 4 PE, +15 · 85%: 5 PE, +20. Cada +5 vai no ataque ou no dano.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "fonte": "Livro de Regras",
+   "pagina": 24
+  },
+  {
+   "nome": "Eclético",
+   "tipo": "habilidade",
+   "classe": "Especialista",
+   "trilha": "",
+   "nex": 5,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "2 PE: conta como treinado na perícia do teste.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "fonte": "Livro de Regras",
+   "pagina": 28
+  },
+  {
+   "nome": "Perito",
+   "tipo": "habilidade",
+   "classe": "Especialista",
+   "trilha": "",
+   "nex": 5,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "Escolha 2 perícias treinadas (não Luta/Pontaria). 2 PE: +1d6 no teste. 25%: 3 PE, +1d8 · 55%: 4 PE, +1d10 · 85%: 5 PE, +1d12.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "fonte": "Livro de Regras",
+   "pagina": 28
+  },
+  {
+   "nome": "Engenhosidade",
+   "tipo": "habilidade",
+   "classe": "Especialista",
+   "trilha": "",
+   "nex": 40,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "Com Eclético, +2 PE: benefícios de veterano na perícia. 75%: +4 PE: benefícios de expert.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "fonte": "Livro de Regras",
+   "pagina": 30
+  },
+  {
+   "nome": "Escolhido pelo Outro Lado",
+   "tipo": "habilidade",
+   "classe": "Ocultista",
+   "trilha": "",
+   "nex": 5,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "Conjura rituais: 1º círculo; 2º em 25%, 3º em 55%, 4º em 85%. Começa com 3 rituais de 1º; +1 ritual a cada NEX (fora do limite).",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "fonte": "Livro de Regras",
+   "pagina": 32
+  },
+  {
+   "nome": "Armamento Pesado",
+   "tipo": "classe",
+   "classe": "Combatente",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "",
+   "requisitos": "For 2",
+   "requisitosRegra": {
+    "atributos": {
+     "FOR": 2
+    }
+   },
+   "efeito": "Proficiência com armas pesadas.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {
+    "proficiencias": [
+     "Armas pesadas"
+    ]
+   },
+   "fonte": "Livro de Regras",
+   "pagina": 25
+  },
+  {
+   "nome": "Artista Marcial",
+   "tipo": "classe",
+   "classe": "Combatente",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "Desarmado: 1d6, dano letal, arma ágil. 35%: 1d8 · 70%: 1d10.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "fonte": "Livro de Regras",
+   "pagina": 25
+  },
+  {
+   "nome": "Ataque de Oportunidade",
+   "tipo": "classe",
+   "classe": "Combatente",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "Reação + 1 PE: ataque corpo a corpo em ser que sai voluntariamente de espaço adjacente.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "fonte": "Livro de Regras",
+   "pagina": 25
+  },
+  {
+   "nome": "Combater com Duas Armas",
+   "tipo": "classe",
+   "classe": "Combatente",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "",
+   "requisitos": "Agi 3, treinado em Luta ou Pontaria",
+   "requisitosRegra": {
+    "atributos": {
+     "AGI": 3
+    }
+   },
+   "efeito": "Com 2 armas (1+ leve), na ação agredir: 1 ataque com cada. –1 dado em todos os ataques até seu próximo turno.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "fonte": "Livro de Regras",
+   "pagina": 25
+  },
+  {
+   "nome": "Combate Defensivo",
+   "tipo": "classe",
+   "classe": "Combatente",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "",
+   "requisitos": "Int 2",
+   "requisitosRegra": {
+    "atributos": {
+     "INT": 2
+    }
+   },
+   "efeito": "Na ação agredir, opcional: –1 dado nos ataques e +5 Defesa até seu próximo turno.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "fonte": "Livro de Regras",
+   "pagina": 25
+  },
+  {
+   "nome": "Golpe Demolidor",
+   "tipo": "classe",
+   "classe": "Combatente",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "",
+   "requisitos": "For 2, treinado em Luta",
+   "requisitosRegra": {
+    "atributos": {
+     "FOR": 2
+    },
+    "treinadas": [
+     "Luta"
+    ]
+   },
+   "efeito": "Na manobra quebrar ou ao atacar objeto, 1 PE: +2 dados de dano do tipo da arma.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "fonte": "Livro de Regras",
+   "pagina": 25
+  },
+  {
+   "nome": "Golpe Pesado",
+   "tipo": "classe",
+   "classe": "Combatente",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "Armas corpo a corpo: +1 dado de dano do mesmo tipo.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "fonte": "Livro de Regras",
+   "pagina": 25
+  },
+  {
+   "nome": "Incansável",
+   "tipo": "classe",
+   "classe": "Combatente",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "1×/cena, 2 PE: ação de investigação extra, com For ou Agi como atributo-base.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "fonte": "Livro de Regras",
+   "pagina": 25
+  },
+  {
+   "nome": "Presteza Atlética",
+   "tipo": "classe",
+   "classe": "Combatente",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "Facilitar investigação, 1 PE: usa For ou Agi como atributo-base. Se passar, próximo aliado que usar o bônus ganha +1 dado.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "fonte": "Livro de Regras",
+   "pagina": 25
+  },
+  {
+   "nome": "Proteção Pesada",
+   "tipo": "classe",
+   "classe": "Combatente",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "",
+   "requisitos": "NEX 30%",
+   "requisitosRegra": {
+    "nex": 30
+   },
+   "efeito": "Proficiência com proteções pesadas.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {
+    "proficiencias": [
+     "Proteções pesadas"
+    ]
+   },
+   "fonte": "Livro de Regras",
+   "pagina": 25
+  },
+  {
+   "nome": "Reflexos Defensivos",
+   "tipo": "classe",
+   "classe": "Combatente",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "",
+   "requisitos": "Agi 2",
+   "requisitosRegra": {
+    "atributos": {
+     "AGI": 2
+    }
+   },
+   "efeito": "+2 Defesa e +2 em testes de resistência.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {
+    "defesa": 2,
+    "testesResistencia": 2
+   },
+   "fonte": "Livro de Regras",
+   "pagina": 25
+  },
+  {
+   "nome": "Saque Rápido",
+   "tipo": "classe",
+   "classe": "Combatente",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "",
+   "requisitos": "Treinado em Iniciativa",
+   "requisitosRegra": {
+    "treinadas": [
+     "Iniciativa"
+    ]
+   },
+   "efeito": "Sacar/guardar itens é ação livre. Com contagem de munição: 1×/rodada recarrega arma de disparo como ação livre.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "fonte": "Livro de Regras",
+   "pagina": 25
+  },
+  {
+   "nome": "Segurar o Gatilho",
+   "tipo": "classe",
+   "classe": "Combatente",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "",
+   "requisitos": "NEX 60%",
+   "requisitosRegra": {
+    "nex": 60
+   },
+   "efeito": "Acertou com arma de fogo: novo ataque no mesmo alvo por 2 PE × ataques já feitos no turno (2, 4, 6…). Para ao errar ou no limite de PE.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "fonte": "Livro de Regras",
+   "pagina": 25
+  },
+  {
+   "nome": "Sentido Tático",
+   "tipo": "classe",
+   "classe": "Combatente",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "",
+   "requisitos": "Int 2, treinado em Percepção e Tática",
+   "requisitosRegra": {
+    "atributos": {
+     "INT": 2
+    },
+    "treinadas": [
+     "Percepção",
+     "Tática"
+    ]
+   },
+   "efeito": "Ação de movimento + 2 PE: +Int na Defesa e em testes de resistência até o fim da cena.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "fonte": "Livro de Regras",
+   "pagina": 26
+  },
+  {
+   "nome": "Tanque de Guerra",
+   "tipo": "classe",
+   "classe": "Combatente",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "",
+   "requisitos": "Proteção Pesada",
+   "requisitosRegra": {
+    "poderes": [
+     "Proteção Pesada"
+    ]
+   },
+   "efeito": "Com proteção pesada: +2 na Defesa e +2 na resistência a dano que ela dá.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {
+    "quando": "protecaoPesada",
+    "defesa": 2,
+    "rd": {
+     "balistico": 2,
+     "corte": 2,
+     "impacto": 2,
+     "perfuracao": 2
+    }
+   },
+   "fonte": "Livro de Regras",
+   "pagina": 26
+  },
+  {
+   "nome": "Tiro Certeiro",
+   "tipo": "classe",
+   "classe": "Combatente",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "",
+   "requisitos": "Treinado em Pontaria",
+   "requisitosRegra": {
+    "treinadas": [
+     "Pontaria"
+    ]
+   },
+   "efeito": "Arma de disparo (inclui fogo): +Agi no dano e ignora penalidade contra alvo em corpo a corpo, mesmo sem mirar.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {
+    "danoSomaAtributo": "AGI",
+    "danoSomaAtributoAtaque": "distancia"
+   },
+   "fonte": "Livro de Regras",
+   "pagina": 26
+  },
+  {
+   "nome": "Tiro de Cobertura",
+   "tipo": "classe",
+   "classe": "Combatente",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "Padrão + 1 PE, arma de fogo: Pontaria × Vontade. Venceu: alvo não sai do lugar e –5 em ataques até seu próximo turno. Medo.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "fonte": "Livro de Regras",
+   "pagina": 26
+  },
+  {
+   "nome": "Transcender",
+   "tipo": "classe",
+   "classe": "Combatente",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "Ganha 1 poder paranormal (p. 114). Não recebe a SAN deste aumento de NEX. Repetível.",
+   "afinidade": "",
+   "repetivel": true,
+   "efeitos": {
+    "semSanNoNex": true
+   },
+   "fonte": "Livro de Regras",
+   "pagina": 26
+  },
+  {
+   "nome": "Treinamento em Perícia",
+   "tipo": "classe",
+   "classe": "Combatente",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "Treina 2 perícias. NEX 35%+: pode subir treinada→veterano; NEX 70%+: veterano→expert. Repetível.",
+   "afinidade": "",
+   "repetivel": true,
+   "efeitos": {
+    "treinaPericias": 2
+   },
+   "fonte": "Livro de Regras",
+   "pagina": 26
+  },
+  {
+   "nome": "Artista Marcial",
+   "tipo": "classe",
+   "classe": "Especialista",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "Desarmado: 1d6, dano letal, arma ágil. 35%: 1d8 · 70%: 1d10.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "fonte": "Livro de Regras",
+   "pagina": 29
+  },
+  {
+   "nome": "Balística Avançada",
+   "tipo": "classe",
+   "classe": "Especialista",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "Proficiência com armas táticas de fogo; +2 no dano com armas de fogo.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {
+    "danoFogo": 2,
+    "proficiencias": [
+     "Armas táticas de fogo"
+    ]
+   },
+   "fonte": "Livro de Regras",
+   "pagina": 29
+  },
+  {
+   "nome": "Conhecimento Aplicado",
+   "tipo": "classe",
+   "classe": "Especialista",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "",
+   "requisitos": "Int 2",
+   "requisitosRegra": {
+    "atributos": {
+     "INT": 2
+    }
+   },
+   "efeito": "2 PE: perícia (não Luta/Pontaria) usa Int como atributo-base neste teste.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "fonte": "Livro de Regras",
+   "pagina": 29
+  },
+  {
+   "nome": "Hacker",
+   "tipo": "classe",
+   "classe": "Especialista",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "",
+   "requisitos": "Treinado em Tecnologia",
+   "requisitosRegra": {
+    "treinadas": [
+     "Tecnologia"
+    ]
+   },
+   "efeito": "+5 em Tecnologia para invadir sistemas; hackear leva só 1 ação completa.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "fonte": "Livro de Regras",
+   "pagina": 29
+  },
+  {
+   "nome": "Mãos Rápidas",
+   "tipo": "classe",
+   "classe": "Especialista",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "",
+   "requisitos": "Agi 3, treinado em Crime",
+   "requisitosRegra": {
+    "atributos": {
+     "AGI": 3
+    },
+    "treinadas": [
+     "Crime"
+    ]
+   },
+   "efeito": "1 PE: teste de Crime como ação livre.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "fonte": "Livro de Regras",
+   "pagina": 29
+  },
+  {
+   "nome": "Mochila de Utilidades",
+   "tipo": "classe",
+   "classe": "Especialista",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "1 item (não arma): –I na categoria e –1 espaço.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "fonte": "Livro de Regras",
+   "pagina": 29
+  },
+  {
+   "nome": "Movimento Tático",
+   "tipo": "classe",
+   "classe": "Especialista",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "",
+   "requisitos": "Treinado em Atletismo",
+   "requisitosRegra": {
+    "treinadas": [
+     "Atletismo"
+    ]
+   },
+   "efeito": "1 PE: ignora penalidade de deslocamento por terreno difícil e por escalar até o fim do turno.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "fonte": "Livro de Regras",
+   "pagina": 29
+  },
+  {
+   "nome": "Na Trilha Certa",
+   "tipo": "classe",
+   "classe": "Especialista",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "Passou em procurar pistas: 1 PE → +1 dado no próximo teste. Acumula: 2 PE → +2 dados, e assim por diante.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "fonte": "Livro de Regras",
+   "pagina": 29
+  },
+  {
+   "nome": "Nerd",
+   "tipo": "classe",
+   "classe": "Especialista",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "1×/cena, 2 PE: Atualidades DT 20. Passou: 1 informação útil para a cena (pista, fraqueza…).",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "fonte": "Livro de Regras",
+   "pagina": 29
+  },
+  {
+   "nome": "Ninja Urbano",
+   "tipo": "classe",
+   "classe": "Especialista",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "Proficiência com armas táticas corpo a corpo e de disparo (não de fogo); +2 no dano com armas corpo a corpo e de disparo.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {
+    "danoCorpo": 2,
+    "danoDistancia": 2,
+    "proficiencias": [
+     "Armas táticas corpo a corpo e de disparo"
+    ]
+   },
+   "fonte": "Livro de Regras",
+   "pagina": 29
+  },
+  {
+   "nome": "Pensamento Ágil",
+   "tipo": "classe",
+   "classe": "Especialista",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "Em investigação, 1×/rodada, 2 PE: ação de procurar pistas extra.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "fonte": "Livro de Regras",
+   "pagina": 30
+  },
+  {
+   "nome": "Perito em Explosivos",
+   "tipo": "classe",
+   "classe": "Especialista",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "+Int na DT dos seus explosivos; exclui da explosão nº de alvos = Int.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "fonte": "Livro de Regras",
+   "pagina": 30
+  },
+  {
+   "nome": "Primeira Impressão",
+   "tipo": "classe",
+   "classe": "Especialista",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "+2 dados no 1º teste de Diplomacia, Enganação, Intimidação ou Intuição da cena.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "fonte": "Livro de Regras",
+   "pagina": 30
+  },
+  {
+   "nome": "Transcender",
+   "tipo": "classe",
+   "classe": "Especialista",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "Ganha 1 poder paranormal (p. 114). Não recebe a SAN deste aumento de NEX. Repetível.",
+   "afinidade": "",
+   "repetivel": true,
+   "efeitos": {
+    "semSanNoNex": true
+   },
+   "fonte": "Livro de Regras",
+   "pagina": 30
+  },
+  {
+   "nome": "Treinamento em Perícia",
+   "tipo": "classe",
+   "classe": "Especialista",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "Treina 2 perícias. NEX 35%+: pode subir treinada→veterano; NEX 70%+: veterano→expert. Repetível.",
+   "afinidade": "",
+   "repetivel": true,
+   "efeitos": {
+    "treinaPericias": 2
+   },
+   "fonte": "Livro de Regras",
+   "pagina": 30
+  },
+  {
+   "nome": "Camuflar Ocultismo",
+   "tipo": "classe",
+   "classe": "Ocultista",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "Livre: oculta sigilos em objetos/pele. Ritual +2 PE: sem componentes nem gestos; perceber exige Ocultismo DT 25.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "fonte": "Livro de Regras",
+   "pagina": 33
+  },
+  {
+   "nome": "Criar Selo",
+   "tipo": "classe",
+   "classe": "Ocultista",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "Fabrica selos de rituais conhecidos (p. 151): 1 ação de interlúdio + PE do ritual. Máx. selos ativos = Pre.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "fonte": "Livro de Regras",
+   "pagina": 33
+  },
+  {
+   "nome": "Envolto em Mistério",
+   "tipo": "classe",
+   "classe": "Ocultista",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "+5 em Enganação e Intimidação contra pessoas não treinadas em Ocultismo (a critério do mestre).",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "fonte": "Livro de Regras",
+   "pagina": 33
+  },
+  {
+   "nome": "Especialista em Elemento",
+   "tipo": "classe",
+   "classe": "Ocultista",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "Escolha 1 elemento: +2 na DT dos seus rituais dele.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "fonte": "Livro de Regras",
+   "pagina": 33
+  },
+  {
+   "nome": "Ferramentas Paranormais",
+   "tipo": "classe",
+   "classe": "Ocultista",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "–I na categoria de 1 item paranormal; ativa itens paranormais sem pagar PE.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "fonte": "Livro de Regras",
+   "pagina": 33
+  },
+  {
+   "nome": "Fluxo de Poder",
+   "tipo": "classe",
+   "classe": "Ocultista",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "",
+   "requisitos": "NEX 60%",
+   "requisitosRegra": {
+    "nex": 60
+   },
+   "efeito": "Mantém 2 efeitos sustentados de rituais com 1 só ação livre, pagando cada custo.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "fonte": "Livro de Regras",
+   "pagina": 33
+  },
+  {
+   "nome": "Guiado pelo Paranormal",
+   "tipo": "classe",
+   "classe": "Ocultista",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "1×/cena, 2 PE: ação de investigação extra.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "fonte": "Livro de Regras",
+   "pagina": 34
+  },
+  {
+   "nome": "Identificação Paranormal",
+   "tipo": "classe",
+   "classe": "Ocultista",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "+10 em Ocultismo para identificar criaturas, objetos ou rituais.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "fonte": "Livro de Regras",
+   "pagina": 34
+  },
+  {
+   "nome": "Improvisar Componentes",
+   "tipo": "classe",
+   "classe": "Ocultista",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "1×/cena, ação completa: Investigação DT 15. Passou: componentes ritualísticos de 1 elemento à escolha (mestre aprova).",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "fonte": "Livro de Regras",
+   "pagina": 34
+  },
+  {
+   "nome": "Intuição Paranormal",
+   "tipo": "classe",
+   "classe": "Ocultista",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "Na ação facilitar investigação, soma Int ou Pre ao teste.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "fonte": "Livro de Regras",
+   "pagina": 34
+  },
+  {
+   "nome": "Mestre em Elemento",
+   "tipo": "classe",
+   "classe": "Ocultista",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "",
+   "requisitos": "Especialista em Elemento no mesmo elemento, NEX 45%",
+   "requisitosRegra": {
+    "poderes": [
+     "Especialista em Elemento"
+    ],
+    "nex": 45
+   },
+   "efeito": "Escolha 1 elemento (com Especialista em Elemento): –1 PE no custo dos rituais dele.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "fonte": "Livro de Regras",
+   "pagina": 34
+  },
+  {
+   "nome": "Ritual Potente",
+   "tipo": "classe",
+   "classe": "Ocultista",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "",
+   "requisitos": "Int 2",
+   "requisitosRegra": {
+    "atributos": {
+     "INT": 2
+    }
+   },
+   "efeito": "+Int no dano ou na cura dos seus rituais.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "fonte": "Livro de Regras",
+   "pagina": 34
+  },
+  {
+   "nome": "Ritual Predileto",
+   "tipo": "classe",
+   "classe": "Ocultista",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "Escolha 1 ritual conhecido: –1 PE no custo (acumula com outras reduções).",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "fonte": "Livro de Regras",
+   "pagina": 34
+  },
+  {
+   "nome": "Tatuagem Ritualística",
+   "tipo": "classe",
+   "classe": "Ocultista",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "–1 PE no custo de rituais de alcance pessoal com você como alvo.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "fonte": "Livro de Regras",
+   "pagina": 34
+  },
+  {
+   "nome": "Transcender",
+   "tipo": "classe",
+   "classe": "Ocultista",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "Ganha 1 poder paranormal (p. 114). Não recebe a SAN deste aumento de NEX. Repetível.",
+   "afinidade": "",
+   "repetivel": true,
+   "efeitos": {
+    "semSanNoNex": true
+   },
+   "fonte": "Livro de Regras",
+   "pagina": 34
+  },
+  {
+   "nome": "Treinamento em Perícia",
+   "tipo": "classe",
+   "classe": "Ocultista",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "Treina 2 perícias. NEX 35%+: pode subir treinada→veterano; NEX 70%+: veterano→expert. Repetível.",
+   "afinidade": "",
+   "repetivel": true,
+   "efeitos": {
+    "treinaPericias": 2
+   },
+   "fonte": "Livro de Regras",
+   "pagina": 34
+  },
+  {
+   "nome": "A Favorita",
+   "tipo": "trilha",
+   "classe": "Combatente",
+   "trilha": "Aniquilador",
+   "nex": 10,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "Escolha 1 arma favorita (ex.: katana, fuzil): categoria –I.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "fonte": "Livro de Regras",
+   "pagina": 26
+  },
+  {
+   "nome": "Técnica Secreta",
+   "tipo": "trilha",
+   "classe": "Combatente",
+   "trilha": "Aniquilador",
+   "nex": 40,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "Favorita –II. Ao atacar com ela, 2 PE por efeito: Amplo (+1 alvo adjacente ao original no alcance, mesmo teste) ou Destruidor (+1 mult. de crítico).",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "fonte": "Livro de Regras",
+   "pagina": 26
+  },
+  {
+   "nome": "Técnica Sublime",
+   "tipo": "trilha",
+   "classe": "Combatente",
+   "trilha": "Aniquilador",
+   "nex": 65,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "Novos efeitos da Técnica Secreta: Letal (+2 margem; escolhido 2× dá +5) e Perfurante (ignora 5 de RD de qualquer tipo).",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "fonte": "Livro de Regras",
+   "pagina": 26
+  },
+  {
+   "nome": "Máquina de Matar",
+   "tipo": "trilha",
+   "classe": "Combatente",
+   "trilha": "Aniquilador",
+   "nex": 99,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "Favorita –III, +2 margem de ameaça e +1 dado de dano do mesmo tipo.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "fonte": "Livro de Regras",
+   "pagina": 26
+  },
+  {
+   "nome": "Inspirar Confiança",
+   "tipo": "trilha",
+   "classe": "Combatente",
+   "trilha": "Comandante de Campo",
+   "nex": 10,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "Reação + 2 PE: aliado em alcance curto rola de novo um teste que acabou de fazer.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "fonte": "Livro de Regras",
+   "pagina": 27
+  },
+  {
+   "nome": "Estrategista",
+   "tipo": "trilha",
+   "classe": "Combatente",
+   "trilha": "Comandante de Campo",
+   "nex": 40,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "Padrão + 1 PE por aliado em alcance curto (máx. Int): no próximo turno deles, +1 ação de movimento.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "fonte": "Livro de Regras",
+   "pagina": 27
+  },
+  {
+   "nome": "Brecha na Guarda",
+   "tipo": "trilha",
+   "classe": "Combatente",
+   "trilha": "Comandante de Campo",
+   "nex": 65,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "1×/rodada, aliado causa dano a inimigo em curto: reação + 2 PE → você ou aliado em curto ataca o mesmo alvo. Inspirar/Estrategista: alcance médio.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "fonte": "Livro de Regras",
+   "pagina": 27
+  },
+  {
+   "nome": "Oficial Comandante",
+   "tipo": "trilha",
+   "classe": "Combatente",
+   "trilha": "Comandante de Campo",
+   "nex": 99,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "Padrão + 5 PE: cada aliado visível em alcance médio ganha +1 ação padrão no próximo turno.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "fonte": "Livro de Regras",
+   "pagina": 27
+  },
+  {
+   "nome": "Técnica Letal",
+   "tipo": "trilha",
+   "classe": "Combatente",
+   "trilha": "Guerreiro",
+   "nex": 10,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "+2 na margem de ameaça dos ataques corpo a corpo.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {
+    "margemCorpo": 2
+   },
+   "fonte": "Livro de Regras",
+   "pagina": 27
+  },
+  {
+   "nome": "Revidar",
+   "tipo": "trilha",
+   "classe": "Combatente",
+   "trilha": "Guerreiro",
+   "nex": 40,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "Ao bloquear, reação + 2 PE: ataque corpo a corpo no atacante.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "fonte": "Livro de Regras",
+   "pagina": 27
+  },
+  {
+   "nome": "Força Opressora",
+   "tipo": "trilha",
+   "classe": "Combatente",
+   "trilha": "Guerreiro",
+   "nex": 65,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "Acertou corpo a corpo, 1 PE: derrubar ou empurrar livre. Empurrar: +5 a cada 10 de dano. Derrubou: 1 PE p/ ataque extra no caído.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "fonte": "Livro de Regras",
+   "pagina": 27
+  },
+  {
+   "nome": "Potência Máxima",
+   "tipo": "trilha",
+   "classe": "Combatente",
+   "trilha": "Guerreiro",
+   "nex": 99,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "Ataque Especial com arma corpo a corpo: todos os bônus numéricos dobram.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "fonte": "Livro de Regras",
+   "pagina": 27
+  },
+  {
+   "nome": "Iniciativa Aprimorada",
+   "tipo": "trilha",
+   "classe": "Combatente",
+   "trilha": "Operações Especiais",
+   "nex": 10,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "+5 em Iniciativa; +1 ação de movimento na 1ª rodada.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {
+    "pericias": {
+     "Iniciativa": 5
+    }
+   },
+   "fonte": "Livro de Regras",
+   "pagina": 27
+  },
+  {
+   "nome": "Ataque Extra",
+   "tipo": "trilha",
+   "classe": "Combatente",
+   "trilha": "Operações Especiais",
+   "nex": 40,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "1×/rodada, ao atacar, 2 PE: +1 ataque.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "fonte": "Livro de Regras",
+   "pagina": 27
+  },
+  {
+   "nome": "Surto de Adrenalina",
+   "tipo": "trilha",
+   "classe": "Combatente",
+   "trilha": "Operações Especiais",
+   "nex": 65,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "1×/rodada, 5 PE: +1 ação padrão ou de movimento.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "fonte": "Livro de Regras",
+   "pagina": 27
+  },
+  {
+   "nome": "Sempre Alerta",
+   "tipo": "trilha",
+   "classe": "Combatente",
+   "trilha": "Operações Especiais",
+   "nex": 99,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "+1 ação padrão no início de cada cena de combate.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "fonte": "Livro de Regras",
+   "pagina": 27
+  },
+  {
+   "nome": "Casca Grossa",
+   "tipo": "trilha",
+   "classe": "Combatente",
+   "trilha": "Tropa de Choque",
+   "nex": 10,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "+1 PV por 5% de NEX (retroativo). Ao bloquear, soma Vig na RD recebida.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {
+    "pvPorNivel": 1
+   },
+   "fonte": "Livro de Regras",
+   "pagina": 27
+  },
+  {
+   "nome": "Cai Dentro",
+   "tipo": "trilha",
+   "classe": "Combatente",
+   "trilha": "Tropa de Choque",
+   "nex": 40,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "Oponente em curto ataca aliado: reação + 1 PE → Vontade (DT Vig) ou ataca você (se puder). Passou: imune até o fim da cena.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "fonte": "Livro de Regras",
+   "pagina": 27
+  },
+  {
+   "nome": "Duro de Matar",
+   "tipo": "trilha",
+   "classe": "Combatente",
+   "trilha": "Tropa de Choque",
+   "nex": 65,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "Dano não paranormal: reação + 2 PE, reduz à metade. NEX 85%: vale também para dano paranormal.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "fonte": "Livro de Regras",
+   "pagina": 27
+  },
+  {
+   "nome": "Inquebrável",
+   "tipo": "trilha",
+   "classe": "Combatente",
+   "trilha": "Tropa de Choque",
+   "nex": 99,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "Machucado: +5 Defesa e RD 5. Morrendo: não fica indefeso e pode agir (regras de morte seguem).",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {
+    "quando": "machucado",
+    "defesa": 5,
+    "rd": {
+     "geral": 5
+    }
+   },
+   "fonte": "Livro de Regras",
+   "pagina": 27
+  },
+  {
+   "nome": "Mira de Elite",
+   "tipo": "trilha",
+   "classe": "Especialista",
+   "trilha": "Atirador de Elite",
+   "nex": 10,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "Proficiência com armas de fogo de balas longas; +Int no dano com elas.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {
+    "proficiencias": [
+     "Armas de fogo de balas longas"
+    ]
+   },
+   "fonte": "Livro de Regras",
+   "pagina": 30
+  },
+  {
+   "nome": "Disparo Letal",
+   "tipo": "trilha",
+   "classe": "Especialista",
+   "trilha": "Atirador de Elite",
+   "nex": 40,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "Ao mirar, 1 PE: +2 margem de ameaça no próximo ataque até o fim do seu próximo turno.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "fonte": "Livro de Regras",
+   "pagina": 30
+  },
+  {
+   "nome": "Disparo Impactante",
+   "tipo": "trilha",
+   "classe": "Especialista",
+   "trilha": "Atirador de Elite",
+   "nex": 65,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "Ataque com arma de fogo, 2 PE: em vez de dano, faz derrubar, desarmar, empurrar ou quebrar.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "fonte": "Livro de Regras",
+   "pagina": 30
+  },
+  {
+   "nome": "Atirar para Matar",
+   "tipo": "trilha",
+   "classe": "Especialista",
+   "trilha": "Atirador de Elite",
+   "nex": 99,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "Crítico com arma de fogo: dano máximo, sem rolar.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "fonte": "Livro de Regras",
+   "pagina": 30
+  },
+  {
+   "nome": "Ataque Furtivo",
+   "tipo": "trilha",
+   "classe": "Especialista",
+   "trilha": "Infiltrador",
+   "nex": 10,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "1 PE: +1d6 dano em alvo desprevenido (corpo a corpo/curto) ou flanqueado (1×/rodada). 40%: +2d6 · 65%: +3d6 · 99%: +4d6.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "fonte": "Livro de Regras",
+   "pagina": 30
+  },
+  {
+   "nome": "Gatuno",
+   "tipo": "trilha",
+   "classe": "Especialista",
+   "trilha": "Infiltrador",
+   "nex": 40,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "+5 em Atletismo e Crime; esconder-se sem penalidade no deslocamento normal.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {
+    "pericias": {
+     "Atletismo": 5,
+     "Crime": 5
+    }
+   },
+   "fonte": "Livro de Regras",
+   "pagina": 30
+  },
+  {
+   "nome": "Assassinar",
+   "tipo": "trilha",
+   "classe": "Especialista",
+   "trilha": "Infiltrador",
+   "nex": 65,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "Movimento + 3 PE, alvo em curto: 1º Ataque Furtivo nele até seu próximo turno dobra os dados extras; se sofrer dano, inconsciente/morrendo (Fort DT Agi).",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "fonte": "Livro de Regras",
+   "pagina": 30
+  },
+  {
+   "nome": "Sombra Fugaz",
+   "tipo": "trilha",
+   "classe": "Especialista",
+   "trilha": "Infiltrador",
+   "nex": 99,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "Furtividade após atacar/ação chamativa, 3 PE: ignora a penalidade de –3 dados.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "fonte": "Livro de Regras",
+   "pagina": 30
+  },
+  {
+   "nome": "Paramédico",
+   "tipo": "trilha",
+   "classe": "Especialista",
+   "trilha": "Médico de Campo",
+   "nex": 10,
+   "elemento": "",
+   "requisitos": "Treinado em Medicina",
+   "requisitosRegra": {
+    "treinadas": [
+     "Medicina"
+    ]
+   },
+   "efeito": "Padrão + 2 PE: cura 2d10 PV em você ou aliado adjacente. 40%/65%/99%: +1d10 cada, pagando +1 PE por dado extra. Exige kit de medicina.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "fonte": "Livro de Regras",
+   "pagina": 31
+  },
+  {
+   "nome": "Equipe de Trauma",
+   "tipo": "trilha",
+   "classe": "Especialista",
+   "trilha": "Médico de Campo",
+   "nex": 40,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "Padrão + 2 PE: remove 1 condição negativa (não morrendo) de aliado adjacente.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "fonte": "Livro de Regras",
+   "pagina": 31
+  },
+  {
+   "nome": "Resgate",
+   "tipo": "trilha",
+   "classe": "Especialista",
+   "trilha": "Médico de Campo",
+   "nex": 65,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "1×/rodada, aliado machucado/morrendo em curto: vai até ele como ação livre. Ao curar/remover condição: você e ele +5 Defesa. Carregar alguém: ½ espaços.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "fonte": "Livro de Regras",
+   "pagina": 31
+  },
+  {
+   "nome": "Reanimação",
+   "tipo": "trilha",
+   "classe": "Especialista",
+   "trilha": "Médico de Campo",
+   "nex": 99,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "1×/cena, completa + 10 PE: revive quem morreu nesta cena (exceto dano massivo).",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "fonte": "Livro de Regras",
+   "pagina": 31
+  },
+  {
+   "nome": "Eloquência",
+   "tipo": "trilha",
+   "classe": "Especialista",
+   "trilha": "Negociador",
+   "nex": 10,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "Completa + 1 PE/alvo em curto: Diplomacia/Enganação/Intimidação × Vontade. Fascinados enquanto se concentra. Hostil/em combate: +5 e novo teste/rodada.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "fonte": "Livro de Regras",
+   "pagina": 31
+  },
+  {
+   "nome": "Discurso Motivador",
+   "tipo": "trilha",
+   "classe": "Especialista",
+   "trilha": "Negociador",
+   "nex": 40,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "Padrão + 4 PE: você e aliados em curto +1 dado em testes de perícia até o fim da cena. 65%: 8 PE para +2 dados.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "fonte": "Livro de Regras",
+   "pagina": 31
+  },
+  {
+   "nome": "Eu Conheço um Cara",
+   "tipo": "trilha",
+   "classe": "Especialista",
+   "trilha": "Negociador",
+   "nex": 65,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "1×/missão: favor da rede de contatos (reequipar o grupo, abrigo, resgate…). Mestre decide.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "fonte": "Livro de Regras",
+   "pagina": 31
+  },
+  {
+   "nome": "Truque de Mestre",
+   "tipo": "trilha",
+   "classe": "Especialista",
+   "trilha": "Negociador",
+   "nex": 99,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "5 PE: imita habilidade que viu um aliado usar na cena; ignora pré-requisitos, paga todos os custos, usa seus números.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "fonte": "Livro de Regras",
+   "pagina": 31
+  },
+  {
+   "nome": "Inventário Otimizado",
+   "tipo": "trilha",
+   "classe": "Especialista",
+   "trilha": "Técnico",
+   "nex": 10,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "Carga calculada com For + Int.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {
+    "cargaSomaInt": true
+   },
+   "fonte": "Livro de Regras",
+   "pagina": 31
+  },
+  {
+   "nome": "Remendão",
+   "tipo": "trilha",
+   "classe": "Especialista",
+   "trilha": "Técnico",
+   "nex": 40,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "Completa + 1 PE: remove quebrado de equipamento adjacente até o fim da cena. Equipamentos gerais: –I na categoria.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "fonte": "Livro de Regras",
+   "pagina": 31
+  },
+  {
+   "nome": "Improvisar",
+   "tipo": "trilha",
+   "classe": "Especialista",
+   "trilha": "Técnico",
+   "nex": 65,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "Completa + 2 PE + 2 PE/categoria: cria versão funcional de 1 equipamento geral; inútil no fim da cena.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "fonte": "Livro de Regras",
+   "pagina": 31
+  },
+  {
+   "nome": "Preparado para Tudo",
+   "tipo": "trilha",
+   "classe": "Especialista",
+   "trilha": "Técnico",
+   "nex": 99,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "Movimento + 3 PE/categoria: tira da bolsa 1 item qualquer (não arma).",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "fonte": "Livro de Regras",
+   "pagina": 31
+  },
+  {
+   "nome": "Ampliar Ritual",
+   "tipo": "trilha",
+   "classe": "Ocultista",
+   "trilha": "Conduíte",
+   "nex": 10,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "Ritual +2 PE: alcance +1 passo (curto→médio→longo→extremo) ou dobra a área.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "fonte": "Livro de Regras",
+   "pagina": 34
+  },
+  {
+   "nome": "Acelerar Ritual",
+   "tipo": "trilha",
+   "classe": "Ocultista",
+   "trilha": "Conduíte",
+   "nex": 40,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "1×/rodada: ritual +4 PE para conjurar como ação livre.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "fonte": "Livro de Regras",
+   "pagina": 34
+  },
+  {
+   "nome": "Anular Ritual",
+   "tipo": "trilha",
+   "classe": "Ocultista",
+   "trilha": "Conduíte",
+   "nex": 65,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "Alvo de ritual: paga PE = custo dele e faz Ocultismo oposto ao conjurador. Venceu: anula o ritual.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "fonte": "Livro de Regras",
+   "pagina": 34
+  },
+  {
+   "nome": "Canalizar o Medo",
+   "tipo": "trilha",
+   "classe": "Ocultista",
+   "trilha": "Conduíte",
+   "nex": 99,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "Aprende o ritual Canalizar o Medo.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "fonte": "Livro de Regras",
+   "pagina": 34
+  },
+  {
+   "nome": "Poder do Flagelo",
+   "tipo": "trilha",
+   "classe": "Ocultista",
+   "trilha": "Flagelador",
+   "nex": 10,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "Ao conjurar, paga PE com PV (2 PV por PE). Esses PV só voltam com descanso.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "fonte": "Livro de Regras",
+   "pagina": 34
+  },
+  {
+   "nome": "Abraçar a Dor",
+   "tipo": "trilha",
+   "classe": "Ocultista",
+   "trilha": "Flagelador",
+   "nex": 40,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "Dano não paranormal: reação + 2 PE, reduz à metade.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "fonte": "Livro de Regras",
+   "pagina": 34
+  },
+  {
+   "nome": "Absorver Agonia",
+   "tipo": "trilha",
+   "classe": "Ocultista",
+   "trilha": "Flagelador",
+   "nex": 65,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "Reduziu 1+ inimigos a 0 PV com ritual: ganha PE temporários = círculo do ritual.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "fonte": "Livro de Regras",
+   "pagina": 34
+  },
+  {
+   "nome": "Medo Tangível",
+   "tipo": "trilha",
+   "classe": "Ocultista",
+   "trilha": "Flagelador",
+   "nex": 99,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "Aprende o ritual Medo Tangível.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "fonte": "Livro de Regras",
+   "pagina": 35
+  },
+  {
+   "nome": "Saber Ampliado",
+   "tipo": "trilha",
+   "classe": "Ocultista",
+   "trilha": "Graduado",
+   "nex": 10,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "+1 ritual de 1º círculo; +1 ritual a cada novo círculo acessado. Fora do limite de rituais.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "fonte": "Livro de Regras",
+   "pagina": 35
+  },
+  {
+   "nome": "Grimório Ritualístico",
+   "tipo": "trilha",
+   "classe": "Ocultista",
+   "trilha": "Graduado",
+   "nex": 40,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "Grimório (1 espaço) com Int rituais de 1º/2º (+1 por novo círculo), fora do limite. Usar: empunhar + ação completa. Refazer: 2 interlúdios.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "fonte": "Livro de Regras",
+   "pagina": 35
+  },
+  {
+   "nome": "Rituais Eficientes",
+   "tipo": "trilha",
+   "classe": "Ocultista",
+   "trilha": "Graduado",
+   "nex": 65,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "+5 na DT de todos os seus rituais.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {
+    "dt": 5
+   },
+   "fonte": "Livro de Regras",
+   "pagina": 35
+  },
+  {
+   "nome": "Conhecendo o Medo",
+   "tipo": "trilha",
+   "classe": "Ocultista",
+   "trilha": "Graduado",
+   "nex": 99,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "Aprende o ritual Conhecendo o Medo.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "fonte": "Livro de Regras",
+   "pagina": 35
+  },
+  {
+   "nome": "Mente Sã",
+   "tipo": "trilha",
+   "classe": "Ocultista",
+   "trilha": "Intuitivo",
+   "nex": 10,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "Resistência paranormal +5 (+5 em testes de resistência contra efeitos paranormais).",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "fonte": "Livro de Regras",
+   "pagina": 35
+  },
+  {
+   "nome": "Presença Poderosa",
+   "tipo": "trilha",
+   "classe": "Ocultista",
+   "trilha": "Intuitivo",
+   "nex": 40,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "+Pre no limite de PE por turno, só para conjurar rituais (não afeta DT).",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "fonte": "Livro de Regras",
+   "pagina": 35
+  },
+  {
+   "nome": "Inabalável",
+   "tipo": "trilha",
+   "classe": "Ocultista",
+   "trilha": "Intuitivo",
+   "nex": 65,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "RD mental 10 e paranormal 10. Efeito paranormal com Vontade para metade do dano: se passar, não sofre dano.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {
+    "rd": {
+     "mental": 10,
+     "paranormal": 10
+    }
+   },
+   "fonte": "Livro de Regras",
+   "pagina": 35
+  },
+  {
+   "nome": "Presença do Medo",
+   "tipo": "trilha",
+   "classe": "Ocultista",
+   "trilha": "Intuitivo",
+   "nex": 99,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "Aprende o ritual Presença do Medo.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "fonte": "Livro de Regras",
+   "pagina": 35
+  },
+  {
+   "nome": "Lâmina Maldita",
+   "tipo": "trilha",
+   "classe": "Ocultista",
+   "trilha": "Lâmina Paranormal",
+   "nex": 10,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "Aprende Amaldiçoar Arma (se já sabe: +1 PE → execução movimento). Com ela, ataca com Ocultismo no lugar de Luta/Pontaria.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "fonte": "Livro de Regras",
+   "pagina": 35
+  },
+  {
+   "nome": "Gladiador Paranormal",
+   "tipo": "trilha",
+   "classe": "Ocultista",
+   "trilha": "Lâmina Paranormal",
+   "nex": 40,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "Acertou corpo a corpo: +2 PE temporários (máx. por cena = limite de PE; somem no fim da cena).",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "fonte": "Livro de Regras",
+   "pagina": 35
+  },
+  {
+   "nome": "Conjuração Marcial",
+   "tipo": "trilha",
+   "classe": "Ocultista",
+   "trilha": "Lâmina Paranormal",
+   "nex": 65,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "1×/rodada, ritual de ação padrão: 2 PE para ataque corpo a corpo como ação livre.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "fonte": "Livro de Regras",
+   "pagina": 35
+  },
+  {
+   "nome": "Lâmina do Medo",
+   "tipo": "trilha",
+   "classe": "Ocultista",
+   "trilha": "Lâmina Paranormal",
+   "nex": 99,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "Aprende o ritual Lâmina do Medo.",
+   "afinidade": "",
+   "repetivel": false,
+   "efeitos": {},
+   "fonte": "Livro de Regras",
+   "pagina": 35
+  },
+  {
+   "nome": "Aprender Ritual",
+   "tipo": "paranormal",
+   "classe": "",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "Aprende 1 ritual de 1º círculo e pode trocar 1 conhecido. 45%: até 2º · 75%: até 3º. Conta como poder do elemento do ritual. Repetível.",
+   "afinidade": "",
+   "repetivel": true,
+   "efeitos": {},
+   "efeitosAfinidade": {},
+   "fonte": "Livro de Regras",
+   "pagina": 114
+  },
+  {
+   "nome": "Resistir a Elemento",
+   "tipo": "paranormal",
+   "classe": "",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "",
+   "requisitos": "",
+   "efeito": "Escolha Conhecimento, Energia, Morte ou Sangue: resistência 10 a ele. Conta como poder desse elemento.",
+   "afinidade": "Resistência sobe para 20.",
+   "repetivel": false,
+   "efeitos": {},
+   "efeitosAfinidade": {},
+   "fonte": "Livro de Regras",
+   "pagina": 114
+  },
+  {
+   "nome": "Expansão de Conhecimento",
+   "tipo": "paranormal",
+   "classe": "",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "Conhecimento",
+   "requisitos": "Conhecimento 1",
+   "requisitosRegra": {
+    "elemento": {
+     "Conhecimento": 1
+    }
+   },
+   "efeito": "Aprende 1 poder de classe de outra classe (cumprindo pré-requisitos).",
+   "afinidade": "Aprende um 2º poder de classe de outra classe.",
+   "repetivel": false,
+   "efeitos": {},
+   "efeitosAfinidade": {},
+   "fonte": "Livro de Regras",
+   "pagina": 114
+  },
+  {
+   "nome": "Percepção Paranormal",
+   "tipo": "paranormal",
+   "classe": "",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "Conhecimento",
+   "requisitos": "",
+   "efeito": "Investigação, ao procurar pistas: rola de novo 1 dado com resultado <10 (fica com o novo).",
+   "afinidade": "Pode rolar de novo até 2 dados <10.",
+   "repetivel": false,
+   "efeitos": {},
+   "efeitosAfinidade": {},
+   "fonte": "Livro de Regras",
+   "pagina": 114
+  },
+  {
+   "nome": "Precognição",
+   "tipo": "paranormal",
+   "classe": "",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "Conhecimento",
+   "requisitos": "Conhecimento 1",
+   "requisitosRegra": {
+    "elemento": {
+     "Conhecimento": 1
+    }
+   },
+   "efeito": "+2 Defesa e +2 em testes de resistência.",
+   "afinidade": "Imune a desprevenido.",
+   "repetivel": false,
+   "efeitos": {
+    "defesa": 2,
+    "testesResistencia": 2
+   },
+   "efeitosAfinidade": {},
+   "fonte": "Livro de Regras",
+   "pagina": 114
+  },
+  {
+   "nome": "Sensitivo",
+   "tipo": "paranormal",
+   "classe": "",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "Conhecimento",
+   "requisitos": "",
+   "efeito": "+5 em Diplomacia, Intimidação e Intuição.",
+   "afinidade": "Em teste oposto com essas perícias, o oponente sofre –1 dado.",
+   "repetivel": false,
+   "efeitos": {
+    "pericias": {
+     "Diplomacia": 5,
+     "Intimidação": 5,
+     "Intuição": 5
+    }
+   },
+   "efeitosAfinidade": {},
+   "fonte": "Livro de Regras",
+   "pagina": 114
+  },
+  {
+   "nome": "Visão do Oculto",
+   "tipo": "paranormal",
+   "classe": "",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "Conhecimento",
+   "requisitos": "",
+   "efeito": "+5 em Percepção; enxerga no escuro.",
+   "afinidade": "Ignora camuflagem.",
+   "repetivel": false,
+   "efeitos": {
+    "pericias": {
+     "Percepção": 5
+    }
+   },
+   "efeitosAfinidade": {},
+   "fonte": "Livro de Regras",
+   "pagina": 115
+  },
+  {
+   "nome": "Afortunado",
+   "tipo": "paranormal",
+   "classe": "",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "Energia",
+   "requisitos": "",
+   "efeito": "1×/rolagem: rola de novo um resultado 1 em dado que não seja d20.",
+   "afinidade": "Também 1×/teste: rola de novo um 1 no d20.",
+   "repetivel": false,
+   "efeitos": {},
+   "efeitosAfinidade": {},
+   "fonte": "Livro de Regras",
+   "pagina": 115
+  },
+  {
+   "nome": "Campo Protetor",
+   "tipo": "paranormal",
+   "classe": "",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "Energia",
+   "requisitos": "Energia 1",
+   "requisitosRegra": {
+    "elemento": {
+     "Energia": 1
+    }
+   },
+   "efeito": "Na ação esquiva, 1 PE: +5 Defesa.",
+   "afinidade": "Também +5 em Reflexos e, até seu próximo turno, passar em Reflexos p/ metade anula o dano.",
+   "repetivel": false,
+   "efeitos": {},
+   "efeitosAfinidade": {},
+   "fonte": "Livro de Regras",
+   "pagina": 115
+  },
+  {
+   "nome": "Causalidade Fortuita",
+   "tipo": "paranormal",
+   "classe": "",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "Energia",
+   "requisitos": "",
+   "efeito": "Investigação: –5 na DT de procurar pistas até achar uma pista.",
+   "afinidade": "A redução de –5 vale sempre.",
+   "repetivel": false,
+   "efeitos": {},
+   "efeitosAfinidade": {},
+   "fonte": "Livro de Regras",
+   "pagina": 115
+  },
+  {
+   "nome": "Golpe de Sorte",
+   "tipo": "paranormal",
+   "classe": "",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "Energia",
+   "requisitos": "Energia 1",
+   "requisitosRegra": {
+    "elemento": {
+     "Energia": 1
+    }
+   },
+   "efeito": "+1 na margem de ameaça dos seus ataques.",
+   "afinidade": "+1 no multiplicador de crítico.",
+   "repetivel": false,
+   "efeitos": {
+    "margemCorpo": 1,
+    "margemDistancia": 1
+   },
+   "efeitosAfinidade": {
+    "multiplicador": 1
+   },
+   "fonte": "Livro de Regras",
+   "pagina": 115
+  },
+  {
+   "nome": "Manipular Entropia",
+   "tipo": "paranormal",
+   "classe": "",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "Energia",
+   "requisitos": "Energia 1",
+   "requisitosRegra": {
+    "elemento": {
+     "Energia": 1
+    }
+   },
+   "efeito": "Outro ser em curto faz teste de perícia: 2 PE, ele rola de novo 1 dado do teste.",
+   "afinidade": "Ele rola de novo todos os dados que você escolher.",
+   "repetivel": false,
+   "efeitos": {},
+   "efeitosAfinidade": {},
+   "fonte": "Livro de Regras",
+   "pagina": 115
+  },
+  {
+   "nome": "Encarar a Morte",
+   "tipo": "paranormal",
+   "classe": "",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "Morte",
+   "requisitos": "",
+   "efeito": "Em cenas de ação: +1 no limite de PE por turno (não afeta DT).",
+   "afinidade": "+2 a mais (total +3) em cenas de ação.",
+   "repetivel": false,
+   "efeitos": {
+    "quando": "cenaDeAcao",
+    "limitePe": 1
+   },
+   "efeitosAfinidade": {
+    "quando": "cenaDeAcao",
+    "limitePe": 2
+   },
+   "fonte": "Livro de Regras",
+   "pagina": 115
+  },
+  {
+   "nome": "Escapar da Morte",
+   "tipo": "paranormal",
+   "classe": "",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "Morte",
+   "requisitos": "Morte 1",
+   "requisitosRegra": {
+    "elemento": {
+     "Morte": 1
+    }
+   },
+   "efeito": "1×/cena: dano que zeraria os PV deixa você com 1 PV (não vale contra dano massivo).",
+   "afinidade": "Evita todo o dano; contra dano massivo fica com 1 PV.",
+   "repetivel": false,
+   "efeitos": {},
+   "efeitosAfinidade": {},
+   "fonte": "Livro de Regras",
+   "pagina": 115
+  },
+  {
+   "nome": "Potencial Aprimorado",
+   "tipo": "paranormal",
+   "classe": "",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "Morte",
+   "requisitos": "",
+   "efeito": "+1 PE por 5% de NEX (retroativo e cresce com o NEX).",
+   "afinidade": "+1 PE extra por 5% de NEX (total +2).",
+   "repetivel": false,
+   "efeitos": {
+    "pePorNivel": 1
+   },
+   "efeitosAfinidade": {
+    "pePorNivel": 1
+   },
+   "fonte": "Livro de Regras",
+   "pagina": 115
+  },
+  {
+   "nome": "Potencial Reaproveitado",
+   "tipo": "paranormal",
+   "classe": "",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "Morte",
+   "requisitos": "",
+   "efeito": "1×/rodada, passou em teste de resistência: +2 PE temporários (acumulam; somem no fim da cena).",
+   "afinidade": "3 PE temporários em vez de 2.",
+   "repetivel": false,
+   "efeitos": {},
+   "efeitosAfinidade": {},
+   "fonte": "Livro de Regras",
+   "pagina": 115
+  },
+  {
+   "nome": "Surto Temporal",
+   "tipo": "paranormal",
+   "classe": "",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "Morte",
+   "requisitos": "Morte 2",
+   "requisitosRegra": {
+    "elemento": {
+     "Morte": 2
+    }
+   },
+   "efeito": "1×/cena, no seu turno, 3 PE: +1 ação padrão.",
+   "afinidade": "Uso 1×/turno em vez de 1×/cena.",
+   "repetivel": false,
+   "efeitos": {},
+   "efeitosAfinidade": {},
+   "fonte": "Livro de Regras",
+   "pagina": 115
+  },
+  {
+   "nome": "Anatomia Insana",
+   "tipo": "paranormal",
+   "classe": "",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "Sangue",
+   "requisitos": "Sangue 2",
+   "requisitosRegra": {
+    "elemento": {
+     "Sangue": 2
+    }
+   },
+   "efeito": "50% (par em 1d4) de ignorar o dano extra de crítico ou ataque furtivo.",
+   "afinidade": "Imune a críticos e ataques furtivos.",
+   "repetivel": false,
+   "efeitos": {},
+   "efeitosAfinidade": {},
+   "fonte": "Livro de Regras",
+   "pagina": 116
+  },
+  {
+   "nome": "Arma de Sangue",
+   "tipo": "paranormal",
+   "classe": "",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "Sangue",
+   "requisitos": "",
+   "efeito": "Movimento + 2 PE: arma natural simples, leve, corpo a corpo, 1d6 Sangue, até o fim da cena. Ao agredir, 1×/turno, 1 PE: +1 ataque com ela.",
+   "afinidade": "A arma fica permanente e causa 1d10 de Sangue.",
+   "repetivel": false,
+   "efeitos": {},
+   "efeitosAfinidade": {},
+   "fonte": "Livro de Regras",
+   "pagina": 116
+  },
+  {
+   "nome": "Sangue de Ferro",
+   "tipo": "paranormal",
+   "classe": "",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "Sangue",
+   "requisitos": "",
+   "efeito": "+2 PV por 5% de NEX (retroativo e cresce com o NEX).",
+   "afinidade": "+5 em Fortitude; imune a venenos e doenças.",
+   "repetivel": false,
+   "efeitos": {
+    "pvPorNivel": 2
+   },
+   "efeitosAfinidade": {
+    "pericias": {
+     "Fortitude": 5
+    }
+   },
+   "fonte": "Livro de Regras",
+   "pagina": 116
+  },
+  {
+   "nome": "Sangue Fervente",
+   "tipo": "paranormal",
+   "classe": "",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "Sangue",
+   "requisitos": "Sangue 2",
+   "requisitosRegra": {
+    "elemento": {
+     "Sangue": 2
+    }
+   },
+   "efeito": "Machucado: +1 em Agi ou For, à escolha a cada ativação.",
+   "afinidade": "O bônus sobe para +2.",
+   "repetivel": false,
+   "efeitos": {},
+   "efeitosAfinidade": {},
+   "fonte": "Livro de Regras",
+   "pagina": 116
+  },
+  {
+   "nome": "Sangue Vivo",
+   "tipo": "paranormal",
+   "classe": "",
+   "trilha": "",
+   "nex": 0,
+   "elemento": "Sangue",
+   "requisitos": "Sangue 1",
+   "requisitosRegra": {
+    "elemento": {
+     "Sangue": 1
+    }
+   },
+   "efeito": "1ª vez machucado na cena: cura acelerada 2 (nunca acima de ½ PV máx.; acaba no fim da cena ou ao deixar de estar machucado).",
+   "afinidade": "Cura acelerada 5.",
+   "repetivel": false,
+   "efeitos": {},
+   "efeitosAfinidade": {},
+   "fonte": "Livro de Regras",
+   "pagina": 116
+  }
+ ]
+}
