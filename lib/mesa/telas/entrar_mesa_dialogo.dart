@@ -10,7 +10,7 @@ Future<(String, String)?> pedirDadosDaMesa(BuildContext context) {
   return showDialog<(String, String)>(
     context: context,
     builder: (ctx) => AlertDialog(
-      
+      scrollable: true,
       title: const Text('Criar mesa'),
       content: Column(
         mainAxisSize: MainAxisSize.min,
@@ -63,7 +63,7 @@ Future<(String, String)?> pedirCodigo(BuildContext context) {
     context: context,
     builder: (ctx) => StatefulBuilder(
       builder: (ctx, setLocal) => AlertDialog(
-        
+        scrollable: true,
         title: const Text('Entrar com código'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -123,7 +123,7 @@ Future<(String, String)?> pedirChaveDeMesa(BuildContext context) {
     context: context,
     builder: (ctx) => StatefulBuilder(
       builder: (ctx, setLocal) => AlertDialog(
-        
+        scrollable: true,
         title: const Text('Reassumir mesa'),
         content: Column(
           mainAxisSize: MainAxisSize.min,

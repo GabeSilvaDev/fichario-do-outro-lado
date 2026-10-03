@@ -507,8 +507,8 @@ class _MesaAbaState extends State<MesaAba> {
   /// Estava numa mesa e o app voltou sem internet. O resto do app continua
   /// funcionando; aqui só dá para esperar ou sair da mesa.
   Widget _semConexao(EstadoMesa estado) {
-    return Center(
-      child: Padding(
+    return _centralizadaRolavel(
+      Padding(
         padding: const EdgeInsets.all(32),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -553,8 +553,8 @@ class _MesaAbaState extends State<MesaAba> {
 
   Widget _semMesa() {
     final conhecidas = MesaStore.conhecidas();
-    return Center(
-      child: Padding(
+    return _centralizadaRolavel(
+      Padding(
         padding: const EdgeInsets.all(32),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -595,6 +595,20 @@ class _MesaAbaState extends State<MesaAba> {
               ),
             ],
           ],
+        ),
+      ),
+    );
+  }
+
+  /// Centraliza quando cabe e rola quando não cabe. No Safari do iPhone a
+  /// capa e as barras deixam pouca altura para esta aba, e uma `Column`
+  /// presa num `Center` cortava os botões de entrar sem deixar rolar.
+  Widget _centralizadaRolavel(Widget filho) {
+    return LayoutBuilder(
+      builder: (context, limites) => SingleChildScrollView(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(minHeight: limites.maxHeight),
+          child: Center(child: filho),
         ),
       ),
     );
