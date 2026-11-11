@@ -124,31 +124,6 @@ void main() {
     expect(valorDe(t, 'Vigor'), 3);
   });
 
-  testWidgets('Sobrevivente estágio 3: ponto extra, teto 3', (t) async {
-    celular(t);
-    await t.pumpWidget(
-      MaterialApp(theme: construirTema(), home: const WizardScreen()),
-    );
-    await t.pumpAndSettle();
-    await t.enterText(find.byType(TextFormField).first, 'Civil');
-    await t.pump();
-    await proximo(t);
-    await t.tap(find.text(DadosOP.origens.first.nome));
-    await t.pump();
-    await proximo(t);
-    await t.tap(find.text('Sobrevivente').first);
-    await t.pump();
-    await t.tap(find.text('3').first);
-    await t.pump();
-    await proximo(t);
-
-    expect(find.textContaining('1 Aumento(s) de Atributo'), findsOneWidget);
-    await tocarMais(t, 'Vigor', 6);
-    expect(valorDe(t, 'Vigor'), 3);
-    await tocarMais(t, 'Força', 6);
-    expect(valorDe(t, 'Força'), 3);
-  });
-
   testWidgets('NEX 70%: Grau de Treinamento leva a expert', (t) async {
     celular(t);
     await ateAtributos(t, 'Combatente', 70);
@@ -230,6 +205,9 @@ void main() {
       expect(f.pvTemporario, 1);
       expect(f.pv, 21);
 
+      expect(find.textContaining('Próximo, em 10%'), findsOneWidget);
+      await t.tap(find.byKey(const ValueKey('editar-Identidade')));
+      await t.pumpAndSettle();
       expect(find.textContaining('Próximo: NEX 10%'), findsOneWidget);
       final regua = t.widget<Slider>(find.byType(Slider).first);
       regua.onChangeStart!(5);
@@ -242,38 +220,4 @@ void main() {
       expect(f.atributo('VIG'), 1);
     },
   );
-  testWidgets('ferimentos no mesmo atributo acumulam pela tela', (t) async {
-    celular(t);
-    final f = FichaOP.nova('ficha-ferimento')
-      ..nome = 'Teste'
-      ..classe = 'Combatente'
-      ..nex = 5;
-    await t.pumpWidget(
-      MaterialApp(
-        theme: construirTema(),
-        home: FichaScreen(fichaDireta: f),
-      ),
-    );
-    await t.pumpAndSettle();
-    await t.ensureVisible(find.text('Sobre'));
-    await t.pumpAndSettle();
-    await t.tap(find.text('Sobre'));
-    await t.pumpAndSettle();
-
-    final vig = find.byKey(const ValueKey('ferimento-VIG'));
-    await t.ensureVisible(vig);
-    await t.tap(vig);
-    await t.pump();
-    await t.tap(vig);
-    await t.pump();
-    expect(f.ferimentosEm('VIG'), 2);
-    expect(find.text('VIG ×2'), findsOneWidget);
-
-    await t.tap(
-      find.descendant(of: vig, matching: find.byIcon(Icons.clear)),
-    );
-    await t.pump();
-    expect(f.ferimentosEm('VIG'), 1);
-    expect(find.text('VIG'), findsOneWidget);
-  });
 }

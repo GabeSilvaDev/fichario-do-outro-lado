@@ -1,10 +1,12 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 
 import '../data/dados_op.dart';
 import '../mesa/ponte_rolagens.dart';
 import '../models/ficha_op.dart';
 import '../models/rolagem.dart';
-import '../regras/condicoes.dart';
+import '../regras/melhorias.dart';
 import '../regras/opcionais.dart';
 import '../regras/pendencias.dart';
 import '../regras/poderes.dart';
@@ -14,7 +16,10 @@ import 'catalogo_screen.dart';
 import 'poderes_screen.dart';
 import '../widgets/painel_pendencias.dart';
 import '../widgets/recurso_contador.dart';
+import '../widgets/filtro_rituais.dart';
+import '../widgets/leitura.dart';
 import '../widgets/retrato.dart';
+import '../widgets/seletor_trilha.dart';
 
 /// A ficha completa, em abas. Serve dois papéis:
 /// - o jogador edita a dele ([somenteLeitura] false — todo toque salva no
@@ -46,7 +51,8 @@ class _FichaScreenState extends State<FichaScreen> {
   @override
   void initState() {
     super.initState();
-    ficha = widget.fichaDireta ??
+    ficha =
+        widget.fichaDireta ??
         FichaStore.porId(widget.fichaId!) ??
         FichaOP.nova(widget.fichaId!);
     if (!leitura) ficha.sincronizarTrilha();
@@ -54,9 +60,9 @@ class _FichaScreenState extends State<FichaScreen> {
   }
 
   static Set<String> _idsQueCobram(List<Pendencia> ps) => {
-        for (final p in ps)
-          if (p.gravidade != Gravidade.info) p.id,
-      };
+    for (final p in ps)
+      if (p.gravidade != Gravidade.info) p.id,
+  };
 
   static const _abasPorNome = {
     'geral': 0,
@@ -68,6 +74,65 @@ class _FichaScreenState extends State<FichaScreen> {
   };
 
   bool get leitura => widget.somenteLeitura;
+
+  /// Painel de pendências aberto pelo ícone da barra, mesmo com tudo
+  /// ignorado.
+  bool _verPendencias = false;
+
+  /// Só as pendências que cobram (erro/aviso) e que não foram ignoradas.
+  List<Pendencia> _naoIgnoradas(List<Pendencia> ps) {
+    final ignoradas = ficha.pendenciasIgnoradas;
+    return [
+      for (final p in ps)
+        if (p.gravidade != Gravidade.info && !ignoradas.contains(p.id)) p,
+    ];
+  }
+
+  void _ignorarPendencias() {
+    ficha.pendenciasIgnoradas = _idsQueCobram(pendenciasDe(ficha));
+    _verPendencias = false;
+    _salvar();
+  }
+
+  /// Seção aberta no lápis (null = a ficha toda em leitura). Uma por vez:
+  /// abrir outra salva a atual.
+  String? _editando;
+
+  /// Como a ficha estava ao abrir o lápis — o Cancelar volta para cá.
+  String? _copiaAntes;
+
+  /// A seção [secao] está em edição agora.
+  bool _ed(String secao) => !leitura && _editando == secao;
+
+  void _abrirEdicao(String secao) {
+    if (leitura) return;
+    if (_editando != null) _fecharEdicao(salvar: true);
+    _copiaAntes = jsonEncode(ficha.dados);
+    setState(() => _editando = secao);
+  }
+
+  void _fecharEdicao({required bool salvar}) {
+    FocusManager.instance.primaryFocus?.unfocus();
+    final copia = _copiaAntes;
+    if (!salvar && copia != null) {
+      final antes = (jsonDecode(copia) as Map).cast<String, dynamic>();
+      ficha.dados
+        ..clear()
+        ..addAll(antes);
+    }
+    _copiaAntes = null;
+    _editando = null;
+    _salvar();
+  }
+
+  /// Faixa de seção com o lápis dela.
+  Widget _faixa(String secao, String titulo) => FaixaSecao(
+    titulo,
+    onEditar: leitura ? null : () => _abrirEdicao(secao),
+    editando: _ed(secao),
+    onSalvar: () => _fecharEdicao(salvar: true),
+    onCancelar: () => _fecharEdicao(salvar: false),
+  );
 
   /// Na mesa, o mestre recebe a ficha nova a cada publicação do jogador.
   @override
@@ -89,47 +154,66 @@ class _FichaScreenState extends State<FichaScreen> {
   /// "e se eu mudar isso aqui?" respondido na hora.
   void _salvar() {
     if (leitura) return;
-    FichaStore.salvar(ficha);
     final agora = pendenciasDe(ficha);
+    // Ignorada que se resolveu sai da lista: se voltar, volta a avisar.
+    final ignoradas = ficha.pendenciasIgnoradas;
+    final ativas = _idsQueCobram(agora);
+    if (ignoradas.any((id) => !ativas.contains(id))) {
+      ficha.pendenciasIgnoradas = ignoradas.intersection(ativas);
+    }
+    FichaStore.salvar(ficha);
     final novas = [
-      for (final p in agora)
-        if (p.gravidade != Gravidade.info && !_pendenciasVistas.contains(p.id))
-          p,
+      for (final p in _naoIgnoradas(agora))
+        if (!_pendenciasVistas.contains(p.id)) p,
     ];
     _pendenciasVistas = _idsQueCobram(agora);
     setState(() {});
     if (novas.isEmpty || !mounted) return;
     final mensageiro = ScaffoldMessenger.maybeOf(context);
     mensageiro?.hideCurrentSnackBar();
-    mensageiro?.showSnackBar(SnackBar(
-      duration: const Duration(seconds: 5),
-      content: Row(
-        children: [
-          Icon(PainelPendencias.icone(novas.first.gravidade),
-              color: PainelPendencias.cor(novas.first.gravidade), size: 18),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(novas.length == 1
-                ? novas.first.texto
-                : '${novas.first.texto} (+${novas.length - 1} pendência(s))'),
-          ),
-        ],
+    mensageiro?.showSnackBar(
+      SnackBar(
+        duration: const Duration(seconds: 5),
+        content: Row(
+          children: [
+            Icon(
+              PainelPendencias.icone(novas.first.gravidade),
+              color: PainelPendencias.cor(novas.first.gravidade),
+              size: 18,
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                novas.length == 1
+                    ? novas.first.texto
+                    : '${novas.first.texto} (+${novas.length - 1} pendência(s))',
+              ),
+            ),
+          ],
+        ),
       ),
-    ));
+    );
   }
 
   void _rolarPericia(Pericia p) {
     final (dados, melhor, bonus) = ficha.testePericia(p);
     final r = Rolagem.teste(
-        titulo: p.nome, dados: dados, melhor: melhor, bonus: bonus);
+      titulo: p.nome,
+      dados: dados,
+      melhor: melhor,
+      bonus: bonus,
+    );
     _mostrarResultado(r);
   }
 
   void _rolarExpressao(String titulo, String expressao) {
     final r = Rolagem.expressao(titulo, expressao);
     if (r == null) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text('Não entendi "$expressao" — use algo como 2d6+3.')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Não entendi "$expressao" — use algo como 2d6+3.'),
+        ),
+      );
       return;
     }
     _mostrarResultado(r);
@@ -147,15 +231,22 @@ class _FichaScreenState extends State<FichaScreen> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(r.formula,
-                style: const TextStyle(
-                    fontFamily: 'monospace', color: Cores.tinta2)),
+            Text(
+              r.formula,
+              style: const TextStyle(
+                fontFamily: 'monospace',
+                color: Cores.tinta2,
+              ),
+            ),
             const SizedBox(height: 4),
-            Text(r.detalhe,
-                style: const TextStyle(
-                    fontFamily: 'monospace',
-                    fontSize: 13,
-                    color: Cores.tinta2)),
+            Text(
+              r.detalhe,
+              style: const TextStyle(
+                fontFamily: 'monospace',
+                fontSize: 13,
+                color: Cores.tinta2,
+              ),
+            ),
             const SizedBox(height: 10),
             Center(
               child: Text(
@@ -166,26 +257,38 @@ class _FichaScreenState extends State<FichaScreen> {
                   color: r.critico
                       ? Cores.estavel
                       : r.desastre
-                          ? Cores.sangue
-                          : Cores.tinta,
+                      ? Cores.sangue
+                      : Cores.tinta,
                 ),
               ),
             ),
             if (r.critico)
               const Center(
-                  child: Text('CRÍTICO!',
-                      style: TextStyle(
-                          color: Cores.estavel, fontWeight: FontWeight.bold))),
+                child: Text(
+                  'CRÍTICO!',
+                  style: TextStyle(
+                    color: Cores.estavel,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
             if (r.desastre)
               const Center(
-                  child: Text('DESASTRE…',
-                      style: TextStyle(
-                          color: Cores.sangue, fontWeight: FontWeight.bold))),
+                child: Text(
+                  'DESASTRE…',
+                  style: TextStyle(
+                    color: Cores.sangue,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
           ],
         ),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(ctx), child: const Text('Fechar')),
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Fechar'),
+          ),
         ],
       ),
     );
@@ -194,110 +297,128 @@ class _FichaScreenState extends State<FichaScreen> {
   @override
   Widget build(BuildContext context) {
     final pendencias = pendenciasDe(ficha);
-    final cobrando =
-        pendencias.where((p) => p.gravidade != Gravidade.info).length;
+    final cobrando = pendencias
+        .where((p) => p.gravidade != Gravidade.info)
+        .length;
     return DefaultTabController(
       length: 6,
-      child: Builder(builder: (ctxAbas) => Scaffold(
-        appBar: AppBar(
-          title: Text(ficha.nome.isEmpty ? 'Ficha' : ficha.nome),
-          actions: [
-            if (cobrando > 0)
-              IconButton(
-                tooltip: '$cobrando pendência(s)',
-                onPressed: () => DefaultTabController.of(ctxAbas).animateTo(0),
-                icon: Badge(
-                  label: Text('$cobrando'),
-                  backgroundColor: pendencias
-                          .any((p) => p.gravidade == Gravidade.erro)
-                      ? Cores.sangue
-                      : Cores.conhecimento,
-                  child: const Icon(Icons.fact_check_outlined),
+      child: Builder(
+        builder: (ctxAbas) => Scaffold(
+          appBar: AppBar(
+            title: Text(ficha.nome.isEmpty ? 'Ficha' : ficha.nome),
+            actions: [
+              if (cobrando > 0)
+                IconButton(
+                  key: const ValueKey('icone-pendencias'),
+                  tooltip: _naoIgnoradas(pendencias).isEmpty
+                      ? '$cobrando pendência(s) ignorada(s) — toque para ver'
+                      : '$cobrando pendência(s)',
+                  onPressed: () {
+                    DefaultTabController.of(ctxAbas).animateTo(0);
+                    setState(() => _verPendencias = !_verPendencias);
+                  },
+                  icon: Badge(
+                    label: Text('$cobrando'),
+                    textColor: _naoIgnoradas(pendencias).isEmpty
+                        ? Cores.tinta
+                        : null,
+                    backgroundColor: _naoIgnoradas(pendencias).isEmpty
+                        ? Cores.linha
+                        : pendencias.any((p) => p.gravidade == Gravidade.erro)
+                        ? Cores.sangue
+                        : Cores.conhecimento,
+                    child: const Icon(Icons.fact_check_outlined),
+                  ),
                 ),
-              ),
-            if (!leitura) ...[_menuTipo(), _menuRegras()],
-          ],
-          bottom: const TabBar(
-            isScrollable: true,
-            tabs: [
-              Tab(text: 'Geral'),
-              Tab(text: 'Perícias'),
-              Tab(text: 'Ataques'),
-              Tab(text: 'Poderes'),
-              Tab(text: 'Inventário'),
-              Tab(text: 'Sobre'),
+              if (!leitura) _menuFicha(),
+            ],
+            bottom: const TabBar(
+              isScrollable: true,
+              tabs: [
+                Tab(text: 'Geral'),
+                Tab(text: 'Perícias'),
+                Tab(text: 'Ataques'),
+                Tab(text: 'Poderes'),
+                Tab(text: 'Inventário'),
+                Tab(text: 'Sobre'),
+              ],
+            ),
+          ),
+          body: Column(
+            children: [
+              if (ficha.ehNpc || ficha.modoLivre) _faixaEstado(),
+              Expanded(child: _abas()),
             ],
           ),
         ),
-        body: Column(
-          children: [
-            if (ficha.ehNpc || ficha.modoLivre) _faixaEstado(),
-            Expanded(child: _abas()),
-          ],
-        ),
-      )),
+      ),
     );
   }
 
   Widget _abas() {
     return TabBarView(
-          children: [
-            _abaGeral(),
-            _abaPericias(),
-            _abaAtaques(),
-            _abaPoderes(),
-            _abaInventario(),
-            _abaSobre(),
-          ],
-        );
-  }
-
-  /// Jogador ou NPC. NPC fica fora da mesa online: o bestiário é do mestre.
-  Widget _menuTipo() {
-    return PopupMenuButton<bool>(
-      icon: Icon(
-          ficha.ehNpc ? Icons.psychology_alt_outlined : Icons.person_outline),
-      tooltip: 'Tipo da ficha',
-      color: Cores.carta2,
-      onSelected: (v) {
-        ficha.ehNpc = v;
-        if (v) ficha.modoLivre = true;
-        _salvar();
-      },
-      itemBuilder: (_) => [
-        CheckedPopupMenuItem(
-          value: false,
-          checked: !ficha.ehNpc,
-          child: const Text('Personagem de jogador'),
-        ),
-        CheckedPopupMenuItem(
-          value: true,
-          checked: ficha.ehNpc,
-          child: const Text('NPC / criatura (só sua)'),
-        ),
+      children: [
+        _abaGeral(),
+        _abaPericias(),
+        _abaAtaques(),
+        _abaPoderes(),
+        _abaInventario(),
+        _abaSobre(),
       ],
     );
   }
 
-  /// Modo livre: solta os tetos da ficha (atributo até 20) para montar
-  /// criatura, NPC ou um personagem que já passou do que a criação permite.
-  Widget _menuRegras() {
-    return PopupMenuButton<bool>(
-      icon: Icon(ficha.modoLivre ? Icons.lock_open : Icons.rule),
-      tooltip: 'Regras da ficha',
+  /// Tipo da ficha e regras, num menu só: são ajustes raros, não precisam
+  /// de dois ícones na barra.
+  Widget _menuFicha() {
+    return PopupMenuButton<String>(
+      key: const ValueKey('menu-ficha'),
+      icon: const Icon(Icons.more_vert),
+      tooltip: 'Ajustes da ficha',
       color: Cores.carta2,
       onSelected: (v) {
-        ficha.modoLivre = v;
+        switch (v) {
+          case 'jogador':
+            ficha.ehNpc = false;
+          case 'npc':
+            ficha.ehNpc = true;
+            ficha.modoLivre = true;
+          case 'padrao':
+            ficha.modoLivre = false;
+          case 'livre':
+            ficha.modoLivre = true;
+        }
         _salvar();
       },
       itemBuilder: (_) => [
+        const PopupMenuItem(
+          enabled: false,
+          height: 28,
+          child: Text('TIPO', style: TextStyle(fontSize: 11)),
+        ),
         CheckedPopupMenuItem(
-          value: false,
+          value: 'jogador',
+          checked: !ficha.ehNpc,
+          child: const Text('Personagem de jogador'),
+        ),
+        CheckedPopupMenuItem(
+          value: 'npc',
+          checked: ficha.ehNpc,
+          child: const Text('NPC / criatura (só sua)'),
+        ),
+        const PopupMenuDivider(),
+        const PopupMenuItem(
+          enabled: false,
+          height: 28,
+          child: Text('REGRAS', style: TextStyle(fontSize: 11)),
+        ),
+        CheckedPopupMenuItem(
+          value: 'padrao',
           checked: !ficha.modoLivre,
           child: const Text('Padrão (limites do livro)'),
         ),
         CheckedPopupMenuItem(
-          value: true,
+          value: 'livre',
           checked: ficha.modoLivre,
           child: const Text('Livre — mestre / evolução'),
         ),
@@ -313,8 +434,11 @@ class _FichaScreenState extends State<FichaScreen> {
       color: (npc ? Cores.sangue : Cores.conhecimento).withValues(alpha: .14),
       child: Row(
         children: [
-          Icon(npc ? Icons.psychology_alt_outlined : Icons.lock_open,
-              size: 15, color: npc ? Cores.sangue : Cores.conhecimento),
+          Icon(
+            npc ? Icons.psychology_alt_outlined : Icons.lock_open,
+            size: 15,
+            color: npc ? Cores.sangue : Cores.conhecimento,
+          ),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
@@ -322,8 +446,9 @@ class _FichaScreenState extends State<FichaScreen> {
                   ? 'NPC / criatura — fica só neste aparelho, fora da mesa.'
                   : 'Modo livre — os limites do livro não travam esta ficha.',
               style: TextStyle(
-                  fontSize: 12,
-                  color: npc ? Cores.sangue : Cores.conhecimento),
+                fontSize: 12,
+                color: npc ? Cores.sangue : Cores.conhecimento,
+              ),
             ),
           ),
         ],
@@ -337,130 +462,340 @@ class _FichaScreenState extends State<FichaScreen> {
       children: [
         Builder(
           builder: (ctx) => PainelPendencias(
-            pendencias: pendenciasDe(ficha),
-            aoIrPara: (aba) => DefaultTabController.of(ctx)
-                .animateTo(_abasPorNome[aba] ?? 0),
+            pendencias:
+                _verPendencias || _naoIgnoradas(pendenciasDe(ficha)).isNotEmpty
+                ? pendenciasDe(ficha)
+                : const [],
+            aoIgnorar: leitura ? null : _ignorarPendencias,
+            ignoradas:
+                _verPendencias && _naoIgnoradas(pendenciasDe(ficha)).isEmpty,
+            aoReativar: leitura
+                ? null
+                : () {
+                    ficha.pendenciasIgnoradas = const {};
+                    _verPendencias = false;
+                    _salvar();
+                  },
+            aoIrPara: (aba) =>
+                DefaultTabController.of(ctx).animateTo(_abasPorNome[aba] ?? 0),
           ),
         ),
-        Row(
+        _faixa('identidade', 'Identidade'),
+        if (_ed('identidade')) _identidadeEdicao() else _identidadeLeitura(),
+        _faixa('atributos', 'Atributos'),
+        _atributos(),
+        _faixa('recursos', 'Recursos'),
+        ..._recursos(),
+        if (_ed('recursos')) _editorMaximos(),
+        if (ficha.ehNpc) ...[
+          const FaixaSecao('Bloco de ameaça'),
+          _blocoAmeaca(),
+        ],
+        _faixa('defesa', 'Defesa e movimento'),
+        _defesa(),
+        const SizedBox(height: 24),
+      ],
+    );
+  }
+
+  // --- Identidade -------------------------------------------------------
+
+  Widget _identidadeLeitura() {
+    final c = ficha.classeOP;
+    final agente = c?.agente ?? false;
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            GestureDetector(
-              onTap: leitura
-                  ? null
-                  : () async {
-                      final b64 = await escolherRetrato();
-                      if (b64 == null) return;
-                      ficha.retrato = b64;
-                      _salvar();
-                    },
-              child: RetratoAvatar(base64: ficha.retrato, tamanho: 72),
+            Row(
+              children: [
+                RetratoAvatar(base64: ficha.retrato, tamanho: 76),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        ficha.nome.isEmpty ? 'Sem nome' : ficha.nome,
+                        style: const TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      if (ficha.jogador.isNotEmpty)
+                        Text(
+                          'Jogador: ${ficha.jogador}',
+                          style: const TextStyle(
+                            fontSize: 13,
+                            color: Cores.tinta2,
+                          ),
+                        ),
+                      const SizedBox(height: 8),
+                      Wrap(
+                        spacing: 6,
+                        runSpacing: 6,
+                        children: [
+                          Etiqueta(ficha.classe, cor: Cores.energiaViva),
+                          if (ficha.origem.isNotEmpty)
+                            Etiqueta(ficha.origem, cor: Cores.tinta),
+                          if (agente)
+                            Etiqueta(
+                              ficha.patente,
+                              cor: Cores.conhecimento,
+                              icone: Icons.military_tech_outlined,
+                            ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(width: 14),
+            const Divider(height: 26),
+            _exposicaoLeitura(),
+            if (agente) ...[
+              const SizedBox(height: 14),
+              InfoLeitura('Trilha', ficha.trilha, detalhe: _detalheTrilha()),
+            ],
+            const SizedBox(height: 14),
+            Row(
+              children: [
+                Expanded(
+                  flex: 3,
+                  child: InfoLeitura('Nacionalidade', ficha.nacionalidade),
+                ),
+                Expanded(
+                  child: InfoLeitura(
+                    'Idade',
+                    ficha.idade > 0 ? '${ficha.idade}' : '',
+                  ),
+                ),
+                if (agente) Expanded(child: InfoLeitura('PP', '${ficha.pp}')),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String? _detalheTrilha() {
+    if (ficha.trilha.isEmpty) {
+      return 'Escolhida em NEX 10%.';
+    }
+    final doLivro = DadosOP.trilhasParaEscolher(ficha.classe);
+    final t = DadosOP.trilhaPorNome(ficha.trilha);
+    if (t == null || !doLivro.any((x) => x.nome == t.nome)) {
+      return 'Fora do Livro de Regras — troque no lápis.';
+    }
+    return t.resumo;
+  }
+
+  /// NEX grande, com o próximo marco embaixo.
+  Widget _exposicaoLeitura() {
+    final classe = ficha.classeOP;
+    final proximo = classe?.proximoMarco(ficha.nex);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            const Padding(
+              padding: EdgeInsets.only(bottom: 5),
+              child: Text(
+                'NEX',
+                style: TextStyle(
+                  fontSize: 11,
+                  letterSpacing: 1.5,
+                  fontWeight: FontWeight.w600,
+                  color: Cores.tinta2,
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              '${ficha.nex}%',
+              style: const TextStyle(
+                fontSize: 28,
+                fontWeight: FontWeight.w800,
+                color: Cores.energiaViva,
+                height: 1,
+              ),
+            ),
+            const SizedBox(width: 12),
             Expanded(
-              child: Column(
-                children: [
-                  _campoTexto('Nome do personagem', ficha.nome,
-                      (v) => ficha.nome = v),
-                  const SizedBox(height: 8),
-                  _campoTexto(
-                      'Jogador', ficha.jogador, (v) => ficha.jogador = v),
-                ],
+              child: Padding(
+                padding: const EdgeInsets.only(bottom: 6),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(99),
+                  child: LinearProgressIndicator(
+                    value: ficha.nex / 99,
+                    minHeight: 6,
+                    backgroundColor: Cores.fundo,
+                    valueColor: const AlwaysStoppedAnimation(Cores.energia),
+                  ),
+                ),
               ),
             ),
           ],
         ),
-        const FaixaSecao('Identidade'),
-        Row(children: [
-          Expanded(child: _seletorClasse()),
-          const SizedBox(width: 8),
-          Expanded(child: _seletorOrigem()),
-        ]),
-        const SizedBox(height: 8),
-        Row(children: [
-          Expanded(child: _seletorTrilha()),
-          const SizedBox(width: 8),
-          Expanded(child: _seletorPatente()),
-        ]),
-        if (ficha.classeOP?.agente ?? false) ...[
-          const SizedBox(height: 8),
-          Row(children: [
-            Expanded(
-              child: _campoNumero('Pontos de prestígio (PP)', ficha.pp,
-                  (v) => ficha.pp = v),
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                'Pelos PP: ${ficha.patentePelosPp}',
-                style: const TextStyle(fontSize: 12, color: Cores.tinta2),
-              ),
-            ),
-          ]),
-        ],
-        const SizedBox(height: 8),
-        Row(children: [
-          Expanded(
-              child: _campoTexto('Nacionalidade / cidade natal',
-                  ficha.nacionalidade, (v) => ficha.nacionalidade = v)),
-          const SizedBox(width: 8),
-          SizedBox(
-            width: 90,
-            child: _campoNumero('Idade', ficha.idade, (v) => ficha.idade = v),
+        if (proximo != null) ...[
+          const SizedBox(height: 6),
+          Text(
+            'Próximo, em $proximo%: ${classe!.marcos(proximo).join(' · ')}',
+            style: const TextStyle(fontSize: 12, color: Cores.tinta2),
           ),
-        ]),
-        const SizedBox(height: 10),
-        _linhaNex(),
-        const FaixaSecao('Atributos'),
-        _atributos(),
-        const FaixaSecao('Recursos'),
-        RecursoContador(
-          rotulo: 'VIDA',
-          atual: ficha.pv,
-          maximo: ficha.pvMax,
-          maximoManual: ficha.pvMaxManual,
-          cor: Cores.sangue,
-          extra: ficha.pvTemporario,
-          rotuloExtra: 'PV temporários',
-          aoEditarExtra: leitura ? null : _editarPvTemporario,
-          aoMudar: leitura
-              ? null
-              : (v) {
-                  if (v < ficha.pv) {
-                    ficha.sofrerDano(ficha.pv - v);
-                  } else {
-                    ficha.pv = v;
-                  }
-                  _salvar();
-                },
-          aoEditarMaximo: leitura ? null : () => _editarMaximo('pv'),
+        ],
+      ],
+    );
+  }
+
+  Widget _identidadeEdicao() {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                Column(
+                  children: [
+                    GestureDetector(
+                      onTap: () async {
+                        final b64 = await escolherRetrato();
+                        if (b64 == null) return;
+                        ficha.retrato = b64;
+                        _salvar();
+                      },
+                      child: RetratoAvatar(base64: ficha.retrato, tamanho: 72),
+                    ),
+                    const SizedBox(height: 4),
+                    const Text(
+                      'trocar foto',
+                      style: TextStyle(fontSize: 11, color: Cores.tinta2),
+                    ),
+                  ],
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    children: [
+                      _campoTexto(
+                        'Nome do personagem',
+                        ficha.nome,
+                        (v) => ficha.nome = v,
+                      ),
+                      const SizedBox(height: 8),
+                      _campoTexto(
+                        'Jogador',
+                        ficha.jogador,
+                        (v) => ficha.jogador = v,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                Expanded(child: _seletorClasse()),
+                const SizedBox(width: 8),
+                Expanded(child: _seletorOrigem()),
+              ],
+            ),
+            const SizedBox(height: 8),
+            _seletorTrilha(),
+            const SizedBox(height: 8),
+            _seletorPatente(),
+            if (ficha.classeOP?.agente ?? false) ...[
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Expanded(
+                    child: _campoNumero(
+                      'Pontos de prestígio (PP)',
+                      ficha.pp,
+                      (v) => ficha.pp = v,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Pelos PP: ${ficha.patentePelosPp}',
+                      style: const TextStyle(fontSize: 12, color: Cores.tinta2),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Expanded(
+                  child: _campoTexto(
+                    'Nacionalidade / cidade natal',
+                    ficha.nacionalidade,
+                    (v) => ficha.nacionalidade = v,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                SizedBox(
+                  width: 90,
+                  child: _campoNumero(
+                    'Idade',
+                    ficha.idade,
+                    (v) => ficha.idade = v,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            _linhaNex(),
+          ],
         ),
-        if (ficha.regraDeterminacao)
-          RecursoContador(
-            rotulo: 'DETERMINAÇÃO',
-            atual: ficha.pd,
-            maximo: ficha.pdMax,
-            cor: Cores.energia,
-            aoMudar: leitura
-                ? null
-                : (v) {
-                    ficha.pd = v;
-                    _salvar();
-                  },
-          )
-        else ...[
+      ),
+    );
+  }
+
+  // --- Recursos ---------------------------------------------------------
+
+  /// PV, SAN e PE: + e − sempre à mão (é o que muda na sessão). Mudar o
+  /// máximo fica no lápis.
+  List<Widget> _recursos() {
+    ValueChanged<int>? muda(void Function(int) grava) => leitura
+        ? null
+        : (v) {
+            grava(v);
+            _salvar();
+          };
+    return [
+      RecursoContador(
+        rotulo: 'VIDA',
+        atual: ficha.pv,
+        maximo: ficha.pvMax,
+        maximoManual: ficha.pvMaxManual,
+        cor: Cores.sangue,
+        extra: ficha.pvTemporario,
+        aoMudar: muda((v) {
+          if (v < ficha.pv) {
+            ficha.sofrerDano(ficha.pv - v);
+          } else {
+            ficha.pv = v;
+          }
+        }),
+      ),
+      ...[
         RecursoContador(
           rotulo: 'SANIDADE',
           atual: ficha.san,
           maximo: ficha.sanMax,
           maximoManual: ficha.sanMaxManual,
           cor: Cores.energia,
-          aoMudar: leitura
-              ? null
-              : (v) {
-                  ficha.san = v;
-                  _salvar();
-                },
-          aoEditarMaximo: leitura ? null : () => _editarMaximo('san'),
+          aoMudar: muda((v) => ficha.san = v),
         ),
         RecursoContador(
           rotulo: 'ESFORÇO',
@@ -468,129 +803,306 @@ class _FichaScreenState extends State<FichaScreen> {
           maximo: ficha.peMax,
           maximoManual: ficha.peMaxManual,
           cor: Cores.conhecimento,
-          aoMudar: leitura
-              ? null
-              : (v) {
-                  ficha.pe = v;
+          aoMudar: muda((v) => ficha.pe = v),
+        ),
+      ],
+      if (!_ed('recursos') &&
+          (ficha.pvMaxManual || ficha.sanMaxManual || ficha.peMaxManual))
+        const Padding(
+          padding: EdgeInsets.only(left: 4, top: 2),
+          child: Text(
+            '* máximo ajustado pela história (lápis para ver a regra).',
+            style: TextStyle(fontSize: 11, color: Cores.tinta2),
+          ),
+        ),
+    ];
+  }
+
+  /// Lápis dos recursos: o máximo de cada um, com o valor da regra ao lado.
+  /// Digitar o número da regra volta ao automático.
+  Widget _editorMaximos() {
+    Widget linha(
+      String recurso,
+      String rotulo,
+      int maximo,
+      int regra,
+      bool manual,
+    ) {
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 10),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '$rotulo máximo',
+                    style: const TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                  Text(
+                    manual
+                        ? 'Pela regra seria $regra — ajustado pela história.'
+                        : 'Pela regra: $regra (automático).',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: manual ? Cores.conhecimento : Cores.tinta2,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (manual)
+              IconButton(
+                tooltip: 'Voltar ao valor da regra',
+                icon: const Icon(Icons.restart_alt, size: 20),
+                onPressed: () {
+                  ficha.definirMaxManual(recurso, null);
                   _salvar();
                 },
-          aoEditarMaximo: leitura ? null : () => _editarMaximo('pe'),
+              ),
+            SizedBox(
+              width: 76,
+              child: TextFormField(
+                key: ValueKey('max-$recurso-$manual-$regra'),
+                initialValue: '$maximo',
+                keyboardType: TextInputType.number,
+                textAlign: TextAlign.center,
+                decoration: const InputDecoration(isDense: true),
+                onChanged: (v) {
+                  final n = int.tryParse(v.trim());
+                  if (n == null || n <= 0) return;
+                  ficha.definirMaxManual(recurso, n == regra ? null : n);
+                  FichaStore.salvar(ficha);
+                },
+                onFieldSubmitted: (_) => _salvar(),
+              ),
+            ),
+          ],
         ),
-        ],
-        if (ficha.ehNpc) ...[
-          const FaixaSecao('Bloco de ameaça'),
-          _blocoAmeaca(),
-        ],
-        const FaixaSecao('Estado'),
-        _estadoDoPersonagem(),
-        const FaixaSecao('Condições'),
-        _condicoes(),
-        const FaixaSecao('Estado na mesa'),
-        _estadoDeMesa(),
-        const FaixaSecao('Defesa e movimento'),
-        Card(
-          child: Padding(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+      );
+    }
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(12, 12, 12, 2),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Padding(
+              padding: EdgeInsets.only(bottom: 10),
+              child: Text(
+                'Mudou o máximo por algo da história? Digite o novo valor. '
+                'O app passa a usar ele no lugar da conta da regra.',
+                style: TextStyle(fontSize: 12, color: Cores.tinta2),
+              ),
+            ),
+            linha(
+              'pv',
+              'PV',
+              ficha.pvMax,
+              ficha.pvMaxCalculado(),
+              ficha.pvMaxManual,
+            ),
+            ...[
+              linha(
+                'san',
+                'SAN',
+                ficha.sanMax,
+                ficha.sanMaxCalculado(),
+                ficha.sanMaxManual,
+              ),
+              linha(
+                'pe',
+                'PE',
+                ficha.peMax,
+                ficha.peMaxCalculado(),
+                ficha.peMaxManual,
+              ),
+            ],
+            Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: Row(
+                children: [
+                  const Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'PV temporários',
+                          style: TextStyle(fontWeight: FontWeight.w600),
+                        ),
+                        Text(
+                          'Por cima da vida; saem primeiro no dano.',
+                          style: TextStyle(fontSize: 12, color: Cores.tinta2),
+                        ),
+                      ],
+                    ),
+                  ),
+                  SizedBox(
+                    width: 76,
+                    child: TextFormField(
+                      initialValue: '${ficha.pvTemporario}',
+                      keyboardType: TextInputType.number,
+                      textAlign: TextAlign.center,
+                      decoration: const InputDecoration(isDense: true),
+                      onChanged: (v) {
+                        ficha.pvTemporario = int.tryParse(v.trim()) ?? 0;
+                        FichaStore.salvar(ficha);
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // --- Defesa -----------------------------------------------------------
+
+  Widget _defesa() {
+    final editando = _ed('defesa');
+    final avisos = <Widget>[
+      if (_textoRd().isNotEmpty)
+        Text(
+          'Resistência a dano: ${_textoRd()}',
+          style: const TextStyle(fontSize: 12),
+        ),
+      if (ficha.sobrecarregado)
+        const Text(
+          'Sobrecarregado: −5 na Defesa, −3m de deslocamento e −5 nas '
+          'perícias que sofrem carga.',
+          style: TextStyle(fontSize: 12, color: Cores.sangue),
+        ),
+      if (ficha.semProficienciaEmProtecao != null)
+        Text(
+          'Sem proficiência em ${ficha.semProficienciaEmProtecao}: −2 d20 em '
+          'For e Agi, já aplicado nos testes.',
+          style: const TextStyle(fontSize: 12, color: Cores.sangue),
+        ),
+    ];
+    final protecao = switch (ficha.protecaoTipo) {
+      'Nenhuma' => 'Nenhuma',
+      'Outra' => '${ficha.protecao} (+${ficha.protecaoDefesa})',
+      final t => '$t (+${ficha.protecaoDefesa})',
+    };
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
               children: [
-                Row(
-                  children: [
-                    _medalha('DEFESA', '${ficha.defesa}'),
-                    const SizedBox(width: 12),
-                    _medalha('DESLOC.', _metros(ficha.deslocamentoEfetivo)),
-                    const SizedBox(width: 12),
-                    _medalha('PE/TURNO', '${ficha.limitePeTurno}'),
-                    const SizedBox(width: 12),
-                    _medalha('DT RIT.', '${ficha.dtRituais}'),
-                  ],
-                ),
-                if (_textoRd().isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 8),
-                    child: Text('Resistência a dano: ${_textoRd()}',
-                        style: const TextStyle(fontSize: 12)),
-                  ),
-                if (ficha.efeitos.defesaCondicao > 0 ||
-                    ficha.efeitos.deslocamentoCondicao != null)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 6),
-                    child: Text(
-                      'Condições já aplicadas: '
-                      '${ficha.efeitos.defesaCondicao > 0 ? '−${ficha.efeitos.defesaCondicao} Defesa' : ''}'
-                      '${ficha.efeitos.deslocamentoCondicao != null ? ' · deslocamento alterado' : ''}',
-                      style: const TextStyle(
-                          fontSize: 12, color: Cores.conhecimento),
+                _medalha('DEFESA', '${ficha.defesa}'),
+                const SizedBox(width: 10),
+                _medalha('DESLOC.', _metros(ficha.deslocamentoEfetivo)),
+                const SizedBox(width: 10),
+                _medalha('PE/TURNO', '${ficha.limitePeTurno}'),
+                const SizedBox(width: 10),
+                _medalha('DT RIT.', '${ficha.dtRituais}'),
+              ],
+            ),
+            if (!editando) ...[
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    flex: 3,
+                    child: InfoLeitura(
+                      'Proteção',
+                      protecao,
+                      detalhe: ficha.escudo ? '+ escudo (+2)' : null,
                     ),
                   ),
-                if (ficha.sobrecarregado)
-                  const Padding(
-                    padding: EdgeInsets.only(top: 8),
-                    child: Text(
-                      'Sobrecarregado: −5 na Defesa, −3m de deslocamento e −5 '
-                      'nas perícias que sofrem carga.',
-                      style: TextStyle(fontSize: 12, color: Cores.sangue),
+                  Expanded(
+                    flex: 2,
+                    child: InfoLeitura(
+                      'Outros bônus',
+                      ficha.defesaBonus == 0
+                          ? ''
+                          : '${ficha.defesaBonus > 0 ? '+' : ''}'
+                                '${ficha.defesaBonus}',
                     ),
                   ),
+                ],
+              ),
+              if (ficha.resistencias.isNotEmpty) ...[
                 const SizedBox(height: 10),
-                Row(children: [
+                InfoLeitura('Resistências', ficha.resistencias),
+              ],
+            ],
+            for (final a in avisos)
+              Padding(padding: const EdgeInsets.only(top: 8), child: a),
+            if (editando) ...[
+              const SizedBox(height: 12),
+              Row(
+                children: [
                   Expanded(child: _seletorProtecao()),
                   const SizedBox(width: 8),
                   Expanded(
-                    child: _campoNumero('Deslocamento (m)',
-                        ficha.deslocamento, (v) => ficha.deslocamento = v),
+                    child: _campoNumero(
+                      'Deslocamento (m)',
+                      ficha.deslocamento,
+                      (v) => ficha.deslocamento = v,
+                    ),
                   ),
-                ]),
-                if (ficha.protecaoTipo == 'Outra') ...[
-                  const SizedBox(height: 8),
-                  Row(children: [
+                ],
+              ),
+              if (ficha.protecaoTipo == 'Outra') ...[
+                const SizedBox(height: 8),
+                Row(
+                  children: [
                     Expanded(
-                      child: _campoTexto('Nome da proteção', ficha.protecao,
-                          (v) => ficha.protecao = v),
+                      child: _campoTexto(
+                        'Nome da proteção',
+                        ficha.protecao,
+                        (v) => ficha.protecao = v,
+                      ),
                     ),
                     const SizedBox(width: 8),
                     Expanded(
-                      child: _campoNumero('Defesa da proteção',
-                          ficha.protecaoDefesa,
-                          (v) => ficha.protecaoDefesa = v),
+                      child: _campoNumero(
+                        'Defesa da proteção',
+                        ficha.protecaoDefesa,
+                        (v) => ficha.protecaoDefesa = v,
+                      ),
                     ),
-                  ]),
-                ],
-                CheckboxListTile(
-                  dense: true,
-                  contentPadding: EdgeInsets.zero,
-                  controlAffinity: ListTileControlAffinity.leading,
-                  value: ficha.escudo,
-                  title: const Text('Escudo (+2 Defesa, 2 espaços)',
-                      style: TextStyle(fontSize: 14)),
-                  onChanged: leitura
-                      ? null
-                      : (v) {
-                          ficha.escudo = v ?? false;
-                          _salvar();
-                        },
+                  ],
                 ),
-                if (ficha.semProficienciaEmProtecao != null)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
-                    child: Text(
-                      'Sem proficiência em ${ficha.semProficienciaEmProtecao} '
-                      '— −2 d20 em For e Agi, já aplicado nos testes.',
-                      style: const TextStyle(
-                          fontSize: 12, color: Cores.sangue),
-                    ),
-                  ),
-                _campoNumero('Outros bônus de Defesa', ficha.defesaBonus,
-                    (v) => ficha.defesaBonus = v),
-                const SizedBox(height: 8),
-                _campoTexto('Resistências', ficha.resistencias,
-                    (v) => ficha.resistencias = v),
               ],
-            ),
-          ),
+              CheckboxListTile(
+                dense: true,
+                contentPadding: EdgeInsets.zero,
+                controlAffinity: ListTileControlAffinity.leading,
+                value: ficha.escudo,
+                title: const Text(
+                  'Escudo (+2 Defesa, 2 espaços)',
+                  style: TextStyle(fontSize: 14),
+                ),
+                onChanged: (v) {
+                  ficha.escudo = v ?? false;
+                  _salvar();
+                },
+              ),
+              _campoNumero(
+                'Outros bônus de Defesa',
+                ficha.defesaBonus,
+                (v) => ficha.defesaBonus = v,
+              ),
+              const SizedBox(height: 8),
+              _campoTexto(
+                'Resistências',
+                ficha.resistencias,
+                (v) => ficha.resistencias = v,
+              ),
+            ],
+          ],
         ),
-        const SizedBox(height: 24),
-      ],
+      ),
     );
   }
 
@@ -604,14 +1116,22 @@ class _FichaScreenState extends State<FichaScreen> {
         ),
         child: Column(
           children: [
-            Text(valor,
-                style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Cores.tinta)),
-            Text(rotulo,
-                style: const TextStyle(
-                    fontSize: 10, letterSpacing: 1.5, color: Cores.tinta2)),
+            Text(
+              valor,
+              style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Cores.tinta,
+              ),
+            ),
+            Text(
+              rotulo,
+              style: const TextStyle(
+                fontSize: 10,
+                letterSpacing: 1.5,
+                color: Cores.tinta2,
+              ),
+            ),
           ],
         ),
       ),
@@ -623,7 +1143,6 @@ class _FichaScreenState extends State<FichaScreen> {
   int? _nexAoPegar;
 
   Widget _linhaNex() {
-    if (ficha.porEstagio) return _linhaEstagio();
     final classe = DadosOP.classePorNome(ficha.classe);
     final proximo = classe?.proximoMarco(ficha.nex);
     return Card(
@@ -634,12 +1153,15 @@ class _FichaScreenState extends State<FichaScreen> {
           children: [
             Row(
               children: [
-                const Text('NEX',
-                    style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 1.5,
-                        fontSize: 12,
-                        color: Cores.energiaViva)),
+                const Text(
+                  'NEX',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1.5,
+                    fontSize: 12,
+                    color: Cores.energiaViva,
+                  ),
+                ),
                 Expanded(
                   child: Slider(
                     value: (ficha.nex == 99 ? 100 : ficha.nex).toDouble(),
@@ -648,8 +1170,9 @@ class _FichaScreenState extends State<FichaScreen> {
                     divisions: 20,
                     activeColor: Cores.energia,
                     label: '${ficha.nex}%',
-                    onChangeStart:
-                        leitura ? null : (_) => _nexAoPegar = ficha.nex,
+                    onChangeStart: leitura
+                        ? null
+                        : (_) => _nexAoPegar = ficha.nex,
                     onChanged: leitura
                         ? null
                         : (v) {
@@ -657,15 +1180,17 @@ class _FichaScreenState extends State<FichaScreen> {
                             ficha.nex = passo >= 100 ? 99 : passo;
                             _salvar();
                           },
-                    onChangeEnd:
-                        leitura ? null : (_) => _mostrarGanhosDeNex(),
+                    onChangeEnd: leitura ? null : (_) => _mostrarGanhosDeNex(),
                   ),
                 ),
-                Text('${ficha.nex}%',
-                    style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Cores.tinta)),
+                Text(
+                  '${ficha.nex}%',
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Cores.tinta,
+                  ),
+                ),
               ],
             ),
             if (proximo != null)
@@ -693,7 +1218,7 @@ class _FichaScreenState extends State<FichaScreen> {
     if (de == null || classe == null) return;
     final (entrou, saiu) = ficha.sincronizarTrilha();
     _salvar();
-    if (!classe.agente && ficha.nex > 0 && !classe.porEstagio) {
+    if (!classe.agente && ficha.nex > 0) {
       await _virarAgente();
       return;
     }
@@ -719,10 +1244,13 @@ class _FichaScreenState extends State<FichaScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               for (final e in ganhos.entries) ...[
-                Text('${e.key}%',
-                    style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: Cores.energiaViva)),
+                Text(
+                  '${e.key}%',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Cores.energiaViva,
+                  ),
+                ),
                 for (final g in e.value)
                   Padding(
                     padding: const EdgeInsets.only(left: 8, bottom: 2),
@@ -741,88 +1269,9 @@ class _FichaScreenState extends State<FichaScreen> {
         ),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: const Text('Entendi')),
-        ],
-      ),
-    );
-  }
-
-  Future<void> _editarPvTemporario() async {
-    final campo = TextEditingController(
-        text: ficha.pvTemporario == 0 ? '' : '${ficha.pvTemporario}');
-    final resultado = await showDialog<String>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('PV temporários'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text(
-              'Ficam por cima da vida e saem primeiro no dano. Fontes '
-              'diferentes somam; o mesmo efeito de novo não. Somem no fim '
-              'da cena. Digite o total.',
-              style: TextStyle(fontSize: 13, color: Cores.tinta2),
-            ),
-            const SizedBox(height: 10),
-            TextField(
-              controller: campo,
-              autofocus: true,
-              keyboardType: TextInputType.number,
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(ctx, '0'),
-              child: const Text('Zerar')),
-          TextButton(
-              onPressed: () => Navigator.pop(ctx, campo.text),
-              child: const Text('Salvar')),
-        ],
-      ),
-    );
-    if (resultado == null) return;
-    ficha.pvTemporario = int.tryParse(resultado.trim()) ?? 0;
-    _salvar();
-  }
-
-  /// Subiu de estágio: o que cada um dá (SAH p. 30).
-  Future<void> _mostrarGanhosDeEstagio(
-      int de, int ate, List<String> entrou, List<String> saiu) async {
-    if (ate <= de) {
-      _avisarTrilha(entrou, saiu);
-      return;
-    }
-    const ganhos = {
-      2: 'Trilha: escolha Durão, Esperto ou Esotérico (1º poder)',
-      3: 'Aumento de Atributo: +1 em um atributo, sem passar de 3',
-      4: 'Trilha: 2º poder',
-      5: 'Cicatrizado: escolha o elemento (−1d20 em resistência contra ele)',
-    };
-    await showDialog<void>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text('Estágio $de → $ate'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            for (var e = de + 1; e <= ate; e++)
-              if (ganhos[e] != null) Text('• $e: ${ganhos[e]}'),
-            if (entrou.isNotEmpty) Text('• Entrou: ${entrou.join(', ')}'),
-            const SizedBox(height: 8),
-            const Text(
-              'PV, PE e SAN já subiram. Treinamento Especial (virar agente) '
-              'é decisão da história: troque a classe quando o mestre disser.',
-              style: TextStyle(fontSize: 12, color: Cores.tinta2),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: const Text('Entendi')),
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Entendi'),
+          ),
         ],
       ),
     );
@@ -836,16 +1285,16 @@ class _FichaScreenState extends State<FichaScreen> {
       builder: (ctx) => AlertDialog(
         title: const Text('Virou agente'),
         content: const Text(
-            'Em NEX 5% o mundano escolhe uma classe e ganha +1 ponto de '
-            'atributo (máx. 3). O que for da classe entra agora.'),
+          'Em NEX 5% o mundano escolhe uma classe e ganha +1 ponto de '
+          'atributo (máx. 3). O que for da classe entra agora.',
+        ),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(ctx, ''),
-              child: const Text('Voltar a 0%')),
+            onPressed: () => Navigator.pop(ctx, ''),
+            child: const Text('Voltar a 0%'),
+          ),
           for (final c in const ['Combatente', 'Especialista', 'Ocultista'])
-            TextButton(
-                onPressed: () => Navigator.pop(ctx, c),
-                child: Text(c)),
+            TextButton(onPressed: () => Navigator.pop(ctx, c), child: Text(c)),
         ],
       ),
     );
@@ -857,70 +1306,36 @@ class _FichaScreenState extends State<FichaScreen> {
     await _trocarClasse(escolha);
   }
 
-  /// Os cinco estágios do Sobrevivente, no lugar da régua de NEX.
-  /// SAH p. 30: 1 Empenho · 2 trilha · 3 atributo · 4 trilha · 5 Cicatrizado.
-  Widget _linhaEstagio() {
-    const marcos = {
-      1: 'Empenho',
-      2: 'Trilha (1º poder)',
-      3: 'Aumento de atributo',
-      4: 'Trilha (2º poder)',
-      5: 'Cicatrizado',
-    };
+  /// Teste puro de atributo: tantos d20 quanto o valor, o melhor (0: 2d20,
+  /// o pior).
+  void _rolarAtributo(String sigla) {
+    final valor = ficha.atributo(sigla);
+    _mostrarResultado(
+      Rolagem.teste(
+        titulo: sigla,
+        dados: valor <= 0 ? 2 : valor,
+        melhor: valor > 0,
+        bonus: 0,
+      ),
+    );
+  }
+
+  Widget _atributos() {
+    const siglas = ['AGI', 'FOR', 'INT', 'PRE', 'VIG'];
+    final editando = _ed('atributos');
     return Card(
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(12, 6, 12, 10),
+        padding: const EdgeInsets.fromLTRB(4, 10, 4, 8),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                const Text('ESTÁGIO',
-                    style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 1.5,
-                        fontSize: 12,
-                        color: Cores.energiaViva)),
-                const SizedBox(width: 8),
-                for (var e = 1; e <= 5; e++)
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: leitura
-                          ? null
-                          : () {
-                              final antes = ficha.estagio;
-                              ficha.estagio = e;
-                              final (entrou, saiu) = ficha.sincronizarTrilha();
-                              _salvar();
-                              _mostrarGanhosDeEstagio(antes, e, entrou, saiu);
-                            },
-                      child: Container(
-                        margin: const EdgeInsets.symmetric(horizontal: 3),
-                        padding: const EdgeInsets.symmetric(vertical: 8),
-                        alignment: Alignment.center,
-                        decoration: BoxDecoration(
-                          color: e <= ficha.estagio
-                              ? Cores.energia
-                              : Colors.transparent,
-                          border: Border.all(color: Cores.linha),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Text('$e',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: e <= ficha.estagio
-                                  ? Cores.tinta
-                                  : Cores.tinta2,
-                            )),
-                      ),
-                    ),
-                  ),
-              ],
-            ),
+            _linhaAtributos(siglas, editando),
             const SizedBox(height: 6),
             Text(
-              '${marcos[ficha.estagio]} · sobe um estágio no fim de cada '
-              'missão · limite de PE sempre 1',
+              editando
+                  ? (ficha.modoLivre
+                        ? 'Toque num atributo para digitar o valor.'
+                        : 'Toque num atributo para mudar (0 a 5).')
+                  : 'Toque num atributo para rolar o teste.',
               style: const TextStyle(fontSize: 11, color: Cores.tinta2),
             ),
           ],
@@ -929,56 +1344,64 @@ class _FichaScreenState extends State<FichaScreen> {
     );
   }
 
-  Widget _atributos() {
-    const siglas = ['AGI', 'FOR', 'INT', 'PRE', 'VIG'];
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 10),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            for (final s in siglas)
-              Column(
-                children: [
-                  Text(s,
-                      style: const TextStyle(
-                          fontSize: 11,
-                          letterSpacing: 1.5,
-                          color: Cores.tinta2)),
-                  const SizedBox(height: 2),
-                  InkWell(
-                    onTap: leitura
-                        ? null
-                        : () {
-                            if (ficha.modoLivre) {
-                              _digitarAtributo(s);
-                            } else {
-                              ficha.definirAtributo(
-                                  s, (ficha.atributo(s) + 1) % 6);
-                              _salvar();
-                            }
-                          },
-                    borderRadius: BorderRadius.circular(99),
-                    child: Container(
-                      width: 46,
-                      height: 46,
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(color: Cores.energia, width: 1.5),
-                        color: Cores.carta2,
+  Widget _linhaAtributos(List<String> siglas, bool editando) {
+    return Builder(
+      builder: (_) => Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          for (final s in siglas)
+            Column(
+              children: [
+                Text(
+                  s,
+                  style: const TextStyle(
+                    fontSize: 11,
+                    letterSpacing: 1.5,
+                    color: Cores.tinta2,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                InkWell(
+                  key: ValueKey('atributo-$s'),
+                  onTap: !editando
+                      ? () => _rolarAtributo(s)
+                      : () {
+                          if (ficha.modoLivre) {
+                            _digitarAtributo(s);
+                          } else {
+                            ficha.definirAtributo(
+                              s,
+                              (ficha.atributo(s) + 1) % 6,
+                            );
+                            _salvar();
+                          }
+                        },
+                  borderRadius: BorderRadius.circular(99),
+                  child: Container(
+                    width: 46,
+                    height: 46,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: editando ? Cores.conhecimento : Cores.energia,
+                        width: editando ? 2 : 1.5,
                       ),
-                      child: Text('${ficha.atributo(s)}',
-                          style: const TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                              color: Cores.tinta)),
+                      color: Cores.carta2,
+                    ),
+                    child: Text(
+                      '${ficha.atributo(s)}',
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Cores.tinta,
+                      ),
                     ),
                   ),
-                ],
-              ),
-          ],
-        ),
+                ),
+              ],
+            ),
+        ],
       ),
     );
   }
@@ -998,11 +1421,13 @@ class _FichaScreenState extends State<FichaScreen> {
         ),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: const Text('Cancelar')),
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancelar'),
+          ),
           TextButton(
-              onPressed: () => Navigator.pop(ctx, campo.text),
-              child: const Text('Salvar')),
+            onPressed: () => Navigator.pop(ctx, campo.text),
+            child: const Text('Salvar'),
+          ),
         ],
       ),
     );
@@ -1013,51 +1438,6 @@ class _FichaScreenState extends State<FichaScreen> {
     _salvar();
   }
 
-  Future<void> _editarMaximo(String recurso) async {
-    final rotulo = {'pv': 'PV', 'san': 'SAN', 'pe': 'PE'}[recurso]!;
-    final atual = {'pv': ficha.pvMax, 'san': ficha.sanMax, 'pe': ficha.peMax}[
-        recurso]!;
-    final campo = TextEditingController(text: '$atual');
-    final resultado = await showDialog<String>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text('$rotulo máximo'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text(
-              'O máximo é calculado da classe, NEX e atributos. Digite um '
-              'valor para fixar na mão, ou volte ao automático.',
-              style: TextStyle(fontSize: 13, color: Cores.tinta2),
-            ),
-            const SizedBox(height: 10),
-            TextField(
-              controller: campo,
-              autofocus: true,
-              keyboardType: TextInputType.number,
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(ctx, 'auto'),
-              child: const Text('Usar automático')),
-          TextButton(
-              onPressed: () => Navigator.pop(ctx, campo.text),
-              child: const Text('Fixar')),
-        ],
-      ),
-    );
-    if (resultado == null) return;
-    if (resultado == 'auto') {
-      ficha.definirMaxManual(recurso, null);
-    } else {
-      final v = int.tryParse(resultado.trim());
-      if (v != null && v > 0) ficha.definirMaxManual(recurso, v);
-    }
-    _salvar();
-  }
-
   final _campoDadoRapido = TextEditingController();
 
   /// Aceita "2d6+3" e também a sintaxe da ficha oficial: "/AGI/d20" rola o
@@ -1065,18 +1445,21 @@ class _FichaScreenState extends State<FichaScreen> {
   void _rolarRapido() {
     final bruto = _campoDadoRapido.text.trim();
     if (bruto.isEmpty) return;
-    final atributo = RegExp(r'^/?(AGI|FOR|INT|PRE|VIG)(/d?20)?$',
-            caseSensitive: false)
-        .firstMatch(bruto);
+    final atributo = RegExp(
+      r'^/?(AGI|FOR|INT|PRE|VIG)(/d?20)?$',
+      caseSensitive: false,
+    ).firstMatch(bruto);
     if (atributo != null) {
       final sigla = atributo.group(1)!.toUpperCase();
       final valor = ficha.atributo(sigla);
-      _mostrarResultado(Rolagem.teste(
-        titulo: sigla,
-        dados: valor <= 0 ? 2 : valor,
-        melhor: valor > 0,
-        bonus: 0,
-      ));
+      _mostrarResultado(
+        Rolagem.teste(
+          titulo: sigla,
+          dados: valor <= 0 ? 2 : valor,
+          melhor: valor > 0,
+          bonus: 0,
+        ),
+      );
     } else {
       _rolarExpressao('Dado rápido', bruto);
     }
@@ -1104,41 +1487,202 @@ class _FichaScreenState extends State<FichaScreen> {
                   ),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.casino_outlined,
-                      color: Cores.energiaViva),
+                  icon: const Icon(
+                    Icons.casino_outlined,
+                    color: Cores.energiaViva,
+                  ),
                   onPressed: _rolarRapido,
                 ),
               ],
             ),
           ),
         ),
-        const Padding(
-          padding: EdgeInsets.only(bottom: 6),
-          child: Text(
-            'Toque no grau para treinar (— → T → V → E). Toque no dado para '
-            'rolar: o teste aparece na hora para o mestre, se você estiver '
-            'numa mesa.',
-            style: TextStyle(fontSize: 12, color: Cores.tinta2),
+        _faixa('pericias', 'Perícias'),
+        if (_ed('pericias')) ...[
+          const Padding(
+            padding: EdgeInsets.only(bottom: 6),
+            child: Text(
+              'Toque no grau para treinar (— → T → V → E). Toque na sigla '
+              'para trocar o atributo que a perícia usa.',
+              style: TextStyle(fontSize: 12, color: Cores.tinta2),
+            ),
           ),
-        ),
-        for (final p in DadosOP.pericias) _linhaPericia(p),
+          for (final p in DadosOP.pericias) _linhaPericia(p),
+        ] else
+          ..._periciasLeitura(),
         const SizedBox(height: 10),
         Wrap(
           alignment: WrapAlignment.center,
           spacing: 14,
           children: const [
-            Text('— destreinada',
-                style: TextStyle(fontSize: 11, color: Cores.tinta2)),
-            Text('T treinada +5',
-                style: TextStyle(fontSize: 11, color: Cores.estavel)),
-            Text('V veterano +10',
-                style: TextStyle(fontSize: 11, color: Cores.energiaViva)),
-            Text('E expert +15',
-                style: TextStyle(fontSize: 11, color: Cores.conhecimento)),
+            Text(
+              '— destreinada',
+              style: TextStyle(fontSize: 11, color: Cores.tinta2),
+            ),
+            Text(
+              'T treinada +5',
+              style: TextStyle(fontSize: 11, color: Cores.estavel),
+            ),
+            Text(
+              'V veterano +10',
+              style: TextStyle(fontSize: 11, color: Cores.energiaViva),
+            ),
+            Text(
+              'E expert +15',
+              style: TextStyle(fontSize: 11, color: Cores.conhecimento),
+            ),
+            Text(
+              '* só treinada',
+              style: TextStyle(fontSize: 11, color: Cores.tinta2),
+            ),
+            Text(
+              '↓ pega o pior dado',
+              style: TextStyle(fontSize: 11, color: Cores.tinta2),
+            ),
           ],
         ),
         const SizedBox(height: 24),
       ],
+    );
+  }
+
+  /// Leitura: treinadas em cima, destreinadas embaixo. A linha inteira
+  /// rola o teste.
+  List<Widget> _periciasLeitura() {
+    final treinadas = [
+      for (final p in DadosOP.pericias)
+        if (ficha.grauPericia(p.nome) > 0) p,
+    ];
+    final outras = [
+      for (final p in DadosOP.pericias)
+        if (ficha.grauPericia(p.nome) <= 0) p,
+    ];
+    Widget titulo(String t) => Padding(
+      padding: const EdgeInsets.fromLTRB(4, 10, 4, 4),
+      child: Text(
+        t,
+        style: const TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w700,
+          color: Cores.tinta2,
+        ),
+      ),
+    );
+    return [
+      const Padding(
+        padding: EdgeInsets.only(bottom: 2),
+        child: Text(
+          'Toque numa perícia para rolar. O teste aparece para o mestre se '
+          'você estiver numa mesa.',
+          style: TextStyle(fontSize: 12, color: Cores.tinta2),
+        ),
+      ),
+      titulo('Treinadas (${treinadas.length})'),
+      if (treinadas.isEmpty)
+        const VazioLeitura('Nenhuma perícia treinada.')
+      else
+        Card(
+          child: Column(
+            children: [
+              for (var i = 0; i < treinadas.length; i++) ...[
+                if (i > 0) const Divider(height: 1, indent: 12, endIndent: 12),
+                _linhaPericiaLeitura(treinadas[i]),
+              ],
+            ],
+          ),
+        ),
+      titulo('Destreinadas (${outras.length})'),
+      Card(
+        child: Column(
+          children: [
+            for (var i = 0; i < outras.length; i++) ...[
+              if (i > 0) const Divider(height: 1, indent: 12, endIndent: 12),
+              _linhaPericiaLeitura(outras[i]),
+            ],
+          ],
+        ),
+      ),
+    ];
+  }
+
+  Widget _linhaPericiaLeitura(Pericia p) {
+    final grau = ficha.grauPericia(p.nome);
+    final (dados, melhor, bonus) = ficha.testePericia(p);
+    final treinada = grau > 0;
+    // O "só treinada" já está no * (legenda no rodapé): repetir em cada
+    // linha só polui a lista.
+    final motivos = [
+      for (final m in ficha.motivosDoTeste(p))
+        if (!m.startsWith('só treinada')) m,
+    ];
+    return InkWell(
+      key: ValueKey('pericia-${p.nome}'),
+      onTap: () => _rolarPericia(p),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+        child: Row(
+          children: [
+            SizedBox(
+              width: 34,
+              child: Text(
+                ficha.atributoPericia(p),
+                style: TextStyle(
+                  fontSize: 10,
+                  letterSpacing: 1,
+                  fontWeight: ficha.atributoTrocado(p)
+                      ? FontWeight.bold
+                      : FontWeight.normal,
+                  color: ficha.atributoTrocado(p)
+                      ? Cores.energiaViva
+                      : Cores.tinta2,
+                ),
+              ),
+            ),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    p.nome + (p.soTreinada && !treinada ? ' *' : ''),
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: treinada
+                          ? FontWeight.w600
+                          : FontWeight.normal,
+                      color: treinada ? Cores.tinta : Cores.tinta2,
+                    ),
+                  ),
+                  if (motivos.isNotEmpty)
+                    Text(
+                      motivos.join(' · '),
+                      style: const TextStyle(
+                        fontSize: 11,
+                        color: Cores.conhecimento,
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            if (treinada) ...[
+              Etiqueta(_rotuloGrau(grau), cor: _corDoGrau(grau)),
+              const SizedBox(width: 10),
+            ],
+            SizedBox(
+              width: 74,
+              child: Text(
+                '${dados}d20${melhor ? '' : '↓'}'
+                '${bonus == 0 ? '' : (bonus > 0 ? '+$bonus' : '$bonus')}',
+                textAlign: TextAlign.right,
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  color: treinada ? Cores.energiaViva : Cores.tinta2,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -1189,8 +1733,9 @@ class _FichaScreenState extends State<FichaScreen> {
                   Text(
                     p.nome + (p.soTreinada ? ' *' : ''),
                     style: TextStyle(
-                      fontWeight:
-                          grau > 0 ? FontWeight.bold : FontWeight.normal,
+                      fontWeight: grau > 0
+                          ? FontWeight.bold
+                          : FontWeight.normal,
                       color: grau > 0 ? Cores.tinta : Cores.tinta2,
                     ),
                   ),
@@ -1200,7 +1745,9 @@ class _FichaScreenState extends State<FichaScreen> {
                     '${motivos.isEmpty ? '' : ' · ${motivos.join(' · ')}'}',
                     style: TextStyle(
                       fontSize: 10.5,
-                      color: motivos.isEmpty ? Cores.tinta2 : Cores.conhecimento,
+                      color: motivos.isEmpty
+                          ? Cores.tinta2
+                          : Cores.conhecimento,
                     ),
                   ),
                 ],
@@ -1216,8 +1763,7 @@ class _FichaScreenState extends State<FichaScreen> {
               borderRadius: BorderRadius.circular(6),
               child: Container(
                 constraints: const BoxConstraints(minWidth: 46),
-                padding:
-                    const EdgeInsets.symmetric(vertical: 6, horizontal: 6),
+                padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 6),
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
                   border: Border.all(color: _corDoGrau(grau)),
@@ -1226,17 +1772,21 @@ class _FichaScreenState extends State<FichaScreen> {
                 child: Text(
                   _rotuloGrau(grau),
                   style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                      color: _corDoGrau(grau)),
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: _corDoGrau(grau),
+                  ),
                 ),
               ),
             ),
             IconButton(
               tooltip:
                   'Rolar ${dados}d20 (${melhor ? 'melhor' : 'pior'}) +$bonus',
-              icon: const Icon(Icons.casino_outlined,
-                  color: Cores.energiaViva, size: 22),
+              icon: const Icon(
+                Icons.casino_outlined,
+                color: Cores.energiaViva,
+                size: 22,
+              ),
               onPressed: () => _rolarPericia(p),
             ),
           ],
@@ -1260,7 +1810,7 @@ class _FichaScreenState extends State<FichaScreen> {
         color: trocado ? Cores.energiaViva : Cores.tinta2,
       ),
     );
-    if (leitura) return texto;
+    if (!_ed('pericias')) return texto;
 
     return PopupMenuButton<String>(
       tooltip: 'Trocar o atributo de ${p.nome}',
@@ -1274,8 +1824,9 @@ class _FichaScreenState extends State<FichaScreen> {
             child: Text(
               sigla == p.atributo ? '$sigla (padrão)' : sigla,
               style: TextStyle(
-                fontWeight:
-                    sigla == atual ? FontWeight.bold : FontWeight.normal,
+                fontWeight: sigla == atual
+                    ? FontWeight.bold
+                    : FontWeight.normal,
               ),
             ),
           ),
@@ -1291,17 +1842,20 @@ class _FichaScreenState extends State<FichaScreen> {
   Widget _abaAtaques() {
     final ataques = ficha.ataques;
     return ListView(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
       children: [
+        _faixa('ataques', 'Ataques'),
         for (var i = 0; i < ataques.length; i++) _cartaoAtaque(i, ataques[i]),
         if (ataques.isEmpty)
           const Padding(
             padding: EdgeInsets.all(20),
-            child: Text('Nenhum ataque ainda.',
-                textAlign: TextAlign.center,
-                style: TextStyle(color: Cores.tinta2)),
+            child: Text(
+              'Nenhum ataque ainda.',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Cores.tinta2),
+            ),
           ),
-        if (!leitura)
+        if (_ed('ataques'))
           Center(
             child: Wrap(
               alignment: WrapAlignment.center,
@@ -1330,100 +1884,491 @@ class _FichaScreenState extends State<FichaScreen> {
     final tipo = '${a['tipo'] ?? ''}';
     final alcance = '${a['alcance'] ?? ''}';
     final fixos = FichaOP.paraIntSeguro(a['dadosTeste']);
+    final semTeste = a['semTeste'] == true;
     final r = ficha.resumoAtaque(a);
+    final arma = ficha.armaDoCatalogo(a);
+    final melhorias = ficha.melhoriasDe(a);
+    final ativas = melhorias.ativas;
     final titulo = nome.isEmpty ? pericia : nome;
+    final duasOpcoes = r.danos.length > 1;
+    final ehCoronhada = '${a['arma'] ?? nome}' == 'Coronhada';
+    String opcao(int i) => !duasOpcoes
+        ? ''
+        : ehCoronhada
+        ? (i == 0 ? ' (arma leve ou de uma mão)' : ' (arma de duas mãos)')
+        : (i == 0 ? ' (uma mão)' : ' (duas mãos)');
+    final teste = fixos > 0
+        ? '${fixos}d20+${a['bonusTeste'] ?? 0}'
+        : '${r.dados}d20${r.melhor ? '' : ' (pior)'}'
+              '${r.bonus == 0 ? '' : (r.bonus > 0 ? '+${r.bonus}' : '${r.bonus}')}';
+    final atributoNoDano = r.atributoNoDano.isEmpty
+        ? ''
+        : '${r.atributoNoDano == 'AGI' ? 'Agilidade' : 'Força'} '
+              '${ficha.atributo(r.atributoNoDano)} já somada';
+    final municao = '${arma?['municao'] ?? ''}';
+    final regras = [
+      for (final e in (arma?['especial'] as List? ?? const [])) '$e',
+      if ('${a['especial'] ?? ''}'.trim().isNotEmpty) '${a['especial']}',
+      for (final m in ativas) '${m.nome}: ${m.efeito}',
+    ];
+
+    Widget linha(String rotulo, String valor, {Color? cor}) => Padding(
+      padding: const EdgeInsets.only(top: 6),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 92,
+            child: Text(
+              rotulo,
+              style: const TextStyle(
+                fontSize: 10,
+                letterSpacing: 1.2,
+                fontWeight: FontWeight.w700,
+                color: Cores.tinta2,
+                height: 1.9,
+              ),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              valor,
+              style: TextStyle(
+                fontSize: 14.5,
+                fontWeight: FontWeight.w600,
+                color: cor ?? Cores.tinta,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+
     return Card(
+      key: ValueKey('ataque-$indice'),
       child: Padding(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
                 Expanded(
-                  child: Text(nome.isEmpty ? 'Sem nome' : nome,
-                      style: const TextStyle(
-                          fontWeight: FontWeight.bold, fontSize: 15)),
+                  child: Text(
+                    nome.isEmpty ? 'Sem nome' : nome,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
                 ),
-                if (!leitura)
+                if (_ed('ataques'))
                   IconButton(
-                    icon: const Icon(Icons.edit_outlined,
-                        size: 18, color: Cores.tinta2),
+                    icon: const Icon(
+                      Icons.edit_outlined,
+                      size: 18,
+                      color: Cores.tinta2,
+                    ),
                     onPressed: () => _editarAtaque(indice),
                   ),
               ],
             ),
-            Text(
-              [
-                if (fixos > 0)
-                  '${fixos}d20+${a['bonusTeste'] ?? 0}'
-                else
-                  '$pericia ${r.dados}d20${r.melhor ? '' : ' (pior)'}'
-                      '${r.bonus >= 0 ? '+' : ''}${r.bonus}',
-                if (r.danos.isNotEmpty)
-                  'dano ${r.danos.map(r.expressaoDano).join(' ou ')}'
-                      '${tipo.isNotEmpty ? ' ($tipo)' : ''}',
-                'crítico ${r.margem < 20 ? '${r.margem}/' : ''}x${r.multiplicador}',
-                if (alcance.isNotEmpty) alcance,
-              ].join(' · '),
-              style: const TextStyle(fontSize: 12, color: Cores.tinta2),
+            if (ativas.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(top: 4, bottom: 2),
+                child: Wrap(
+                  spacing: 6,
+                  runSpacing: 4,
+                  children: [
+                    for (final m in ativas)
+                      Etiqueta(
+                        m.nome,
+                        cor: m.maldicao
+                            ? (_corElemento[m.elemento] ?? Cores.energiaViva)
+                            : Cores.energiaViva,
+                        icone: m.maldicao
+                            ? Icons.auto_awesome
+                            : Icons.build_outlined,
+                      ),
+                  ],
+                ),
+              ),
+            if ('${arma?['descricao'] ?? ''}'.isNotEmpty)
+              Text(
+                '${arma!['descricao']}',
+                style: const TextStyle(
+                  fontSize: 12.5,
+                  fontStyle: FontStyle.italic,
+                  color: Cores.tinta2,
+                ),
+              ),
+            linha(
+              'ATAQUE',
+              semTeste
+                  ? 'Sem teste de ataque — o alvo resiste'
+                  : '$pericia $teste',
             ),
-            if (r.semProficiencia != null)
-              Text('Sem proficiência em ${r.semProficiencia}: −2 d20 (já no '
-                  'teste).',
-                  style: const TextStyle(fontSize: 12, color: Cores.sangue)),
-            if (pericia == 'Luta' && ficha.atributo('FOR') != 0)
-              Text('Força ${ficha.atributo('FOR')} já somada no dano.',
-                  style: const TextStyle(fontSize: 11, color: Cores.tinta2)),
-            const SizedBox(height: 6),
+            for (var i = 0; i < r.danos.length; i++)
+              linha(
+                i == 0 ? 'DANO' : '',
+                '${r.expressaoDano(r.danos[i])}${opcao(i)}'
+                '${tipo.isNotEmpty ? ' $tipo' : ''}',
+                cor: Cores.sangue,
+              ),
+            if (r.danos.isNotEmpty && !semTeste) ...[
+              linha(
+                'CRÍTICO',
+                '${r.textoMargem} no d20 · dano ×${r.multiplicador}',
+                cor: Cores.conhecimento,
+              ),
+              for (var i = 0; i < r.danos.length; i++)
+                linha(
+                  i == 0 ? 'NO CRÍTICO' : '',
+                  '${r.expressaoCritico(r.danos[i])}${opcao(i)}',
+                  cor: Cores.conhecimento,
+                ),
+            ],
+            if (alcance.isNotEmpty)
+              linha('ALCANCE', melhorias.alcance(alcance)),
+            if (ativas.isNotEmpty)
+              linha(
+                'CATEGORIA',
+                '${melhorias.categoriaBaseTexto} → '
+                    '${melhorias.categoriaTexto}'
+                    '${melhorias.amaldicoada ? ' (amaldiçoada)' : ''}',
+              ),
+            if (municao.isNotEmpty) linha('MUNIÇÃO', municao),
+            if (atributoNoDano.isNotEmpty ||
+                r.semProficiencia != null ||
+                r.automatica)
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Text(
+                  [
+                    if (atributoNoDano.isNotEmpty) '$atributoNoDano no dano.',
+                    if (r.semProficiencia != null)
+                      'Sem proficiência em ${r.semProficiencia}: −2 d20 (já '
+                          'no teste).',
+                  ].join(' '),
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: r.semProficiencia != null
+                        ? Cores.sangue
+                        : Cores.tinta2,
+                  ),
+                ),
+              ),
+            if (regras.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(top: 6),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    for (final t in regras)
+                      Text(
+                        '• $t',
+                        style: const TextStyle(
+                          fontSize: 12.5,
+                          color: Cores.tinta2,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            if (_ed('ataques'))
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: OutlinedButton.icon(
+                  key: ValueKey('melhorias-$indice'),
+                  onPressed: () => _editarMelhorias(indice),
+                  icon: const Icon(Icons.tune, size: 16),
+                  label: Text(
+                    ativas.isEmpty
+                        ? 'Modificações e maldições'
+                        : 'Modificações e maldições (${ativas.length})',
+                  ),
+                ),
+              ),
+            const SizedBox(height: 10),
             Wrap(
               spacing: 8,
               runSpacing: 4,
               children: [
-                OutlinedButton.icon(
-                  onPressed: () {
-                    final teste = fixos > 0
-                        ? Rolagem.teste(
-                            titulo: 'Ataque: $titulo',
-                            dados: fixos,
-                            melhor: true,
-                            bonus: FichaOP.paraIntSeguro(a['bonusTeste']),
-                          )
-                        : Rolagem.teste(
-                            titulo: 'Ataque: $titulo',
-                            dados: r.dados,
-                            melhor: r.melhor,
-                            bonus: r.bonus,
-                            margem: r.margem,
-                          );
-                    _mostrarResultado(teste);
-                  },
-                  icon: const Icon(Icons.casino_outlined, size: 16),
-                  label: const Text('Teste'),
-                ),
-                for (final d in r.danos) ...[
+                if (!semTeste)
                   OutlinedButton.icon(
-                    onPressed: () =>
-                        _rolarExpressao('Dano: $titulo', r.expressaoDano(d)),
-                    icon: const Icon(Icons.bolt_outlined, size: 16),
-                    label: Text(r.danos.length > 1 ? 'Dano $d' : 'Dano'),
+                    onPressed: () {
+                      final t = fixos > 0
+                          ? Rolagem.teste(
+                              titulo: 'Ataque: $titulo',
+                              dados: fixos,
+                              melhor: true,
+                              bonus: FichaOP.paraIntSeguro(a['bonusTeste']),
+                            )
+                          : Rolagem.teste(
+                              titulo: 'Ataque: $titulo',
+                              dados: r.dados,
+                              melhor: r.melhor,
+                              bonus: r.bonus,
+                              margem: r.margem,
+                            );
+                      _mostrarResultado(t);
+                    },
+                    icon: const Icon(Icons.casino_outlined, size: 16),
+                    label: const Text('Teste'),
                   ),
+                for (var i = 0; i < r.danos.length; i++) ...[
+                  OutlinedButton.icon(
+                    onPressed: () => _rolarExpressao(
+                      'Dano: $titulo',
+                      r.expressaoDano(r.danos[i]),
+                    ),
+                    icon: const Icon(Icons.bolt_outlined, size: 16),
+                    label: Text(duasOpcoes ? 'Dano${opcao(i)}' : 'Dano'),
+                  ),
+                  if (!semTeste)
+                    TextButton(
+                      onPressed: () {
+                        final res = Rolagem.expressao(
+                          'Crítico: $titulo',
+                          r.expressaoCritico(r.danos[i]),
+                        );
+                        if (res != null) _mostrarResultado(res);
+                      },
+                      child: Text(
+                        'Crítico ×${r.multiplicador}${duasOpcoes ? opcao(i) : ''}',
+                      ),
+                    ),
+                ],
+                if (r.automatica)
+                  OutlinedButton.icon(
+                    key: ValueKey('rajada-$indice'),
+                    onPressed: () {
+                      final rr = ficha.resumoAtaque(a, rajada: true);
+                      _mostrarResultado(
+                        Rolagem.teste(
+                          titulo: 'Rajada: $titulo',
+                          dados: rr.dados,
+                          melhor: rr.melhor,
+                          bonus: rr.bonus,
+                          margem: rr.margem,
+                        ),
+                      );
+                    },
+                    icon: const Icon(
+                      Icons.local_fire_department_outlined,
+                      size: 16,
+                    ),
+                    label: const Text('Rajada'),
+                  ),
+                if (r.automatica && r.danos.isNotEmpty)
                   TextButton(
                     onPressed: () {
-                      final res = Rolagem.expressao('Crítico: $titulo',
-                          r.expressaoDano(d),
-                          multiplicarDados: r.multiplicador);
-                      if (res != null) _mostrarResultado(res);
+                      final rr = ficha.resumoAtaque(a, rajada: true);
+                      _rolarExpressao(
+                        'Dano da rajada: $titulo',
+                        rr.expressaoDano(rr.danos.first),
+                      );
                     },
-                    child: Text('Crítico x${r.multiplicador}'),
+                    child: const Text('Dano da rajada'),
                   ),
-                ],
               ],
             ),
           ],
         ),
       ),
     );
+  }
+
+  static const Map<String, Color> _corElemento = {
+    'Conhecimento': Cores.conhecimento,
+    'Energia': Cores.energiaViva,
+    'Morte': Cores.tinta2,
+    'Sangue': Cores.sangue,
+  };
+
+  /// Liga e desliga modificações e maldições de um ataque. Só aparece o que
+  /// cabe na arma; maldição de elemento opressor fica travada. A categoria
+  /// e o item do inventário acompanham.
+  Future<void> _editarMelhorias(int indice) async {
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Cores.carta,
+      showDragHandle: true,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setLocal) {
+          final a = ficha.ataques[indice];
+          final m = ficha.melhoriasDe(a);
+          final ativasMod = m.nomesModificacoes;
+          final ativasMal = m.nomesMaldicoes;
+
+          void alternar(Melhoria x, bool liga) {
+            final novo = Map<String, dynamic>.from(a);
+            novo['categoriaBase'] ??= '${a['categoria'] ?? ''}';
+            novo['espacosBase'] ??= '${a['espacos'] ?? ''}';
+            final chave = x.maldicao ? 'maldicoes' : 'modificacoes';
+            final lista = [
+              for (final n in (a[chave] as List? ?? const [])) '$n',
+            ];
+            if (liga) {
+              if (!lista.contains(x.nome)) lista.add(x.nome);
+            } else {
+              lista.remove(x.nome);
+              // Sem ferrolho, o compensador não tem onde ficar.
+              if (x.nome == 'Ferrolho automático') {
+                lista.remove('Compensador');
+              }
+            }
+            novo[chave] = lista;
+            final efetivas = ficha.melhoriasDe(novo);
+            novo['categoria'] = efetivas.categoriaTexto;
+            if (efetivas.espacosBase > 0) {
+              novo['espacos'] = '${efetivas.espacos}';
+            }
+            ficha.atualizarEm('ataques', indice, novo);
+            _sincronizarItemDaArma(indice);
+            _salvar();
+            setLocal(() {});
+          }
+
+          Widget interruptor(Melhoria x, bool ligada) {
+            final conflito = ligada ? null : m.conflitoDe(x);
+            return SwitchListTile(
+              key: ValueKey('melhoria-${x.nome}'),
+              dense: true,
+              contentPadding: EdgeInsets.zero,
+              value: ligada,
+              title: Text(
+                x.nome,
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  color: conflito != null ? Cores.tinta2 : Cores.tinta,
+                ),
+              ),
+              subtitle: Text(
+                conflito != null
+                    ? 'Não combina com maldição de $conflito (elemento '
+                          'opressor).'
+                    : x.efeito,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: conflito != null ? Cores.sangue : Cores.tinta2,
+                ),
+              ),
+              onChanged: conflito != null ? null : (v) => alternar(x, v),
+            );
+          }
+
+          final porGrupo = <String, List<Melhoria>>{};
+          for (final x in m.modificacoesPossiveis) {
+            porGrupo.putIfAbsent(x.para, () => []).add(x);
+          }
+          final porElemento = <String, List<Melhoria>>{};
+          for (final x in m.maldicoesPossiveis) {
+            porElemento.putIfAbsent(x.elemento, () => []).add(x);
+          }
+          final patente = DadosOP.patentePorNome(ficha.patente);
+          final semPatente =
+              !ficha.ehNpc &&
+              ativasMal.isNotEmpty &&
+              (patente == null || patente.pp < 50);
+
+          return DraggableScrollableSheet(
+            expand: false,
+            initialChildSize: 0.85,
+            minChildSize: 0.4,
+            maxChildSize: 0.95,
+            builder: (ctx, rolagem) => ListView(
+              controller: rolagem,
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 28),
+              children: [
+                Text(
+                  '${a['nome']}',
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Categoria ${m.categoriaBaseTexto} → ${m.categoriaTexto}'
+                  '${m.amaldicoada ? ' · amaldiçoada' : ''}',
+                  key: const ValueKey('categoria-melhorias'),
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                    color: Cores.conhecimento,
+                  ),
+                ),
+                const Text(
+                  'Cada modificação sobe I; a 1ª maldição sobe II e as '
+                  'outras I. Iguais não acumulam. O item no inventário '
+                  'acompanha.',
+                  style: TextStyle(fontSize: 12, color: Cores.tinta2),
+                ),
+                if (semPatente)
+                  const Padding(
+                    padding: EdgeInsets.only(top: 6),
+                    child: Text(
+                      'Arma amaldiçoada só a partir de Agente Especial.',
+                      style: TextStyle(fontSize: 12, color: Cores.sangue),
+                    ),
+                  ),
+                for (final g in porGrupo.entries) ...[
+                  FaixaSecao('Modificações · ${g.key}'),
+                  for (final x in g.value)
+                    interruptor(x, ativasMod.contains(x.nome)),
+                ],
+                for (final g in porElemento.entries) ...[
+                  FaixaSecao('Maldições · ${g.key}'),
+                  for (final x in g.value)
+                    interruptor(x, ativasMal.contains(x.nome)),
+                ],
+                const Padding(
+                  padding: EdgeInsets.only(top: 12),
+                  child: Text(
+                    'Preço da maldição: para cada uma, perde 2 SAN ao falhar '
+                    'num teste do atributo do elemento (Conhecimento: Int · '
+                    'Energia: Agi · Morte: Pre · Sangue: For ou Vig).',
+                    style: TextStyle(fontSize: 12, color: Cores.tinta2),
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  /// O item do inventário que é esta arma (ligado pelo `itemId`, ou pelo
+  /// nome, na ficha antiga) passa a ter a categoria, os espaços e a marca de
+  /// amaldiçoado da arma modificada — é o que conta no limite da patente.
+  void _sincronizarItemDaArma(int indice) {
+    final a = ficha.ataques[indice];
+    final itens = ficha.inventario;
+    var alvo = -1;
+    final id = '${a['itemId'] ?? ''}';
+    if (id.isNotEmpty) alvo = itens.indexWhere((i) => i['id'] == id);
+    if (alvo < 0) {
+      final nome = '${a['arma'] ?? a['nome']}';
+      alvo = itens.indexWhere(
+        (i) => i['nome'] == nome && '${i['id'] ?? ''}'.isEmpty,
+      );
+    }
+    if (alvo < 0) return;
+    final m = ficha.melhoriasDe(a);
+    final novoId = id.isNotEmpty
+        ? id
+        : 'arma-${DateTime.now().microsecondsSinceEpoch}';
+    final item = Map<String, dynamic>.from(itens[alvo])
+      ..['id'] = novoId
+      ..['categoria'] = m.categoriaTexto
+      ..['amaldicoado'] = m.amaldicoada;
+    if (m.espacosBase > 0) item['espacos'] = m.espacos;
+    ficha.atualizarEm('inventario', alvo, item);
+    if (id.isEmpty) {
+      ficha.atualizarEm('ataques', indice, {...a, 'itemId': novoId});
+    }
   }
 
   /// Pega uma arma da tabela do sistema e monta o ataque na ficha — com
@@ -1438,7 +2383,9 @@ class _FichaScreenState extends State<FichaScreen> {
     if (escolhido == null || !mounted) return;
     // A arma também é item: ocupa espaço e conta no limite da patente.
     // Munição não é ataque, só item.
+    final id = 'arma-${DateTime.now().microsecondsSinceEpoch}';
     final item = <String, dynamic>{
+      'id': id,
       'nome': escolhido['nome'],
       'categoria': '${escolhido['categoria'] ?? ''}'.isEmpty
           ? '0'
@@ -1446,16 +2393,20 @@ class _FichaScreenState extends State<FichaScreen> {
       'espacos': FichaOP.paraIntSeguro(escolhido['espacos']),
     };
     final ehArma = '${escolhido['dano'] ?? ''}'.isNotEmpty;
-    if (ehArma) ficha.adicionarEm('ataques', escolhido);
+    if (ehArma) ficha.adicionarEm('ataques', {...escolhido, 'itemId': id});
     if ('${escolhido['espacos'] ?? ''}'.isNotEmpty) {
       ficha.adicionarEm('inventario', item);
     }
     _salvar();
-    ScaffoldMessenger.maybeOf(context)?.showSnackBar(SnackBar(
-      content: Text(ehArma
-          ? '${escolhido['nome']}: ataque e item no inventário.'
-          : '${escolhido['nome']}: item no inventário.'),
-    ));
+    ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+      SnackBar(
+        content: Text(
+          ehArma
+              ? '${escolhido['nome']}: ataque e item no inventário.'
+              : '${escolhido['nome']}: item no inventário.',
+        ),
+      ),
+    );
   }
 
   /// O mesmo para rituais: entra com custo, execução, alcance, duração,
@@ -1467,6 +2418,10 @@ class _FichaScreenState extends State<FichaScreen> {
         builder: (_) => CatalogoScreen(
           escolhendo: true,
           circuloMaximo: livre ? null : circuloMaximoDe(ficha),
+          nex: ficha.nex,
+          rituaisRestantes: livre
+              ? null
+              : limiteDeRituais(ficha).$1 - ficha.rituais.length,
           nomesExcluidos: {for (final r in ficha.rituais) '${r['nome']}'},
         ),
       ),
@@ -1481,30 +2436,47 @@ class _FichaScreenState extends State<FichaScreen> {
         ? <String, dynamic>{}
         : Map<String, dynamic>.from(ficha.ataques[indice]);
     final nome = TextEditingController(text: (atual['nome'] ?? '') as String);
-    final bonus =
-        TextEditingController(text: '${atual['bonus'] ?? 0}');
+    final bonus = TextEditingController(text: '${atual['bonus'] ?? 0}');
     final dano = TextEditingController(text: (atual['dano'] ?? '') as String);
-    final critico =
-        TextEditingController(text: (atual['critico'] ?? '') as String);
-    final margem =
-        TextEditingController(text: (atual['margem'] ?? '') as String);
-    final alcance =
-        TextEditingController(text: (atual['alcance'] ?? '') as String);
-    final especial =
-        TextEditingController(text: (atual['especial'] ?? '') as String);
+    final critico = TextEditingController(
+      text: (atual['critico'] ?? '') as String,
+    );
+    final margem = TextEditingController(
+      text: (atual['margem'] ?? '') as String,
+    );
+    final alcance = TextEditingController(
+      text: (atual['alcance'] ?? '') as String,
+    );
+    final especial = TextEditingController(
+      text: (atual['especial'] ?? '') as String,
+    );
     var pericia = (atual['pericia'] ?? 'Luta') as String;
     var tipo = (atual['tipo'] ?? '') as String;
     var familia = '${atual['familia'] ?? ''}';
-    if (!const ['', 'Armas Simples', 'Armas Táticas', 'Armas Pesadas']
-        .contains(familia)) {
+    if (!const [
+      '',
+      'Armas Simples',
+      'Armas Táticas',
+      'Armas Pesadas',
+    ].contains(familia)) {
       familia = '';
     }
     var daOrigem = atual['armaDaOrigem'] == true;
     final origemComArma = ficha.origemAtual?.flag('armaFavorita') ?? false;
     const tiposDano = [
-      '', 'corte', 'impacto', 'perfuração', 'balístico', 'fogo',
-      'elétrico', 'químico', 'mental', 'de conhecimento', 'de energia',
-      'de morte', 'de sangue',
+      '',
+      'corte',
+      'impacto',
+      'perfuração',
+      'balístico',
+      'fogo',
+      'elétrico',
+      'químico',
+      'mental',
+      'de conhecimento',
+      'de energia',
+      'de morte',
+      'de sangue',
     ];
     if (!tiposDano.contains(tipo)) tipo = '';
 
@@ -1518,89 +2490,116 @@ class _FichaScreenState extends State<FichaScreen> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 TextField(
-                    controller: nome,
-                    decoration:
-                        const InputDecoration(labelText: 'Nome (ex.: Pistola)')),
+                  controller: nome,
+                  decoration: const InputDecoration(
+                    labelText: 'Nome (ex.: Pistola)',
+                  ),
+                ),
                 const SizedBox(height: 8),
                 DropdownButtonFormField<String>(
-      isExpanded: true,
+                  isExpanded: true,
                   initialValue: pericia,
-                  decoration:
-                      const InputDecoration(labelText: 'Perícia do teste'),
+                  decoration: const InputDecoration(
+                    labelText: 'Perícia do teste',
+                  ),
                   dropdownColor: Cores.carta2,
                   items: const [
                     DropdownMenuItem(value: 'Luta', child: Text('Luta')),
                     DropdownMenuItem(
-                        value: 'Pontaria', child: Text('Pontaria')),
+                      value: 'Pontaria',
+                      child: Text('Pontaria'),
+                    ),
                   ],
                   onChanged: (v) => setLocal(() => pericia = v ?? 'Luta'),
                 ),
                 const SizedBox(height: 8),
                 TextField(
-                    controller: bonus,
-                    keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(
-                        labelText: 'Bônus extra no teste')),
+                  controller: bonus,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(
+                    labelText: 'Bônus extra no teste',
+                  ),
+                ),
                 const SizedBox(height: 8),
                 TextField(
-                    controller: dano,
-                    decoration: const InputDecoration(
-                        labelText: 'Dano (ex.: 1d12+2)')),
+                  controller: dano,
+                  decoration: const InputDecoration(
+                    labelText: 'Dano (ex.: 1d12+2)',
+                  ),
+                ),
                 const SizedBox(height: 8),
                 DropdownButtonFormField<String>(
-      isExpanded: true,
+                  isExpanded: true,
                   initialValue: tipo,
-                  decoration:
-                      const InputDecoration(labelText: 'Tipo de dano'),
+                  decoration: const InputDecoration(labelText: 'Tipo de dano'),
                   dropdownColor: Cores.carta2,
                   items: [
                     for (final t in tiposDano)
                       DropdownMenuItem(
-                          value: t, child: Text(t.isEmpty ? '—' : t)),
+                        value: t,
+                        child: Text(t.isEmpty ? '—' : t),
+                      ),
                   ],
                   onChanged: (v) => setLocal(() => tipo = v ?? ''),
                 ),
                 const SizedBox(height: 8),
-                Row(children: [
-                  Expanded(
-                    child: TextField(
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
                         controller: margem,
                         decoration: const InputDecoration(
-                            labelText: 'Margem (ex.: 19)')),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: TextField(
+                          labelText: 'Margem (ex.: 19)',
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: TextField(
                         controller: critico,
                         decoration: const InputDecoration(
-                            labelText: 'Crítico (ex.: x2)')),
+                          labelText: 'Crítico (ex.: x2)',
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: alcance,
+                  decoration: const InputDecoration(
+                    labelText: 'Alcance (ex.: curto)',
                   ),
-                ]),
+                ),
                 const SizedBox(height: 8),
                 TextField(
-                    controller: alcance,
-                    decoration: const InputDecoration(
-                        labelText: 'Alcance (ex.: curto)')),
-                const SizedBox(height: 8),
-                TextField(
-                    controller: especial,
-                    decoration: const InputDecoration(
-                        labelText: 'Especial / recarga')),
+                  controller: especial,
+                  decoration: const InputDecoration(
+                    labelText: 'Especial / recarga',
+                  ),
+                ),
                 const SizedBox(height: 8),
                 DropdownButtonFormField<String>(
                   isExpanded: true,
                   initialValue: familia,
                   decoration: const InputDecoration(
-                      labelText: 'Tipo de arma (proficiência)'),
+                    labelText: 'Tipo de arma (proficiência)',
+                  ),
                   dropdownColor: Cores.carta2,
                   items: const [
                     DropdownMenuItem(value: '', child: Text('— (sem checar)')),
                     DropdownMenuItem(
-                        value: 'Armas Simples', child: Text('Simples')),
+                      value: 'Armas Simples',
+                      child: Text('Simples'),
+                    ),
                     DropdownMenuItem(
-                        value: 'Armas Táticas', child: Text('Tática')),
+                      value: 'Armas Táticas',
+                      child: Text('Tática'),
+                    ),
                     DropdownMenuItem(
-                        value: 'Armas Pesadas', child: Text('Pesada')),
+                      value: 'Armas Pesadas',
+                      child: Text('Pesada'),
+                    ),
                   ],
                   onChanged: (v) => setLocal(() => familia = v ?? ''),
                 ),
@@ -1608,10 +2607,14 @@ class _FichaScreenState extends State<FichaScreen> {
                   SwitchListTile(
                     contentPadding: EdgeInsets.zero,
                     value: daOrigem,
-                    title: const Text('Arma da origem (Operário)',
-                        style: TextStyle(fontSize: 14)),
-                    subtitle: const Text('Proficiente; +1 ataque, dano e margem',
-                        style: TextStyle(fontSize: 12)),
+                    title: const Text(
+                      'Arma da origem (Operário)',
+                      style: TextStyle(fontSize: 14),
+                    ),
+                    subtitle: const Text(
+                      'Proficiente; +1 ataque, dano e margem',
+                      style: TextStyle(fontSize: 12),
+                    ),
                     onChanged: (v) => setLocal(() => daOrigem = v),
                   ),
               ],
@@ -1624,12 +2627,15 @@ class _FichaScreenState extends State<FichaScreen> {
                   ficha.removerDe('ataques', indice);
                   Navigator.pop(ctx, true);
                 },
-                child: const Text('Excluir',
-                    style: TextStyle(color: Cores.sangue)),
+                child: const Text(
+                  'Excluir',
+                  style: TextStyle(color: Cores.sangue),
+                ),
               ),
             TextButton(
-                onPressed: () => Navigator.pop(ctx, false),
-                child: const Text('Cancelar')),
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Cancelar'),
+            ),
             TextButton(
               onPressed: () {
                 final novo = {
@@ -1671,7 +2677,11 @@ class _FichaScreenState extends State<FichaScreen> {
       padding: const EdgeInsets.all(14),
       children: [
         if (agente) ...[
-          const FaixaSecao('Na régua agora'),
+          // Só a afinidade (NEX 50%) se escolhe aqui: antes disso, sem lápis.
+          if (ficha.nex >= 50)
+            _faixa('regua', 'Na régua agora')
+          else
+            const FaixaSecao('Na régua agora'),
           Card(
             child: Padding(
               padding: const EdgeInsets.all(12),
@@ -1680,24 +2690,42 @@ class _FichaScreenState extends State<FichaScreen> {
                 children: [
                   for (final e in escalas) Text('• $e'),
                   Text('• Limite de PE por turno: ${ficha.limitePeTurno}'),
-                  Text('• DT de habilidades: 10 + ${ficha.limitePeBase} + '
-                      'atributo · DT de rituais: ${ficha.dtRituais}'),
+                  Text(
+                    '• DT de habilidades: 10 + ${ficha.limitePeBase} + '
+                    'atributo · DT de rituais: ${ficha.dtRituais}',
+                  ),
                   if (ficha.transcendencias > 0)
-                    Text('• Transcender: ${ficha.transcendencias} '
-                        '(−${ficha.transcendencias * c!.sanPorNivel} SAN máx.)'),
+                    Text(
+                      '• Transcender: ${ficha.transcendencias} '
+                      '(−${ficha.transcendencias * c!.sanPorNivel} SAN máx.)',
+                    ),
                   if (ficha.nex >= 50) ...[
                     const SizedBox(height: 8),
-                    _seletorAfinidade(),
+                    if (_ed('regua'))
+                      _seletorAfinidade()
+                    else
+                      InfoLeitura(
+                        'Afinidade',
+                        ficha.afinidade,
+                        detalhe: ficha.afinidade.isEmpty
+                            ? 'Escolha no lápis (NEX 50%).'
+                            : null,
+                      ),
                   ],
                 ],
               ),
             ),
           ),
         ],
-        const FaixaSecao('Habilidades e poderes'),
-        ..._listaSimples('habilidades', 'habilidade',
-            camposExtras: const [], habilidade: true),
-        if (!leitura && DadosOP.poderes.isNotEmpty)
+        _faixa('poderes', 'Habilidades e poderes'),
+        ..._listaSimples(
+          'habilidades',
+          'habilidade',
+          camposExtras: const [],
+          habilidade: true,
+          editando: _ed('poderes'),
+        ),
+        if (_ed('poderes') && DadosOP.poderes.isNotEmpty)
           Center(
             child: TextButton.icon(
               onPressed: _poderDoCatalogo,
@@ -1705,42 +2733,354 @@ class _FichaScreenState extends State<FichaScreen> {
               label: const Text('Do catálogo de poderes'),
             ),
           ),
-        FaixaSecao('Rituais · ${ficha.rituais.length} de $limite'),
-        Padding(
-          padding: const EdgeInsets.only(bottom: 6),
-          child: Text(
-            'DT ${ficha.dtRituais} para resistir. Conjurar gasta PE e pede '
-            'Ocultismo DT 20 + custo (Medo: perde SAN e 1 permanente) — '
-            'o app faz a conta.',
-            style: const TextStyle(fontSize: 12, color: Cores.tinta2),
-          ),
-        ),
-        ..._listaSimples('rituais', 'ritual', camposExtras: const [
-          ('circulo', 'Círculo (1º a 4º)'),
-          ('custo', 'Custo (PE)'),
-          ('elemento', 'Elemento'),
-          ('execucao', 'Execução'),
-          ('alcance', 'Alcance'),
-          ('duracao', 'Duração'),
-        ], acoes: leitura
-            ? null
-            : (i, r) => OutlinedButton.icon(
-                  onPressed: () => _conjurar(r),
-                  icon: const Icon(Icons.auto_fix_high, size: 16),
-                  label: const Text('Conjurar'),
-                )),
-        if (!leitura)
-          Center(
-            child: TextButton.icon(
-              onPressed: _ritualDoCatalogo,
-              icon: const Icon(Icons.auto_stories_outlined),
-              label: const Text('Do catálogo de rituais'),
+        // Quem não conjura (sem ritual e sem limite) não vê a seção vazia;
+        // modo livre e NPC sempre podem pôr ritual.
+        if (ficha.rituais.isNotEmpty ||
+            limite > 0 ||
+            ficha.modoLivre ||
+            ficha.ehNpc) ...[
+          _faixa('rituais', 'Rituais · ${ficha.rituais.length} de $limite'),
+          Padding(
+            padding: const EdgeInsets.only(bottom: 6),
+            child: Text(
+              'DT ${ficha.dtRituais} para resistir. Conjurar gasta PE e pede '
+              'Ocultismo DT 20 + custo (Medo: perde SAN e 1 permanente) — '
+              'o app faz a conta.',
+              style: const TextStyle(fontSize: 12, color: Cores.tinta2),
             ),
           ),
+          ..._listaRituais(),
+          if (_ed('rituais'))
+            Center(
+              child: TextButton.icon(
+                onPressed: _ritualDoCatalogo,
+                icon: const Icon(Icons.auto_stories_outlined),
+                label: const Text('Do catálogo de rituais'),
+              ),
+            ),
+        ],
         const SizedBox(height: 24),
       ],
     );
   }
+
+  static const List<(String, String)> _camposRitual = [
+    ('circulo', 'Círculo (1º a 4º)'),
+    ('custo', 'Custo (PE)'),
+    ('elemento', 'Elemento'),
+    ('execucao', 'Execução'),
+    ('alcance', 'Alcance'),
+    ('duracao', 'Duração'),
+  ];
+
+  static const Map<String, Color> _corDoElemento = {
+    'Conhecimento': Cores.conhecimento,
+    'Energia': Cores.energiaViva,
+    'Morte': Color(0xFF9E9AA8),
+    'Sangue': Cores.sangue,
+    'Medo': Cores.tinta,
+  };
+
+  /// Rituais abertos para ver as formas Discente e Verdadeira.
+  final Set<int> _ritualAberto = {};
+
+  /// Alvo, resistência, efeito e formas maiores do ritual: dos campos
+  /// próprios (catálogo novo) ou, na ficha antiga, das linhas da descrição.
+  static (String, String, String, List<(String, String, String)>)
+  _partesDoRitual(Map<String, dynamic> r) {
+    final amp = <(String, String, String)>[
+      for (final a in (r['ampliacoes'] as List? ?? const []))
+        if (a is Map) ('${a['nome']}', '${a['custo']}', '${a['efeito']}'),
+    ];
+    if (r['efeito'] != null) {
+      return (
+        '${r['alvo'] ?? ''}',
+        '${r['resistencia'] ?? ''}',
+        '${r['efeito']}',
+        amp,
+      );
+    }
+    var alvo = '';
+    var resistencia = '';
+    final efeito = <String>[];
+    final forma = RegExp(r'^(Discente|Verdadeir[oa])\s*\(\+(\d+)\s*PE\):\s*');
+    for (final linha in '${r['descricao'] ?? ''}'.split('\n')) {
+      final l = linha.trim();
+      if (l.isEmpty) continue;
+      final m = forma.firstMatch(l);
+      if (l.startsWith('Alvo: ')) {
+        alvo = l.substring(6);
+      } else if (l.startsWith('Resistência: ')) {
+        resistencia = l.substring(13);
+      } else if (m != null) {
+        amp.add((m[1]!, m[2]!, l.substring(m.end)));
+      } else {
+        efeito.add(l);
+      }
+    }
+    return (alvo, resistencia, efeito.join('\n'), amp);
+  }
+
+  AgrupaRituais _agrupaRituais = AgrupaRituais.circulo;
+  String? _filtroRituais;
+
+  String _elementoDoRitual(Map<String, dynamic> r) {
+    final e = '${r['elemento'] ?? ''}'.trim();
+    if (e.isNotEmpty) return e;
+    return '${DadosOP.ritualPorNome('${r['nome'] ?? ''}')?['elemento'] ?? ''}';
+  }
+
+  List<Widget> _listaRituais() {
+    final lista = ficha.rituais;
+    final avisos = avisosDosRituais(ficha);
+    String grupo(int i) => grupoDoRitual(
+      _agrupaRituais,
+      circuloDoRitual(lista[i]),
+      _elementoDoRitual(lista[i]),
+    );
+    final porGrupo = <String, List<int>>{};
+    for (var i = 0; i < lista.length; i++) {
+      (porGrupo[grupo(i)] ??= []).add(i);
+    }
+    // Filtro que sumiu (trocou o modo ou tirou o último ritual) volta a Todos.
+    final filtro = porGrupo.containsKey(_filtroRituais) ? _filtroRituais : null;
+    final ordem = gruposEmOrdem(_agrupaRituais, porGrupo.keys);
+    return [
+      if (lista.length > 1)
+        Padding(
+          padding: const EdgeInsets.only(bottom: 4),
+          child: FiltroRituais(
+            modo: _agrupaRituais,
+            filtro: filtro,
+            contagem: {for (final e in porGrupo.entries) e.key: e.value.length},
+            aoMudarModo: (m) => setState(() {
+              _agrupaRituais = m;
+              _filtroRituais = null;
+            }),
+            aoFiltrar: (g) => setState(() => _filtroRituais = g),
+          ),
+        ),
+      for (final g in ordem)
+        if (filtro == null || filtro == g) ...[
+          if (lista.length > 1)
+            TituloGrupoRitual(
+              g,
+              porGrupo[g]!.length,
+              cor: _corDoElemento[g] ?? Cores.conhecimento,
+            ),
+          for (final i in porGrupo[g]!)
+            _cartaoRitualFicha(i, lista[i], avisos[i] ?? const []),
+        ],
+      if (lista.isEmpty) const VazioLeitura('Nenhum ritual ainda.'),
+      if (_ed('rituais'))
+        Center(
+          child: TextButton.icon(
+            onPressed: () =>
+                _editarSimples('rituais', 'ritual', null, _camposRitual),
+            icon: const Icon(Icons.add),
+            label: const Text('Adicionar ritual à mão'),
+          ),
+        ),
+    ];
+  }
+
+  Widget _cartaoRitualFicha(
+    int i,
+    Map<String, dynamic> r,
+    List<String> avisos,
+  ) {
+    // Ritual antigo gravado sem elemento: o catálogo completa pelo nome.
+    final elemento = _elementoDoRitual(r);
+    final cor = _corDoElemento[elemento] ?? Cores.energiaViva;
+    final circulo = circuloDoRitual(r);
+    final custo = custoDoRitual(r);
+    final (alvo, resistencia, efeito, formas) = _partesDoRitual(r);
+    final aberto = _ritualAberto.contains(i);
+    final dados = [
+      ('Execução', '${r['execucao'] ?? ''}'),
+      ('Alcance', '${r['alcance'] ?? ''}'),
+      ('Alvo', alvo),
+      ('Duração', '${r['duracao'] ?? ''}'),
+      ('Resistência', resistencia),
+    ].where((d) => d.$2.trim().isNotEmpty).toList();
+
+    return Card(
+      key: ValueKey('ritual-$i'),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(
+          color: avisos.isNotEmpty ? Cores.sangue : cor.withValues(alpha: .5),
+          width: avisos.isNotEmpty ? 1.5 : 1,
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(14, 12, 14, 10),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '${r['nome'] ?? ''}',
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(height: 5),
+                      Wrap(
+                        spacing: 6,
+                        runSpacing: 4,
+                        children: [
+                          if (elemento.isNotEmpty) Etiqueta(elemento, cor: cor),
+                          Etiqueta('$circuloº círculo', cor: Cores.tinta2),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      '$custo PE',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w800,
+                        color: cor,
+                      ),
+                    ),
+                    const Text(
+                      'custo',
+                      style: TextStyle(fontSize: 10, color: Cores.tinta2),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            if (dados.isNotEmpty) ...[
+              const SizedBox(height: 10),
+              LayoutBuilder(
+                builder: (context, c) => Wrap(
+                  runSpacing: 8,
+                  children: [
+                    for (final d in dados)
+                      SizedBox(
+                        width: c.maxWidth / 2,
+                        child: Padding(
+                          padding: const EdgeInsets.only(right: 8),
+                          child: InfoLeitura(d.$1, d.$2),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ],
+            if (efeito.trim().isNotEmpty) ...[
+              const SizedBox(height: 10),
+              Text(efeito, style: const TextStyle(fontSize: 14, height: 1.35)),
+            ],
+            if (formas.isNotEmpty) ...[
+              const SizedBox(height: 4),
+              TextButton.icon(
+                key: ValueKey('formas-$i'),
+                style: TextButton.styleFrom(
+                  padding: EdgeInsets.zero,
+                  visualDensity: VisualDensity.compact,
+                ),
+                onPressed: () => setState(
+                  () => aberto ? _ritualAberto.remove(i) : _ritualAberto.add(i),
+                ),
+                icon: Icon(
+                  aberto ? Icons.expand_less : Icons.expand_more,
+                  size: 18,
+                ),
+                label: Text(
+                  aberto
+                      ? 'Esconder formas maiores'
+                      : 'Formas maiores: ${formas.map((f) => '${f.$1} +${f.$2} PE').join(' · ')}',
+                ),
+              ),
+              if (aberto)
+                for (final f in formas)
+                  Container(
+                    width: double.infinity,
+                    margin: const EdgeInsets.only(bottom: 6),
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: cor.withValues(alpha: .08),
+                      border: Border.all(color: cor.withValues(alpha: .4)),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '${f.$1.toUpperCase()} · +${f.$2} PE '
+                          '(total ${custo + (int.tryParse(f.$2) ?? 0)} PE)',
+                          style: TextStyle(
+                            fontSize: 11,
+                            letterSpacing: 1,
+                            fontWeight: FontWeight.w700,
+                            color: cor,
+                          ),
+                        ),
+                        const SizedBox(height: 3),
+                        Text(f.$3, style: const TextStyle(fontSize: 13)),
+                      ],
+                    ),
+                  ),
+            ],
+            for (final a in avisos) _linhaAviso(a),
+            if (!leitura || _ed('rituais')) ...[
+              const SizedBox(height: 6),
+              Row(
+                children: [
+                  if (!leitura)
+                    FilledButton.icon(
+                      key: ValueKey('conjurar-$i'),
+                      onPressed: () => _conjurar(r),
+                      icon: const Icon(Icons.auto_fix_high, size: 16),
+                      label: const Text('Conjurar'),
+                    ),
+                  const Spacer(),
+                  if (_ed('rituais'))
+                    TextButton(
+                      onPressed: () =>
+                          _editarSimples('rituais', 'ritual', i, _camposRitual),
+                      child: const Text('Editar'),
+                    ),
+                ],
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Linha vermelha com o motivo de estar fora da regra.
+  Widget _linhaAviso(String texto) => Padding(
+    padding: const EdgeInsets.only(top: 6),
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Icon(Icons.error_outline, size: 16, color: Cores.sangue),
+        const SizedBox(width: 6),
+        Expanded(
+          child: Text(
+            texto,
+            style: const TextStyle(fontSize: 12.5, color: Cores.sangue),
+          ),
+        ),
+      ],
+    ),
+  );
 
   Widget _seletorAfinidade() {
     return DropdownButtonFormField<String>(
@@ -1748,7 +3088,9 @@ class _FichaScreenState extends State<FichaScreen> {
       isExpanded: true,
       initialValue: ficha.afinidade,
       decoration: const InputDecoration(
-          labelText: 'Afinidade (NEX 50%, irrevogável)', isDense: true),
+        labelText: 'Afinidade (NEX 50%, irrevogável)',
+        isDense: true,
+      ),
       dropdownColor: Cores.carta2,
       items: [
         const DropdownMenuItem(value: '', child: Text('—')),
@@ -1773,11 +3115,15 @@ class _FichaScreenState extends State<FichaScreen> {
     ficha.adicionarEm('habilidades', p.paraFicha(nexAtual: ficha.nex));
     _salvar();
     final perdeu = sanAntes - ficha.sanMax;
-    ScaffoldMessenger.maybeOf(context)?.showSnackBar(SnackBar(
-      content: Text('${p.nome} na ficha.'
+    ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+      SnackBar(
+        content: Text(
+          '${p.nome} na ficha.'
           '${p.efeitos.isNotEmpty ? ' Efeitos já aplicados.' : ''}'
-          '${perdeu > 0 ? ' Transcender: −$perdeu SAN máxima.' : ''}'),
-    ));
+          '${perdeu > 0 ? ' Transcender: −$perdeu SAN máxima.' : ''}',
+        ),
+      ),
+    );
   }
 
   /// Conjura: escolhe a forma, confere o limite de PE, gasta os PE e cobra
@@ -1787,9 +3133,10 @@ class _FichaScreenState extends State<FichaScreen> {
     final medo = '${r['elemento'] ?? ''}'.toLowerCase() == 'medo';
     final formas = <(String, int)>[('Básica', 0)];
     for (final linha in '${r['descricao'] ?? ''}'.split('\n')) {
-      final m = RegExp(r'^(Discente|Verdadeir[oa])\s*\(\+(\d+)\s*PE\)',
-              caseSensitive: false)
-          .firstMatch(linha.trim());
+      final m = RegExp(
+        r'^(Discente|Verdadeir[oa])\s*\(\+(\d+)\s*PE\)',
+        caseSensitive: false,
+      ).firstMatch(linha.trim());
       if (m != null) formas.add((m.group(1)!, int.parse(m.group(2)!)));
     }
     final base = custoDoRitual(r);
@@ -1808,54 +3155,74 @@ class _FichaScreenState extends State<FichaScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 if (formas.length > 1)
-                  Wrap(spacing: 6, children: [
-                    for (var i = 0; i < formas.length; i++)
-                      ChoiceChip(
-                        label: Text(i == 0
-                            ? formas[i].$1
-                            : '${formas[i].$1} +${formas[i].$2}'),
-                        selected: forma == i,
-                        onSelected: (_) => setLocal(() => forma = i),
-                      ),
-                  ]),
+                  Wrap(
+                    spacing: 6,
+                    children: [
+                      for (var i = 0; i < formas.length; i++)
+                        ChoiceChip(
+                          label: Text(
+                            i == 0
+                                ? formas[i].$1
+                                : '${formas[i].$1} +${formas[i].$2}',
+                          ),
+                          selected: forma == i,
+                          onSelected: (_) => setLocal(() => forma = i),
+                        ),
+                    ],
+                  ),
                 const SizedBox(height: 8),
-                Text('Custo: $custo PE (tem ${ficha.pe}) · limite '
-                    '${ficha.limitePeTurno}/turno'),
+                Text(
+                  'Custo: $custo PE (tem ${ficha.pe}) · limite '
+                  '${ficha.limitePeTurno}/turno',
+                ),
                 Text('DT para resistir: ${ficha.dtRituais}'),
                 const SizedBox(height: 6),
                 Text(
                   medo
-                      ? 'Medo: perde $custo SAN e ${forma == 0 ? 1 : forma == 1 ? 2 : 3} '
-                          'de SAN máxima.'
+                      ? 'Medo: perde $custo SAN e ${forma == 0
+                                ? 1
+                                : forma == 1
+                                ? 2
+                                : 3} '
+                            'de SAN máxima.'
                       : 'Teste de Ocultismo DT ${20 + custo}: falhou, perde '
-                          '$custo SAN; falhou por 5+, também 1 de SAN máxima.',
+                            '$custo SAN; falhou por 5+, também 1 de SAN máxima.',
                   style: const TextStyle(fontSize: 12, color: Cores.tinta2),
                 ),
                 if (acima)
-                  const Text('Passa do limite de PE: esta forma não dá.',
-                      style: TextStyle(fontSize: 12, color: Cores.sangue)),
+                  const Text(
+                    'Passa do limite de PE: esta forma não dá.',
+                    style: TextStyle(fontSize: 12, color: Cores.sangue),
+                  ),
                 if (semPe)
-                  const Text('PE insuficiente.',
-                      style: TextStyle(fontSize: 12, color: Cores.sangue)),
+                  const Text(
+                    'PE insuficiente.',
+                    style: TextStyle(fontSize: 12, color: Cores.sangue),
+                  ),
                 if (ficha.efeitos.custoPeCondicao > 0)
-                  const Text('Alquebrado: +1 PE já somado.',
-                      style: TextStyle(fontSize: 12, color: Cores.conhecimento)),
+                  const Text(
+                    'Alquebrado: +1 PE já somado.',
+                    style: TextStyle(fontSize: 12, color: Cores.conhecimento),
+                  ),
                 if (ficha.efeitos.custoRitual != 0)
                   const Text(
-                      'Reduções de poderes somadas (o livro se contradiz se '
-                      'acumulam: p. 78 × Ritual Predileto). Confira com o mestre.',
-                      style: TextStyle(fontSize: 11, color: Cores.tinta2)),
+                    'Reduções de poderes somadas (o livro se contradiz se '
+                    'acumulam: p. 78 × Ritual Predileto). Confira com o mestre.',
+                    style: TextStyle(fontSize: 11, color: Cores.tinta2),
+                  ),
               ],
             ),
             actions: [
               TextButton(
-                  onPressed: () => Navigator.pop(ctx, false),
-                  child: const Text('Cancelar')),
+                onPressed: () => Navigator.pop(ctx, false),
+                child: const Text('Cancelar'),
+              ),
               TextButton(
-                  onPressed: acima || semPe
-                      ? null
-                      : () => Navigator.pop(ctx, true),
-                  child: const Text('Conjurar')),
+                onPressed: acima || semPe
+                    ? null
+                    : () => Navigator.pop(ctx, true),
+                child: const Text('Conjurar'),
+              ),
             ],
           );
         },
@@ -1867,53 +3234,65 @@ class _FichaScreenState extends State<FichaScreen> {
     String resultado;
     if (medo) {
       ficha.san -= custo;
-      final permanente = forma == 0 ? 1 : forma == 1 ? 2 : 3;
+      final permanente = forma == 0
+          ? 1
+          : forma == 1
+          ? 2
+          : 3;
       ficha.sanPerdida += permanente;
       resultado = 'Medo: −$custo SAN e −$permanente SAN máxima.';
     } else {
-      final ocultismo =
-          DadosOP.pericias.where((p) => p.nome == 'Ocultismo').toList();
+      final ocultismo = DadosOP.pericias
+          .where((p) => p.nome == 'Ocultismo')
+          .toList();
       if (ocultismo.isEmpty) {
         resultado = 'Faça Ocultismo DT ${20 + custo}.';
       } else {
         final (dados, melhor, bonus) = ficha.testePericia(ocultismo.first);
         final teste = Rolagem.teste(
-            titulo: 'Custo de $nome',
-            dados: dados,
-            melhor: melhor,
-            bonus: bonus);
+          titulo: 'Custo de $nome',
+          dados: dados,
+          melhor: melhor,
+          bonus: bonus,
+        );
         final dt = 20 + custo;
         if (teste.total >= dt) {
-          resultado = 'Ocultismo ${teste.total} contra DT $dt: sem custo de SAN.';
+          resultado =
+              'Ocultismo ${teste.total} contra DT $dt: sem custo de SAN.';
         } else {
           ficha.san -= custo;
           if (dt - teste.total >= 5) {
             ficha.sanPerdida += 1;
-            resultado = 'Ocultismo ${teste.total} contra DT $dt: −$custo SAN '
+            resultado =
+                'Ocultismo ${teste.total} contra DT $dt: −$custo SAN '
                 'e −1 SAN máxima.';
           } else {
-            resultado =
-                'Ocultismo ${teste.total} contra DT $dt: −$custo SAN.';
+            resultado = 'Ocultismo ${teste.total} contra DT $dt: −$custo SAN.';
           }
         }
         PonteRolagens.publicar(
-            teste, ficha.nome.isEmpty ? 'Sem nome' : ficha.nome);
+          teste,
+          ficha.nome.isEmpty ? 'Sem nome' : ficha.nome,
+        );
       }
     }
     _salvar();
     if (!mounted) return;
-    ScaffoldMessenger.maybeOf(context)?.showSnackBar(SnackBar(
-      duration: const Duration(seconds: 6),
-      content: Text('$nome: −$custo PE. $resultado'),
-    ));
+    ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+      SnackBar(
+        duration: const Duration(seconds: 6),
+        content: Text('$nome: −$custo PE. $resultado'),
+      ),
+    );
   }
 
   Widget _abaInventario() {
     final itens = ficha.inventario;
     final patente = DadosOP.patentePorNome(ficha.patente);
     return ListView(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
       children: [
+        _faixa('inventario', 'Inventário'),
         Card(
           child: Padding(
             padding: const EdgeInsets.all(12),
@@ -1935,11 +3314,14 @@ class _FichaScreenState extends State<FichaScreen> {
                     if (ficha.sobrecarregado)
                       const Padding(
                         padding: EdgeInsets.only(left: 8),
-                        child: Text('SOBRECARREGADO',
-                            style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.bold,
-                                color: Cores.sangue)),
+                        child: Text(
+                          'SOBRECARREGADO',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                            color: Cores.sangue,
+                          ),
+                        ),
                       ),
                   ],
                 ),
@@ -1961,7 +3343,8 @@ class _FichaScreenState extends State<FichaScreen> {
           ),
         ),
         for (var i = 0; i < itens.length; i++) _linhaItem(i, itens[i]),
-        if (!leitura)
+        if (itens.isEmpty) const VazioLeitura('Nenhum item ainda.'),
+        if (_ed('inventario'))
           Center(
             child: TextButton.icon(
               onPressed: () => _editarItem(null),
@@ -1969,19 +3352,32 @@ class _FichaScreenState extends State<FichaScreen> {
               label: const Text('Adicionar item'),
             ),
           ),
-        const FaixaSecao('Anotações'),
-        TextFormField(
-          key: leitura ? ValueKey('anotacoes|${ficha.anotacoes}') : null,
-          initialValue: ficha.anotacoes,
-          readOnly: leitura,
-          maxLines: 8,
-          decoration: const InputDecoration(
-              hintText: 'História, contatos, pistas, dívidas…'),
-          onChanged: (v) {
-            ficha.anotacoes = v;
-            if (!leitura) FichaStore.salvar(ficha);
-          },
-        ),
+        _faixa('anotacoes', 'Anotações'),
+        if (_ed('anotacoes'))
+          TextFormField(
+            initialValue: ficha.anotacoes,
+            maxLines: 10,
+            minLines: 4,
+            decoration: const InputDecoration(
+              hintText: 'História, contatos, pistas, dívidas…',
+            ),
+            onChanged: (v) {
+              ficha.anotacoes = v;
+              FichaStore.salvar(ficha);
+            },
+          )
+        else if (ficha.anotacoes.trim().isEmpty)
+          const VazioLeitura('Nada anotado ainda.')
+        else
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(14),
+              child: Text(
+                ficha.anotacoes,
+                style: const TextStyle(fontSize: 14, height: 1.35),
+              ),
+            ),
+          ),
         const SizedBox(height: 24),
       ],
     );
@@ -1996,8 +3392,10 @@ class _FichaScreenState extends State<FichaScreen> {
       child: Wrap(
         spacing: 10,
         children: [
-          Text('Patente ${patente.nome} · crédito ${patente.credito}',
-              style: const TextStyle(fontSize: 12, color: Cores.tinta2)),
+          Text(
+            'Patente ${patente.nome} · crédito ${patente.credito}',
+            style: const TextStyle(fontSize: 12, color: Cores.tinta2),
+          ),
           for (final cat in const ['I', 'II', 'III', 'IV'])
             Text(
               '$cat: ${conta[cat] ?? 0}/${patente.limites[cat] ?? 0}',
@@ -2032,11 +3430,14 @@ class _FichaScreenState extends State<FichaScreen> {
           ].join(' · '),
           style: const TextStyle(fontSize: 12),
         ),
-        trailing: leitura
+        trailing: !_ed('inventario')
             ? null
             : IconButton(
-                icon: const Icon(Icons.edit_outlined,
-                    size: 18, color: Cores.tinta2),
+                icon: const Icon(
+                  Icons.edit_outlined,
+                  size: 18,
+                  color: Cores.tinta2,
+                ),
                 onPressed: () => _editarItem(indice),
               ),
       ),
@@ -2063,12 +3464,13 @@ class _FichaScreenState extends State<FichaScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               TextField(
-                  controller: nome,
-                  autofocus: true,
-                  decoration: const InputDecoration(labelText: 'Item')),
+                controller: nome,
+                autofocus: true,
+                decoration: const InputDecoration(labelText: 'Item'),
+              ),
               const SizedBox(height: 8),
               DropdownButtonFormField<String>(
-      isExpanded: true,
+                isExpanded: true,
                 initialValue: categoria,
                 decoration: const InputDecoration(labelText: 'Categoria'),
                 dropdownColor: Cores.carta2,
@@ -2083,25 +3485,34 @@ class _FichaScreenState extends State<FichaScreen> {
               ),
               const SizedBox(height: 8),
               TextField(
-                  controller: espacos,
-                  keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(labelText: 'Espaços')),
+                controller: espacos,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(labelText: 'Espaços'),
+              ),
               CheckboxListTile(
                 contentPadding: EdgeInsets.zero,
                 value: amaldicoado,
-                title: const Text('Amaldiçoado',
-                    style: TextStyle(fontSize: 14)),
-                subtitle: const Text('Só a partir de Agente Especial',
-                    style: TextStyle(fontSize: 12)),
+                title: const Text(
+                  'Amaldiçoado',
+                  style: TextStyle(fontSize: 14),
+                ),
+                subtitle: const Text(
+                  'Só a partir de Agente Especial',
+                  style: TextStyle(fontSize: 12),
+                ),
                 onChanged: (v) => setLocal(() => amaldicoado = v ?? false),
               ),
               CheckboxListTile(
                 contentPadding: EdgeInsets.zero,
                 value: foraDoLimite,
-                title: const Text('Não conta no limite da patente',
-                    style: TextStyle(fontSize: 14)),
-                subtitle: const Text('Ex.: poder do Criminoso',
-                    style: TextStyle(fontSize: 12)),
+                title: const Text(
+                  'Não conta no limite da patente',
+                  style: TextStyle(fontSize: 14),
+                ),
+                subtitle: const Text(
+                  'Ex.: poder do Criminoso',
+                  style: TextStyle(fontSize: 12),
+                ),
                 onChanged: (v) => setLocal(() => foraDoLimite = v ?? false),
               ),
             ],
@@ -2113,12 +3524,15 @@ class _FichaScreenState extends State<FichaScreen> {
                   ficha.removerDe('inventario', indice);
                   Navigator.pop(ctx, true);
                 },
-                child: const Text('Excluir',
-                    style: TextStyle(color: Cores.sangue)),
+                child: const Text(
+                  'Excluir',
+                  style: TextStyle(color: Cores.sangue),
+                ),
               ),
             TextButton(
-                onPressed: () => Navigator.pop(ctx, false),
-                child: const Text('Cancelar')),
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Cancelar'),
+            ),
             TextButton(
               onPressed: () {
                 final novo = <String, dynamic>{
@@ -2149,24 +3563,57 @@ class _FichaScreenState extends State<FichaScreen> {
     '': '— (não conta)',
     'classe': 'Poder de classe',
     'paranormal': 'Paranormal (Transcender)',
-    'geral': 'Poder geral (SAH)',
     'trilha': 'Habilidade de trilha',
     'habilidade': 'Habilidade de classe',
     'origem': 'Poder de origem',
   };
 
-  List<Widget> _listaSimples(String chave, String rotulo,
-      {required List<(String, String)> camposExtras,
-      bool habilidade = false,
-      Widget Function(int, Map<String, dynamic>)? acoes}) {
+  List<Widget> _listaSimples(
+    String chave,
+    String rotulo, {
+    required List<(String, String)> camposExtras,
+    bool habilidade = false,
+    bool editando = false,
+    Widget Function(int, Map<String, dynamic>)? acoes,
+  }) {
     final itens = ficha._listaPublica(chave);
+    if (habilidade) {
+      final avisos = avisosDasHabilidades(ficha);
+      return [
+        for (var i = 0; i < itens.length; i++)
+          _cartaoHabilidade(
+            i,
+            itens[i],
+            editando,
+            camposExtras,
+            avisos[i] ?? const [],
+          ),
+        if (itens.isEmpty) VazioLeitura('Nenhuma $rotulo ainda.'),
+        if (editando)
+          Center(
+            child: TextButton.icon(
+              onPressed: () => _editarSimples(
+                chave,
+                rotulo,
+                null,
+                camposExtras,
+                habilidade: true,
+              ),
+              icon: const Icon(Icons.add),
+              label: Text('Adicionar $rotulo'),
+            ),
+          ),
+      ];
+    }
     return [
       for (var i = 0; i < itens.length; i++)
         Card(
           child: ExpansionTile(
             shape: const Border(),
-            title: Text('${itens[i]['nome'] ?? ''}',
-                style: const TextStyle(fontWeight: FontWeight.bold)),
+            title: Text(
+              '${itens[i]['nome'] ?? ''}',
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
             subtitle: habilidade
                 ? _subtituloHabilidade(itens[i])
                 : _subtituloExtras(itens[i], camposExtras),
@@ -2177,17 +3624,22 @@ class _FichaScreenState extends State<FichaScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text('${itens[i]['descricao'] ?? ''}'),
-                    if (!leitura)
+                    if (acoes != null || editando)
                       Row(
                         children: [
                           if (acoes != null) acoes(i, itens[i]),
                           const Spacer(),
-                          TextButton(
-                            onPressed: () => _editarSimples(
-                                chave, rotulo, i, camposExtras,
-                                habilidade: habilidade),
-                            child: const Text('Editar'),
-                          ),
+                          if (editando)
+                            TextButton(
+                              onPressed: () => _editarSimples(
+                                chave,
+                                rotulo,
+                                i,
+                                camposExtras,
+                                habilidade: habilidade,
+                              ),
+                              child: const Text('Editar'),
+                            ),
                         ],
                       ),
                   ],
@@ -2199,20 +3651,97 @@ class _FichaScreenState extends State<FichaScreen> {
       if (itens.isEmpty)
         Padding(
           padding: const EdgeInsets.all(12),
-          child: Text('Nenhum $rotulo ainda.',
-              textAlign: TextAlign.center,
-              style: const TextStyle(color: Cores.tinta2, fontSize: 13)),
+          child: Text(
+            'Nenhum $rotulo ainda.',
+            textAlign: TextAlign.center,
+            style: const TextStyle(color: Cores.tinta2, fontSize: 13),
+          ),
         ),
-      if (!leitura)
+      if (editando)
         Center(
           child: TextButton.icon(
-            onPressed: () => _editarSimples(chave, rotulo, null, camposExtras,
-                habilidade: habilidade),
+            onPressed: () => _editarSimples(
+              chave,
+              rotulo,
+              null,
+              camposExtras,
+              habilidade: habilidade,
+            ),
             icon: const Icon(Icons.add),
             label: Text('Adicionar $rotulo'),
           ),
         ),
     ];
+  }
+
+  /// Habilidade aberta: o que ela faz já aparece, sem precisar expandir.
+  Widget _cartaoHabilidade(
+    int i,
+    Map<String, dynamic> h,
+    bool editando,
+    List<(String, String)> camposExtras, [
+    List<String> avisos = const [],
+  ]) {
+    final descricao = '${h['descricao'] ?? ''}'.trim();
+    final sub = _subtituloHabilidade(h);
+    return Card(
+      key: ValueKey('habilidade-$i'),
+      shape: avisos.isEmpty
+          ? null
+          : RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+              side: const BorderSide(color: Cores.sangue, width: 1.5),
+            ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(14, 12, 6, 12),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '${h['nome'] ?? ''}',
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  if (sub != null)
+                    Padding(padding: const EdgeInsets.only(top: 2), child: sub),
+                  if (descricao.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 6),
+                      child: Text(
+                        descricao,
+                        style: const TextStyle(fontSize: 13.5, height: 1.35),
+                      ),
+                    ),
+                  for (final a in avisos) _linhaAviso(a),
+                ],
+              ),
+            ),
+            if (editando)
+              IconButton(
+                tooltip: 'Editar',
+                icon: const Icon(
+                  Icons.edit_outlined,
+                  size: 18,
+                  color: Cores.tinta2,
+                ),
+                onPressed: () => _editarSimples(
+                  'habilidades',
+                  'habilidade',
+                  i,
+                  camposExtras,
+                  habilidade: true,
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
   }
 
   Widget? _subtituloHabilidade(Map<String, dynamic> h) {
@@ -2225,12 +3754,16 @@ class _FichaScreenState extends State<FichaScreen> {
       if (h['transcender'] == true) 'Transcender',
     ];
     if (partes.isEmpty) return null;
-    return Text(partes.join(' · '),
-        style: const TextStyle(fontSize: 12, color: Cores.tinta2));
+    return Text(
+      partes.join(' · '),
+      style: const TextStyle(fontSize: 12, color: Cores.tinta2),
+    );
   }
 
   Widget? _subtituloExtras(
-      Map<String, dynamic> item, List<(String, String)> campos) {
+    Map<String, dynamic> item,
+    List<(String, String)> campos,
+  ) {
     final partes = <String>[];
     for (final (chave, _) in campos) {
       final v = '${item[chave] ?? ''}';
@@ -2240,19 +3773,24 @@ class _FichaScreenState extends State<FichaScreen> {
     return Text(partes.join(' · '), style: const TextStyle(fontSize: 12));
   }
 
-  Future<void> _editarSimples(String chave, String rotulo, int? indice,
-      List<(String, String)> camposExtras,
-      {bool habilidade = false}) async {
+  Future<void> _editarSimples(
+    String chave,
+    String rotulo,
+    int? indice,
+    List<(String, String)> camposExtras, {
+    bool habilidade = false,
+  }) async {
     final itens = ficha._listaPublica(chave);
     final atual = indice == null
         ? <String, dynamic>{}
         : Map<String, dynamic>.from(itens[indice]);
     final nome = TextEditingController(text: '${atual['nome'] ?? ''}');
-    final descricao =
-        TextEditingController(text: '${atual['descricao'] ?? ''}');
+    final descricao = TextEditingController(
+      text: '${atual['descricao'] ?? ''}',
+    );
     final extras = {
       for (final (c, _) in camposExtras)
-        c: TextEditingController(text: '${atual[c] ?? ''}')
+        c: TextEditingController(text: '${atual[c] ?? ''}'),
     };
     var tipoPoder = '${atual['tipoPoder'] ?? ''}';
     if (!_tiposDePoder.containsKey(tipoPoder)) tipoPoder = '';
@@ -2260,93 +3798,106 @@ class _FichaScreenState extends State<FichaScreen> {
 
     final ok = await showDialog<bool>(
       context: context,
-      builder: (ctx) => StatefulBuilder(builder: (ctx, setLocal) => AlertDialog(
-        title: Text(indice == null ? 'Novo $rotulo' : 'Editar $rotulo'),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setLocal) => AlertDialog(
+          title: Text(indice == null ? 'Novo $rotulo' : 'Editar $rotulo'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
                   controller: nome,
                   autofocus: true,
-                  decoration: const InputDecoration(labelText: 'Nome')),
-              for (final (c, r) in camposExtras) ...[
+                  decoration: const InputDecoration(labelText: 'Nome'),
+                ),
+                for (final (c, r) in camposExtras) ...[
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: extras[c],
+                    decoration: InputDecoration(labelText: r),
+                  ),
+                ],
                 const SizedBox(height: 8),
                 TextField(
-                    controller: extras[c],
-                    decoration: InputDecoration(labelText: r)),
-              ],
-              const SizedBox(height: 8),
-              TextField(
                   controller: descricao,
                   maxLines: 4,
-                  decoration: const InputDecoration(labelText: 'Descrição')),
-              if (habilidade) ...[
-                const SizedBox(height: 8),
-                DropdownButtonFormField<String>(
-                  isExpanded: true,
-                  initialValue: tipoPoder,
-                  decoration: const InputDecoration(
-                      labelText: 'Tipo (para a contagem de poderes)'),
-                  dropdownColor: Cores.carta2,
-                  items: [
-                    for (final e in _tiposDePoder.entries)
-                      DropdownMenuItem(value: e.key, child: Text(e.value)),
-                  ],
-                  onChanged: (v) => setLocal(() {
-                    tipoPoder = v ?? '';
-                    if (tipoPoder == 'paranormal') transcender = true;
-                  }),
+                  decoration: const InputDecoration(labelText: 'Descrição'),
                 ),
-                CheckboxListTile(
-                  contentPadding: EdgeInsets.zero,
-                  value: transcender,
-                  title: const Text('Conta como Transcender',
-                      style: TextStyle(fontSize: 14)),
-                  subtitle: const Text('Não ganha a SAN do NEX em que entrou',
-                      style: TextStyle(fontSize: 12)),
-                  onChanged: (v) => setLocal(() => transcender = v ?? false),
-                ),
+                if (habilidade) ...[
+                  const SizedBox(height: 8),
+                  DropdownButtonFormField<String>(
+                    isExpanded: true,
+                    initialValue: tipoPoder,
+                    decoration: const InputDecoration(
+                      labelText: 'Tipo (para a contagem de poderes)',
+                    ),
+                    dropdownColor: Cores.carta2,
+                    items: [
+                      for (final e in _tiposDePoder.entries)
+                        DropdownMenuItem(value: e.key, child: Text(e.value)),
+                    ],
+                    onChanged: (v) => setLocal(() {
+                      tipoPoder = v ?? '';
+                      if (tipoPoder == 'paranormal') transcender = true;
+                    }),
+                  ),
+                  CheckboxListTile(
+                    contentPadding: EdgeInsets.zero,
+                    value: transcender,
+                    title: const Text(
+                      'Conta como Transcender',
+                      style: TextStyle(fontSize: 14),
+                    ),
+                    subtitle: const Text(
+                      'Não ganha a SAN do NEX em que entrou',
+                      style: TextStyle(fontSize: 12),
+                    ),
+                    onChanged: (v) => setLocal(() => transcender = v ?? false),
+                  ),
+                ],
               ],
-            ],
+            ),
           ),
-        ),
-        actions: [
-          if (indice != null)
+          actions: [
+            if (indice != null)
+              TextButton(
+                onPressed: () {
+                  ficha.removerDe(chave, indice);
+                  Navigator.pop(ctx, true);
+                },
+                child: const Text(
+                  'Excluir',
+                  style: TextStyle(color: Cores.sangue),
+                ),
+              ),
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Cancelar'),
+            ),
             TextButton(
               onPressed: () {
-                ficha.removerDe(chave, indice);
+                final novo = <String, dynamic>{
+                  ...atual,
+                  'nome': nome.text.trim(),
+                  'descricao': descricao.text.trim(),
+                  for (final e in extras.entries) e.key: e.value.text.trim(),
+                  if (habilidade) ...{
+                    'tipoPoder': tipoPoder,
+                    'transcender': transcender,
+                  },
+                };
+                if (indice == null) {
+                  ficha.adicionarEm(chave, novo);
+                } else {
+                  ficha.atualizarEm(chave, indice, novo);
+                }
                 Navigator.pop(ctx, true);
               },
-              child:
-                  const Text('Excluir', style: TextStyle(color: Cores.sangue)),
+              child: const Text('Salvar'),
             ),
-          TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('Cancelar')),
-          TextButton(
-            onPressed: () {
-              final novo = <String, dynamic>{
-                ...atual,
-                'nome': nome.text.trim(),
-                'descricao': descricao.text.trim(),
-                for (final e in extras.entries) e.key: e.value.text.trim(),
-                if (habilidade) ...{
-                  'tipoPoder': tipoPoder,
-                  'transcender': transcender,
-                },
-              };
-              if (indice == null) {
-                ficha.adicionarEm(chave, novo);
-              } else {
-                ficha.atualizarEm(chave, indice, novo);
-              }
-              Navigator.pop(ctx, true);
-            },
-            child: const Text('Salvar'),
-          ),
-        ],
-      )),
+          ],
+        ),
+      ),
     );
     if (ok == true) _salvar();
   }
@@ -2374,53 +3925,86 @@ class _FichaScreenState extends State<FichaScreen> {
             ),
             const SizedBox(height: 10),
             if (ficha.presenca.isNotEmpty)
-              _linhaAmeaca('Presença perturbadora', ficha.presenca,
-                  Cores.energiaViva),
+              _linhaAmeaca(
+                'Presença perturbadora',
+                ficha.presenca,
+                Cores.energiaViva,
+              ),
             if (ficha.sentidos.isNotEmpty)
               _linhaAmeaca('Sentidos', ficha.sentidos, Cores.tinta2),
             if (ficha.resistencias.isNotEmpty)
               _linhaAmeaca('Resistências', ficha.resistencias, Cores.estavel),
             if (ficha.vulnerabilidades.isNotEmpty)
               _linhaAmeaca(
-                  'Vulnerabilidades', ficha.vulnerabilidades, Cores.sangue),
+                'Vulnerabilidades',
+                ficha.vulnerabilidades,
+                Cores.sangue,
+              ),
             if (!leitura) ...[
               const SizedBox(height: 6),
-              Row(children: [
-                Expanded(
-                  child: _campoTexto('Categoria (Criatura, Pessoa…)',
-                      ficha.categoria, (v) => ficha.categoria = v),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: _campoTexto('Tamanho', ficha.tamanho,
-                      (v) => ficha.tamanho = v),
-                ),
-              ]),
+              Row(
+                children: [
+                  Expanded(
+                    child: _campoTexto(
+                      'Categoria (Criatura, Pessoa…)',
+                      ficha.categoria,
+                      (v) => ficha.categoria = v,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _campoTexto(
+                      'Tamanho',
+                      ficha.tamanho,
+                      (v) => ficha.tamanho = v,
+                    ),
+                  ),
+                ],
+              ),
               const SizedBox(height: 8),
-              Row(children: [
-                Expanded(
-                  child: _campoTexto('Elemento', ficha.elemento,
-                      (v) => ficha.elemento = v),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: _campoNumero('VD', ficha.vd ?? 0,
-                      (v) => ficha.vd = v <= 0 ? null : v),
-                ),
-              ]),
+              Row(
+                children: [
+                  Expanded(
+                    child: _campoTexto(
+                      'Elemento',
+                      ficha.elemento,
+                      (v) => ficha.elemento = v,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _campoNumero(
+                      'VD',
+                      ficha.vd ?? 0,
+                      (v) => ficha.vd = v <= 0 ? null : v,
+                    ),
+                  ),
+                ],
+              ),
               const SizedBox(height: 8),
-              _campoTexto('Presença perturbadora', ficha.presenca,
-                  (v) => ficha.presenca = v),
+              _campoTexto(
+                'Presença perturbadora',
+                ficha.presenca,
+                (v) => ficha.presenca = v,
+              ),
               const SizedBox(height: 8),
-              _campoTexto('Sentidos', ficha.sentidos,
-                  (v) => ficha.sentidos = v),
+              _campoTexto(
+                'Sentidos',
+                ficha.sentidos,
+                (v) => ficha.sentidos = v,
+              ),
               const SizedBox(height: 8),
-              _campoTexto('Vulnerabilidades', ficha.vulnerabilidades,
-                  (v) => ficha.vulnerabilidades = v),
+              _campoTexto(
+                'Vulnerabilidades',
+                ficha.vulnerabilidades,
+                (v) => ficha.vulnerabilidades = v,
+              ),
               const SizedBox(height: 8),
-              _campoNumero('Defesa impressa (0 = calcular)',
-                  ficha.defesaManual ?? 0,
-                  (v) => ficha.defesaManual = v <= 0 ? null : v),
+              _campoNumero(
+                'Defesa impressa (0 = calcular)',
+                ficha.defesaManual ?? 0,
+                (v) => ficha.defesaManual = v <= 0 ? null : v,
+              ),
             ],
           ],
         ),
@@ -2436,8 +4020,9 @@ class _FichaScreenState extends State<FichaScreen> {
           style: const TextStyle(fontSize: 12.5, color: Cores.tinta),
           children: [
             TextSpan(
-                text: '$rotulo: ',
-                style: TextStyle(fontWeight: FontWeight.bold, color: cor)),
+              text: '$rotulo: ',
+              style: TextStyle(fontWeight: FontWeight.bold, color: cor),
+            ),
             TextSpan(text: valor),
           ],
         ),
@@ -2445,121 +4030,92 @@ class _FichaScreenState extends State<FichaScreen> {
     );
   }
 
-  Widget _estadoDeMesa() {
+  Widget _abaSobre() {
+    final escritos = [
+      for (final campo in FichaOP.camposSobre.entries)
+        if (ficha.sobre(campo.key).trim().isNotEmpty) campo,
+    ];
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
+      children: [
+        _faixa('proficiencias', 'Proficiências'),
+        _proficiencias(),
+        _faixa('opcionais', 'Regras opcionais'),
+        if (_ed('opcionais')) _regrasOpcionais() else _opcionaisLeitura(),
+        _faixa('sobre', 'Sobre o personagem'),
+        if (_ed('sobre'))
+          for (final campo in FichaOP.camposSobre.entries)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: TextFormField(
+                initialValue: ficha.sobre(campo.key),
+                maxLines: campo.key == 'anotacoes' ? 8 : 4,
+                minLines: 1,
+                decoration: InputDecoration(labelText: campo.value),
+                onChanged: (v) {
+                  ficha.definirSobre(campo.key, v);
+                  FichaStore.salvar(ficha);
+                },
+              ),
+            )
+        else if (escritos.isEmpty)
+          const VazioLeitura(
+            'Nada escrito ainda. Toque no lápis para contar a história.',
+          )
+        else
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(14, 14, 14, 0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  for (final campo in escritos)
+                    ParagrafoLeitura(campo.value, ficha.sobre(campo.key)),
+                ],
+              ),
+            ),
+          ),
+        const SizedBox(height: 24),
+      ],
+    );
+  }
+
+  /// Resumo das regras opcionais ligadas — o formulário fica no lápis.
+  Widget _opcionaisLeitura() {
+    final faixa = RegrasOpcionais.faixa(ficha.faixaEtaria);
+    final linhas = <Widget>[
+      if (faixa != null)
+        InfoLeitura(
+          'Idade variada',
+          faixa.nome,
+          detalhe: [
+            faixa.efeito,
+            if (ficha.desvantagens.isNotEmpty)
+              'Desvantagens: ${ficha.desvantagens.join(', ')}',
+          ].join('\n'),
+        ),
+    ];
+    if (linhas.isEmpty) {
+      return const VazioLeitura('Nenhuma regra opcional ligada.');
+    }
     return Card(
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
+        padding: const EdgeInsets.all(14),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Wrap(
-              spacing: 8,
-              children: [
-                FilterChip(
-                  label: const Text('Em combate'),
-                  selected: ficha.emCombate,
-                  showCheckmark: false,
-                  avatar: Icon(Icons.local_fire_department_outlined,
-                      size: 18,
-                      color: ficha.emCombate ? Cores.conhecimento : Cores.tinta2),
-                  selectedColor: Cores.conhecimento.withValues(alpha: .18),
-                  onSelected: leitura
-                      ? null
-                      : (v) {
-                          ficha.emCombate = v;
-                          _salvar();
-                        },
-                ),
-                FilterChip(
-                  label: const Text('Morto'),
-                  selected: ficha.morto,
-                  showCheckmark: false,
-                  avatar: Icon(Icons.dangerous_outlined,
-                      size: 18,
-                      color: ficha.morto ? Cores.sangue : Cores.tinta2),
-                  selectedColor: Cores.sangue.withValues(alpha: .18),
-                  onSelected: leitura
-                      ? null
-                      : (v) {
-                          ficha.morto = v;
-                          _salvar();
-                        },
-                ),
-              ],
-            ),
-            const SizedBox(height: 10),
-            const Text('Esconder do mestre',
-                style: TextStyle(fontSize: 12, color: Cores.tinta2)),
-            const SizedBox(height: 4),
-            Wrap(
-              spacing: 8,
-              children: [
-                for (final r in const [
-                  ('pv', 'Vida'),
-                  ('san', 'Sanidade'),
-                  ('pe', 'Esforço'),
-                ])
-                  FilterChip(
-                    label: Text(r.$2),
-                    selected: ficha.oculto(r.$1),
-                    showCheckmark: false,
-                    avatar: Icon(
-                        ficha.oculto(r.$1)
-                            ? Icons.visibility_off_outlined
-                            : Icons.visibility_outlined,
-                        size: 18,
-                        color:
-                            ficha.oculto(r.$1) ? Cores.energiaViva : Cores.tinta2),
-                    selectedColor: Cores.energia.withValues(alpha: .18),
-                    onSelected: leitura
-                        ? null
-                        : (v) {
-                            ficha.definirOculto(r.$1, v);
-                            _salvar();
-                          },
-                  ),
-              ],
-            ),
+            for (var i = 0; i < linhas.length; i++) ...[
+              if (i > 0) const SizedBox(height: 12),
+              linhas[i],
+            ],
           ],
         ),
       ),
     );
   }
 
-  Widget _abaSobre() {
-    return ListView(
-      padding: const EdgeInsets.all(14),
-      children: [
-        const FaixaSecao('Proficiências'),
-        _proficiencias(),
-        const FaixaSecao('Regras opcionais'),
-        _regrasOpcionais(),
-        const FaixaSecao('Sobre o personagem'),
-        for (final campo in FichaOP.camposSobre.entries) ...[
-          Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: TextFormField(
-              key: leitura
-                  ? ValueKey('${campo.key}|${ficha.sobre(campo.key)}')
-                  : null,
-              initialValue: ficha.sobre(campo.key),
-              readOnly: leitura,
-              maxLines: campo.key == 'anotacoes' ? 8 : 3,
-              decoration: InputDecoration(labelText: campo.value),
-              onChanged: (v) {
-                ficha.definirSobre(campo.key, v);
-                if (!leitura) FichaStore.salvar(ficha);
-              },
-            ),
-          ),
-        ],
-        const SizedBox(height: 24),
-      ],
-    );
-  }
-
-  /// Idade (OPRPG p. 172), ferimentos debilitantes e Determinação (SAH
-  /// p. 104–105): cada uma ligada por ficha, com efeito já nas contas.
+  /// Idade variada (OPRPG p. 172): ligada por ficha, com efeito já nas
+  /// contas.
   Widget _regrasOpcionais() {
     final faixa = RegrasOpcionais.faixa(ficha.faixaEtaria);
     return Card(
@@ -2573,10 +4129,15 @@ class _FichaScreenState extends State<FichaScreen> {
               isExpanded: true,
               initialValue: ficha.faixaEtaria,
               decoration: const InputDecoration(
-                  labelText: 'Idade variada (faixa etária)', isDense: true),
+                labelText: 'Idade variada (faixa etária)',
+                isDense: true,
+              ),
               dropdownColor: Cores.carta2,
               items: [
-                const DropdownMenuItem(value: '', child: Text('— (regra desligada)')),
+                const DropdownMenuItem(
+                  value: '',
+                  child: Text('— (regra desligada)'),
+                ),
                 for (final f in RegrasOpcionais.faixas)
                   DropdownMenuItem(value: f.nome, child: Text(f.nome)),
               ],
@@ -2590,19 +4151,26 @@ class _FichaScreenState extends State<FichaScreen> {
             ),
             if (faixa != null) ...[
               const SizedBox(height: 4),
-              Text(faixa.efeito,
-                  style: const TextStyle(fontSize: 12, color: Cores.tinta2)),
+              Text(
+                faixa.efeito,
+                style: const TextStyle(fontSize: 12, color: Cores.tinta2),
+              ),
               if (faixa.nexExtra > 0)
-                Text('Na criação: NEX +${faixa.nexExtra}% (suba a régua).',
-                    style: const TextStyle(
-                        fontSize: 12, color: Cores.conhecimento)),
+                Text(
+                  'Na criação: NEX +${faixa.nexExtra}% (suba a régua).',
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: Cores.conhecimento,
+                  ),
+                ),
             ],
             if (faixa != null && faixa.desvantagens > 0) ...[
               const SizedBox(height: 8),
               Text(
-                  'Desvantagens de idade (${ficha.desvantagens.length} de '
-                  '${faixa.desvantagens}):',
-                  style: const TextStyle(fontSize: 12)),
+                'Desvantagens de idade (${ficha.desvantagens.length} de '
+                '${faixa.desvantagens}):',
+                style: const TextStyle(fontSize: 12),
+              ),
               Wrap(
                 spacing: 6,
                 children: [
@@ -2625,133 +4193,131 @@ class _FichaScreenState extends State<FichaScreen> {
                 ],
               ),
             ],
-            const SizedBox(height: 10),
-            const Text('Ferimentos debilitantes (−1 d20 no atributo; Vigor '
-                'tira 1 PV máx. por 5% de NEX; acumulam — toque para '
-                'somar, × para tirar):',
-                style: TextStyle(fontSize: 12)),
-            Wrap(
-              spacing: 6,
-              children: [
-                for (final a in const ['AGI', 'FOR', 'INT', 'PRE', 'VIG'])
-                  _chipFerimento(a),
-              ],
-            ),
-            SwitchListTile(
-              contentPadding: EdgeInsets.zero,
-              value: ficha.regraDeterminacao,
-              title: const Text('Jogando sem Sanidade (Determinação)',
-                  style: TextStyle(fontSize: 14)),
-              subtitle: Text(
-                  'PD substituem PE e SAN: ${ficha.pdMax} PD. Perturbado '
-                  'abaixo da metade.',
-                  style: const TextStyle(fontSize: 12)),
-              onChanged: leitura
-                  ? null
-                  : (v) {
-                      ficha.regraDeterminacao = v;
-                      _salvar();
-                    },
-            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _chipFerimento(String sigla) {
-    final n = ficha.ferimentosEm(sigla);
-    return InputChip(
-      key: ValueKey('ferimento-$sigla'),
-      label: Text(n > 1 ? '$sigla ×$n' : sigla,
-          style: const TextStyle(fontSize: 12)),
-      selected: n > 0,
-      showCheckmark: false,
-      visualDensity: VisualDensity.compact,
-      onPressed: leitura
-          ? null
-          : () {
-              ficha.ferimentos = [...ficha.ferimentos, sigla];
-              _salvar();
-            },
-      onDeleted: leitura || n == 0
-          ? null
-          : () {
-              final atuais = ficha.ferimentos;
-              atuais.remove(sigla);
-              ficha.ferimentos = atuais;
-              _salvar();
-            },
-    );
-  }
-
+  /// As cinco do livro, marcadas ou não. No lápis, cada uma liga e desliga;
+  /// a que vem de poder ou origem fica travada. É daqui que sai o −2d20 de
+  /// arma ou proteção sem proficiência.
   Widget _proficiencias() {
-    final lista = ficha.proficiencias;
+    final editando = _ed('proficiencias');
+    final extras = [
+      for (final p in ficha.proficiencias)
+        if (!FichaOP.proficienciasDoLivro.any(
+          (l) =>
+              FichaOP.chaveDeProficiencia(l) == FichaOP.chaveDeProficiencia(p),
+        ))
+          p,
+    ];
     return Card(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if (lista.isEmpty)
-              const Text('Nenhuma ainda. A classe preenche as dela.',
-                  style: TextStyle(fontSize: 12, color: Cores.tinta2)),
-            Wrap(
-              spacing: 8,
-              runSpacing: 4,
-              children: [
-                for (var i = 0; i < lista.length; i++)
-                  Chip(
-                    label: Text(lista[i]),
-                    backgroundColor: Cores.carta2,
-                    side: const BorderSide(color: Cores.linha),
-                    onDeleted: leitura
-                        ? null
-                        : () {
-                            final novas = ficha.proficiencias..removeAt(i);
-                            ficha.proficiencias = novas;
-                            _salvar();
-                          },
-                  ),
-              ],
-            ),
-            if (!leitura)
-              TextButton.icon(
-                onPressed: _adicionarProficiencia,
-                icon: const Icon(Icons.add, size: 18),
-                label: const Text('Adicionar proficiência'),
+            if (editando)
+              const Padding(
+                padding: EdgeInsets.only(bottom: 6),
+                child: Text(
+                  'Toque para marcar ou desmarcar. Sem proficiência: −2d20 no '
+                  'ataque com a arma, ou em For e Agi com a proteção.',
+                  style: TextStyle(fontSize: 12, color: Cores.tinta2),
+                ),
               ),
+            if (editando)
+              Wrap(
+                spacing: 8,
+                runSpacing: 6,
+                children: [
+                  for (final p in FichaOP.proficienciasDoLivro)
+                    FilterChip(
+                      key: ValueKey('prof-$p'),
+                      label: Text(
+                        ficha.proficienciaDePoder(p) &&
+                                !ficha.proficienciaMarcada(p)
+                            ? '$p (poder/origem)'
+                            : p,
+                      ),
+                      selected: ficha.proficiente(p),
+                      onSelected:
+                          ficha.proficienciaDePoder(p) &&
+                              !ficha.proficienciaMarcada(p)
+                          ? null
+                          : (v) {
+                              ficha.marcarProficiencia(p, v);
+                              _salvar();
+                            },
+                    ),
+                ],
+              )
+            else
+              for (final p in FichaOP.proficienciasDoLivro)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 3),
+                  child: Row(
+                    children: [
+                      Icon(
+                        ficha.proficiente(p)
+                            ? Icons.check_circle
+                            : Icons.cancel_outlined,
+                        size: 18,
+                        color: ficha.proficiente(p)
+                            ? Cores.estavel
+                            : Cores.tinta2,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        p,
+                        style: TextStyle(
+                          fontSize: 14.5,
+                          color: ficha.proficiente(p)
+                              ? Cores.tinta
+                              : Cores.tinta2,
+                        ),
+                      ),
+                      if (ficha.proficienciaDePoder(p) &&
+                          !ficha.proficienciaMarcada(p))
+                        const Text(
+                          '  · de poder/origem',
+                          style: TextStyle(fontSize: 12, color: Cores.tinta2),
+                        ),
+                    ],
+                  ),
+                ),
+            if (extras.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              const Text(
+                'Fora do livro (anotada à mão; não conta para armas):',
+                style: TextStyle(fontSize: 12, color: Cores.tinta2),
+              ),
+              Wrap(
+                spacing: 8,
+                children: [
+                  for (final p in extras)
+                    Chip(
+                      label: Text(p),
+                      backgroundColor: Cores.carta2,
+                      side: const BorderSide(color: Cores.linha),
+                      onDeleted: editando
+                          ? () {
+                              ficha.proficiencias = [
+                                for (final x in ficha.proficiencias)
+                                  if (x != p) x,
+                              ];
+                              _salvar();
+                            }
+                          : null,
+                    ),
+                ],
+              ),
+            ],
           ],
         ),
       ),
     );
-  }
-
-  Future<void> _adicionarProficiencia() async {
-    final campo = TextEditingController();
-    final nome = await showDialog<String>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Proficiência'),
-        content: TextField(
-          controller: campo,
-          autofocus: true,
-          decoration: const InputDecoration(
-              hintText: 'Ex.: armas pesadas, proteções pesadas'),
-        ),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: const Text('Cancelar')),
-          TextButton(
-              onPressed: () => Navigator.pop(ctx, campo.text.trim()),
-              child: const Text('Adicionar')),
-        ],
-      ),
-    );
-    if (nome == null || nome.isEmpty) return;
-    ficha.proficiencias = ficha.proficiencias..add(nome);
-    _salvar();
   }
 
   Widget _campoTexto(String rotulo, String valor, ValueChanged<String> grava) {
@@ -2826,282 +4392,19 @@ class _FichaScreenState extends State<FichaScreen> {
     ].join(' · ');
   }
 
-  /// Machucado, morrendo, perturbado, enlouquecendo — saem sozinhos dos
-  /// recursos. Morrendo e enlouquecendo contam turnos: no 3º, o livro
-  /// decide (p. 88).
-  Widget _estadoDoPersonagem() {
-    final chips = <Widget>[];
-    void estado(String nome, Color cor, IconData icone) => chips.add(Chip(
-          avatar: Icon(icone, size: 16, color: cor),
-          label: Text(nome, style: TextStyle(color: cor, fontSize: 12)),
-          side: BorderSide(color: cor.withValues(alpha: .6)),
-          backgroundColor: cor.withValues(alpha: .1),
-          visualDensity: VisualDensity.compact,
-        ));
-    if (ficha.morto) estado('Morto', Cores.sangue, Icons.dangerous_outlined);
-    if (ficha.morrendo) {
-      estado('Morrendo', Cores.sangue, Icons.monitor_heart_outlined);
-    } else if (ficha.estaMachucado && !ficha.morto) {
-      estado('Machucado', Cores.sangue, Icons.healing_outlined);
-    }
-    if (ficha.insano) {
-      estado('Insano', Cores.energia, Icons.psychology_alt_outlined);
-    } else if (ficha.enlouquecendo) {
-      estado('Enlouquecendo', Cores.energia, Icons.psychology_alt_outlined);
-    } else if (!ficha.regraDeterminacao && ficha.perturbado) {
-      estado('Perturbado', Cores.energia, Icons.blur_on);
-    }
-    if (ficha.regraDeterminacao && ficha.pd < (ficha.pdMax + 1) ~/ 2) {
-      estado('Perturbado', Cores.energia, Icons.blur_on);
-    }
-    if (ficha.sobrecarregado) {
-      estado('Sobrecarregado', Cores.conhecimento, Icons.backpack_outlined);
-    }
-
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (chips.isEmpty)
-              const Text('Tudo em ordem.',
-                  style: TextStyle(fontSize: 12, color: Cores.tinta2))
-            else
-              Wrap(spacing: 6, runSpacing: 4, children: chips),
-            if (ficha.morrendo)
-              _contadorDeTurnos(
-                'Morrendo: inconsciente. Medicina DT '
-                    '${20 + 5 * FichaOP.paraIntSeguro(ficha.dados['estabilizacoes'])} '
-                    'estabiliza (fica com 1 PV). 3 turnos e morre.',
-                ficha.turnosMorrendo,
-                (v) {
-                  ficha.turnosMorrendo = v;
-                  if (v >= 3) ficha.morto = true;
-                },
-                Cores.sangue,
-              ),
-            if (ficha.enlouquecendo)
-              _contadorDeTurnos(
-                'Enlouquecendo: Diplomacia ou Religião DT '
-                    '${20 + 5 * FichaOP.paraIntSeguro(ficha.dados['acalmado'])} '
-                    'acalma (fica com 1 SAN). 3 turnos e fica insano (vira NPC).',
-                ficha.turnosEnlouquecendo,
-                (v) {
-                  ficha.turnosEnlouquecendo = v;
-                  if (v >= 3) ficha.insano = true;
-                },
-                Cores.energia,
-              ),
-            if (!leitura) ...[
-              const SizedBox(height: 6),
-              Wrap(spacing: 8, children: [
-                if (ficha.morrendo)
-                  OutlinedButton(
-                    onPressed: () {
-                      ficha.dados['estabilizacoes'] = FichaOP.paraIntSeguro(
-                              ficha.dados['estabilizacoes']) +
-                          1;
-                      ficha.pv = 1;
-                      ficha.turnosMorrendo = 0;
-                      _salvar();
-                    },
-                    child: const Text('Estabilizado (1 PV)'),
-                  ),
-                if (ficha.enlouquecendo)
-                  OutlinedButton(
-                    onPressed: () {
-                      ficha.dados['acalmado'] =
-                          FichaOP.paraIntSeguro(ficha.dados['acalmado']) + 1;
-                      ficha.san = 1;
-                      ficha.turnosEnlouquecendo = 0;
-                      _salvar();
-                    },
-                    child: const Text('Acalmado (1 SAN)'),
-                  ),
-                if (ficha.insano)
-                  TextButton(
-                    onPressed: () {
-                      ficha.insano = false;
-                      _salvar();
-                    },
-                    child: const Text('Desfazer insano'),
-                  ),
-                OutlinedButton.icon(
-                  onPressed: () {
-                    ficha.fimDeCena();
-                    _salvar();
-                    ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-                      const SnackBar(
-                        content: Text('Fim de cena: temporários, condições e '
-                            'contadores zerados.'),
-                      ),
-                    );
-                  },
-                  icon: const Icon(Icons.flag_outlined, size: 16),
-                  label: const Text('Fim de cena'),
-                ),
-              ]),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _contadorDeTurnos(
-      String texto, int turnos, ValueChanged<int> grava, Color cor) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 8),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(texto, style: TextStyle(fontSize: 12, color: cor)),
-          Row(
-            children: [
-              for (var i = 1; i <= 3; i++)
-                Padding(
-                  padding: const EdgeInsets.only(right: 6, top: 4),
-                  child: Icon(
-                    i <= turnos ? Icons.circle : Icons.circle_outlined,
-                    size: 16,
-                    color: cor,
-                  ),
-                ),
-              const Spacer(),
-              if (!leitura)
-                TextButton(
-                  onPressed: turnos >= 3
-                      ? null
-                      : () {
-                          grava(turnos + 1);
-                          _salvar();
-                        },
-                  child: const Text('+1 turno'),
-                ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// As condições do livro, com efeito já aplicado em Defesa, testes e
-  /// deslocamento. Tocar liga e desliga; a que piora com repetição avisa.
-  Widget _condicoes() {
-    final ativas = ficha.condicoes;
-    final implicitas = {
-      for (final c in Condicoes.expandir(ativas))
-        if (!ativas.contains(c.nome)) c.nome,
-    };
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(10),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Wrap(
-              spacing: 6,
-              runSpacing: 2,
-              children: [
-                for (final c in Condicoes.todas)
-                  if (!leitura || ativas.contains(c.nome))
-                    FilterChip(
-                      label: Text(c.nome, style: const TextStyle(fontSize: 12)),
-                      tooltip: c.efeito,
-                      selected: ativas.contains(c.nome) ||
-                          implicitas.contains(c.nome),
-                      showCheckmark: false,
-                      visualDensity: VisualDensity.compact,
-                      selectedColor: implicitas.contains(c.nome)
-                          ? Cores.carta2
-                          : Cores.sangue.withValues(alpha: .22),
-                      onSelected: leitura
-                          ? null
-                          : (_) => _alternarCondicao(c),
-                    ),
-              ],
-            ),
-            for (final c in Condicoes.expandir(ativas))
-              Padding(
-                padding: const EdgeInsets.only(top: 4),
-                child: Text('${c.nome}: ${c.efeito}',
-                    style: const TextStyle(fontSize: 12, color: Cores.tinta2)),
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  /// Tocar numa condição que já vale e que piora com repetição pergunta:
-  /// tirar ou pegar de novo (abalado → apavorado, fraco → debilitado…).
-  Future<void> _alternarCondicao(Condicao c) async {
-    final ativas = ficha.condicoes;
-    final jaVale = Condicoes.expandir(ativas).any((x) => x.nome == c.nome);
-    if (jaVale && c.piora.isNotEmpty) {
-      final escolha = await showDialog<String>(
-        context: context,
-        builder: (ctx) => AlertDialog(
-          title: Text(c.nome),
-          content: Text('Ficar ${c.nome.toLowerCase()} de novo vira '
-              '${c.piora.toLowerCase()}.'),
-          actions: [
-            if (ativas.contains(c.nome))
-              TextButton(
-                  onPressed: () => Navigator.pop(ctx, 'tirar'),
-                  child: const Text('Tirar')),
-            TextButton(
-                onPressed: () => Navigator.pop(ctx, 'piorar'),
-                child: Text('Pegar de novo (${c.piora})')),
-          ],
-        ),
-      );
-      if (escolha == 'tirar') {
-        ficha.alternarCondicao(c.nome);
-      } else if (escolha == 'piorar') {
-        ficha.condicoes = [
-          for (final a in ativas)
-            if (a != c.nome) a,
-          c.piora,
-        ];
-      } else {
-        return;
-      }
-    } else {
-      ficha.alternarCondicao(c.nome);
-    }
-    _salvar();
-  }
-
-  /// Trilha da classe, do catálogo — escolher já põe as habilidades que o
-  /// NEX dá. "Outra" deixa digitar (trilha de campanha, sem automação).
+  /// Trilha da classe, só do Livro de Regras (p. 26–35) — escolher já põe
+  /// as habilidades que o NEX dá. Nunca é texto livre: uma trilha antiga fora
+  /// da lista continua aparecendo até ser trocada.
   Widget _seletorTrilha() {
-    final c = ficha.classeOP;
-    final opcoes = c == null ? const <Trilha>[] : DadosOP.trilhasDe(c.nome);
-    final conhecida = opcoes.any((t) => t.nome == ficha.trilha);
-    if (opcoes.isEmpty || (!conhecida && ficha.trilha.isNotEmpty)) {
-      return _campoTexto('Trilha', ficha.trilha, (v) => ficha.trilha = v);
-    }
-    return DropdownButtonFormField<String>(
+    return SeletorTrilha(
       key: ValueKey('trilha-${ficha.classe}-${ficha.trilha}'),
-      isExpanded: true,
-      initialValue: conhecida ? ficha.trilha : '',
-      decoration: const InputDecoration(labelText: 'Trilha', isDense: true),
-      dropdownColor: Cores.carta2,
-      items: [
-        const DropdownMenuItem(value: '', child: Text('—')),
-        for (final t in opcoes)
-          DropdownMenuItem(
-            value: t.nome,
-            child: Text(
-                '${t.nome}${t.fonte != 'Livro de Regras' ? ' (SAH)' : ''}'),
-          ),
-      ],
+      classe: ficha.classe,
+      valor: ficha.trilha,
+      nex: ficha.nex,
       onChanged: leitura
           ? null
           : (v) {
-              ficha.trilha = v ?? '';
+              ficha.trilha = v;
               final (entrou, saiu) = ficha.sincronizarTrilha();
               _salvar();
               _avisarTrilha(entrou, saiu);
@@ -3111,12 +4414,16 @@ class _FichaScreenState extends State<FichaScreen> {
 
   void _avisarTrilha(List<String> entrou, List<String> saiu) {
     if (entrou.isEmpty && saiu.isEmpty) return;
-    ScaffoldMessenger.maybeOf(context)?.showSnackBar(SnackBar(
-      content: Text([
-        if (entrou.isNotEmpty) 'Entrou: ${entrou.join(', ')}.',
-        if (saiu.isNotEmpty) 'Saiu: ${saiu.join(', ')}.',
-      ].join(' ')),
-    ));
+    ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+      SnackBar(
+        content: Text(
+          [
+            if (entrou.isNotEmpty) 'Entrou: ${entrou.join(', ')}.',
+            if (saiu.isNotEmpty) 'Saiu: ${saiu.join(', ')}.',
+          ].join(' '),
+        ),
+      ),
+    );
   }
 
   Widget _seletorClasse() {
@@ -3142,41 +4449,15 @@ class _FichaScreenState extends State<FichaScreen> {
   }
 
   /// Troca de classe com tudo que vem junto: NEX coerente (civil em 0%,
-  /// agente a partir de 5%), Treinamento Especial do sobrevivente, o que
-  /// a classe antiga deixou para trás e o que a nova dá.
+  /// agente a partir de 5%), o que a classe antiga deixou para trás e o
+  /// que a nova dá.
   Future<void> _trocarClasse(String nome) async {
     final antiga = ficha.classeOP;
     final nova = DadosOP.classePorNome(nome);
     if (nova == null) return;
 
-    var viraAgenteDeSobrevivente = false;
-    if (antiga?.porEstagio == true && nova.agente) {
-      viraAgenteDeSobrevivente = await showDialog<bool>(
-            context: context,
-            builder: (ctx) => AlertDialog(
-              title: const Text('Treinamento Especial?'),
-              content: Text(
-                  'O sobrevivente (estágio ${ficha.estagio}) vira $nome em '
-                  'NEX 5% e MANTÉM o que já tinha, somando o bônus da classe '
-                  '(SAH p. 32).'),
-              actions: [
-                TextButton(
-                    onPressed: () => Navigator.pop(ctx, false),
-                    child: const Text('Não, ficha nova de agente')),
-                TextButton(
-                    onPressed: () => Navigator.pop(ctx, true),
-                    child: const Text('Sim, Treinamento Especial')),
-              ],
-            ),
-          ) ??
-          false;
-    }
-
-    final estagio = ficha.estagio;
     ficha.classe = nome;
-    if (viraAgenteDeSobrevivente) ficha.exSobrevivente = estagio;
     if (!nova.agente) {
-      ficha.exSobrevivente = 0;
       ficha.nex = 0;
     } else if (ficha.nex == 0) {
       ficha.nex = 5;
@@ -3212,7 +4493,8 @@ class _FichaScreenState extends State<FichaScreen> {
     ])) {
       ficha.aplicarClasse(nova);
     }
-    ficha.trilha = DadosOP.trilhasDe(nome).any((t) => t.nome == ficha.trilha)
+    ficha.trilha =
+        DadosOP.trilhasParaEscolher(nome).any((t) => t.nome == ficha.trilha)
         ? ficha.trilha
         : '';
     ficha.sincronizarTrilha();
@@ -3232,19 +4514,22 @@ class _FichaScreenState extends State<FichaScreen> {
               for (final r in restos) Text('• $r'),
               const SizedBox(height: 8),
               const Text(
-                  'Perícias que você subiu de grau ficam. Manter tudo deixa '
-                  'pendências na ficha.',
-                  style: TextStyle(fontSize: 12, color: Cores.tinta2)),
+                'Perícias que você subiu de grau ficam. Manter tudo deixa '
+                'pendências na ficha.',
+                style: TextStyle(fontSize: 12, color: Cores.tinta2),
+              ),
             ],
           ),
         ),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('Manter')),
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Manter'),
+          ),
           TextButton(
-              onPressed: () => Navigator.pop(ctx, true),
-              child: const Text('Tirar')),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Tirar'),
+          ),
         ],
       ),
     );
@@ -3264,8 +4549,10 @@ class _FichaScreenState extends State<FichaScreen> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Preencho na ficha:',
-                style: TextStyle(color: Cores.tinta2, fontSize: 13)),
+            const Text(
+              'Preencho na ficha:',
+              style: TextStyle(color: Cores.tinta2, fontSize: 13),
+            ),
             const SizedBox(height: 6),
             for (final g in ganhos)
               Padding(
@@ -3273,17 +4560,21 @@ class _FichaScreenState extends State<FichaScreen> {
                 child: Text('• $g'),
               ),
             const SizedBox(height: 8),
-            const Text('Nada é apagado: o que você já treinou continua.',
-                style: TextStyle(color: Cores.tinta2, fontSize: 12)),
+            const Text(
+              'Nada é apagado: o que você já treinou continua.',
+              style: TextStyle(color: Cores.tinta2, fontSize: 12),
+            ),
           ],
         ),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('Só trocar o nome')),
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Só trocar o nome'),
+          ),
           TextButton(
-              onPressed: () => Navigator.pop(ctx, true),
-              child: const Text('Preencher')),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Preencher'),
+          ),
         ],
       ),
     );
@@ -3300,17 +4591,7 @@ class _FichaScreenState extends State<FichaScreen> {
       dropdownColor: Cores.carta2,
       items: [
         for (final o in DadosOP.origens)
-          DropdownMenuItem(
-            value: o.nome,
-            child: Row(
-              children: [
-                Expanded(child: Text(o.nome)),
-                if (o.fonte != 'Livro de Regras')
-                  const Text('SAH',
-                      style: TextStyle(fontSize: 10, color: Cores.tinta2)),
-              ],
-            ),
-          ),
+          DropdownMenuItem(value: o.nome, child: Text(o.nome)),
       ],
       onChanged: leitura
           ? null
@@ -3349,8 +4630,10 @@ class _FichaScreenState extends State<FichaScreen> {
     if (DadosOP.patentes.isEmpty || !(ficha.classeOP?.agente ?? true)) {
       return const Padding(
         padding: EdgeInsets.only(top: 12),
-        child: Text('Sem patente (civil)',
-            style: TextStyle(fontSize: 12, color: Cores.tinta2)),
+        child: Text(
+          'Sem patente (civil)',
+          style: TextStyle(fontSize: 12, color: Cores.tinta2),
+        ),
       );
     }
     return DropdownButtonFormField<String>(

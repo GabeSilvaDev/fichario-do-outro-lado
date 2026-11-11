@@ -7,8 +7,7 @@ import '../regras/poderes.dart';
 import '../theme.dart';
 import '../util/texto.dart';
 
-/// Escolhe um poder do catálogo para a ficha: de classe, gerais (SAH),
-/// paranormais e o 1º poder de outra trilha (Versatilidade). Mostra na hora
+/// Escolhe um poder do catálogo para a ficha: de classe, paranormais e o 1º poder de outra trilha (Versatilidade). Mostra na hora
 /// se a ficha cumpre o pré-requisito e se o poder já foi escolhido.
 class PoderesScreen extends StatefulWidget {
   final FichaOP ficha;
@@ -30,13 +29,12 @@ class _PoderesScreenState extends State<PoderesScreen> {
       for (final p in DadosOP.poderes)
         if (switch (aba) {
           0 => p.tipo == 'classe' && p.classe == classe,
-          1 => p.tipo == 'geral',
-          2 => p.tipo == 'paranormal',
+          1 => p.tipo == 'paranormal',
           _ =>
             p.tipo == 'trilha' &&
                 p.classe == classe &&
                 p.trilha != f.trilha &&
-                (p.nex == 10 || p.estagio == 2),
+                p.nex == 10,
         })
           if (_filtro.isEmpty ||
               casaBusca(p.nome, _filtro) ||
@@ -48,7 +46,7 @@ class _PoderesScreenState extends State<PoderesScreen> {
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: 4,
+      length: 3,
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Escolher poder'),
@@ -56,7 +54,6 @@ class _PoderesScreenState extends State<PoderesScreen> {
             isScrollable: true,
             tabs: [
               Tab(text: 'Da classe'),
-              Tab(text: 'Gerais'),
               Tab(text: 'Paranormais'),
               Tab(text: 'Outra trilha'),
             ],
@@ -85,16 +82,11 @@ class _PoderesScreenState extends State<PoderesScreen> {
                   ),
                   _lista(
                     1,
-                    'Poderes gerais (SAH p. 33): valem no lugar de '
-                    'um poder de classe.',
-                  ),
-                  _lista(
-                    2,
                     'Cada poder paranormal é um Transcender: não '
                     'ganha a SAN do NEX em que entra.',
                   ),
                   _lista(
-                    3,
+                    2,
                     'Versatilidade (NEX 50%): o 1º poder de outra '
                     'trilha da sua classe.',
                   ),
@@ -107,11 +99,40 @@ class _PoderesScreenState extends State<PoderesScreen> {
     );
   }
 
+  bool get _cobra => !f.ehNpc && !f.modoLivre;
+  int get _esperado => poderesQueONexDa(f);
+  int get _tem => f.habilidades.where((h) => ehPoderEscolhido(f, h)).length;
+
   Widget _lista(int aba, String explicacao) {
     final poderes = _daAba(aba);
+    final cheio = _cobra && _tem >= _esperado;
     return ListView(
       padding: const EdgeInsets.fromLTRB(14, 4, 14, 24),
       children: [
+        if (_cobra)
+          Container(
+            margin: const EdgeInsets.only(bottom: 8),
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: (cheio ? Cores.sangue : Cores.conhecimento).withValues(
+                alpha: .1,
+              ),
+              border: Border.all(
+                color: (cheio ? Cores.sangue : Cores.conhecimento).withValues(
+                  alpha: .5,
+                ),
+              ),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              'NEX ${f.nex}%: $_esperado poder(es) à escolha · a ficha tem '
+              '$_tem. ${cheio ? 'Escolher mais fica fora da regra (a ficha avisa).' : 'Pode escolher mais ${_esperado - _tem}.'}',
+              style: TextStyle(
+                fontSize: 12.5,
+                color: cheio ? Cores.sangue : Cores.conhecimento,
+              ),
+            ),
+          ),
         Text(
           explicacao,
           style: const TextStyle(fontSize: 12, color: Cores.tinta2),
@@ -136,7 +157,20 @@ class _PoderesScreenState extends State<PoderesScreen> {
     final jaTem =
         !p.repetivel && f.habilidades.any((h) => h['poder'] == p.nome);
     final bloqueado = jaTem;
+    final avisos = <String>[
+      if (_cobra && _tem >= _esperado)
+        'Acima do que o NEX ${f.nex}% dá ($_esperado).',
+      if (_cobra && p.tipo == 'trilha' && f.nex < 50)
+        'Versatilidade (outra trilha) só a partir de NEX 50%.',
+    ];
     return Card(
+      key: ValueKey('poder-${p.nome}'),
+      shape: (avisos.isEmpty && (falta == null || !_cobra)) || bloqueado
+          ? null
+          : RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+              side: const BorderSide(color: Cores.sangue),
+            ),
       child: ListTile(
         title: Text(
           '${p.nome}${p.elemento.isNotEmpty ? ' · ${p.elemento}' : ''}'
@@ -165,7 +199,13 @@ class _PoderesScreenState extends State<PoderesScreen> {
               const Text(
                 'Já está na ficha.',
                 style: TextStyle(fontSize: 12, color: Cores.tinta2),
-              ),
+              )
+            else
+              for (final a in avisos)
+                Text(
+                  '⚠ $a',
+                  style: const TextStyle(fontSize: 12, color: Cores.sangue),
+                ),
             Text(
               '${p.fonte} p. ${p.pagina}',
               style: const TextStyle(fontSize: 10, color: Cores.tinta2),
@@ -176,8 +216,14 @@ class _PoderesScreenState extends State<PoderesScreen> {
         trailing: IconButton(
           tooltip: 'Pôr na ficha',
           icon: Icon(
-            Icons.add_circle_outline,
-            color: bloqueado ? Cores.linha : Cores.energiaViva,
+            avisos.isEmpty && (falta == null || !_cobra)
+                ? Icons.add_circle_outline
+                : Icons.warning_amber,
+            color: bloqueado
+                ? Cores.linha
+                : (avisos.isEmpty && (falta == null || !_cobra)
+                      ? Cores.energiaViva
+                      : Cores.sangue),
           ),
           onPressed: bloqueado ? null : () => Navigator.of(context).pop(p),
         ),

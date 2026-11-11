@@ -1,7 +1,9 @@
 import '../data/dados_op.dart';
 import '../regras/efeitos.dart';
+import '../regras/melhorias.dart';
 import '../regras/opcionais.dart';
 import '../regras/poderes.dart';
+import '../util/texto.dart';
 import 'normalizar.dart';
 
 /// A ficha de Ordem Paranormal.
@@ -16,6 +18,60 @@ class FichaOP {
   /// antiga não derruba tela por tipo errado.
   FichaOP(this.dados) {
     normalizarFicha(dados);
+    _acertarNomeDaTrilha();
+    _acertarProficiencias();
+  }
+
+  /// As proficiências do livro (p. 54 e 62). A ficha só escolhe entre estas.
+  static const List<String> proficienciasDoLivro = [
+    'Armas simples',
+    'Armas táticas',
+    'Armas pesadas',
+    'Proteções leves',
+    'Proteções pesadas',
+  ];
+
+  /// Chave de comparação: sem caixa, sem acento e sem plural ("arma
+  /// tatica" = "Armas táticas").
+  static String chaveDeProficiencia(String s) => semAcento(s)
+      .toLowerCase()
+      .trim()
+      .replaceAll(RegExp(r's\b'), '')
+      .replaceAll(RegExp(r'\s+'), ' ');
+
+  /// Proficiência digitada à mão na versão antiga vira o nome do livro;
+  /// repetidas somem.
+  void _acertarProficiencias() {
+    final bruta = dados['proficiencias'];
+    if (bruta is! List || bruta.isEmpty) return;
+    final saida = <String>[];
+    final vistas = <String>{};
+    for (final item in bruta) {
+      final texto = '$item'.trim();
+      if (texto.isEmpty) continue;
+      final chave = chaveDeProficiencia(texto);
+      final oficial = proficienciasDoLivro.where(
+        (p) => chaveDeProficiencia(p) == chave,
+      );
+      final nome = oficial.isEmpty ? texto : oficial.first;
+      if (vistas.add(chaveDeProficiencia(nome))) saida.add(nome);
+    }
+    dados['proficiencias'] = saida;
+  }
+
+  /// Trilha digitada à mão na versão antiga ("flagelador", "lamina
+  /// paranormal") vira o nome do catálogo, sem diferença de caixa nem de
+  /// acento — senão as habilidades dela nunca entram.
+  void _acertarNomeDaTrilha() {
+    final atual = '${dados['trilha'] ?? ''}'.trim();
+    if (atual.isEmpty || DadosOP.trilhaPorNome(atual) != null) return;
+    String chave(String t) => semAcento(t).toLowerCase().trim();
+    for (final t in DadosOP.trilhas) {
+      if (chave(t.nome) == chave(atual)) {
+        dados['trilha'] = t.nome;
+        return;
+      }
+    }
   }
 
   /// NPC/criatura já nasce em modo livre: nenhuma ameaça do livro cabe no
@@ -28,46 +84,46 @@ class FichaOP {
   }
 
   factory FichaOP.nova(String id) => FichaOP({
-        'id': id,
-        'nome': '',
-        'jogador': '',
-        'classe': 'Mundano',
-        'trilha': '',
-        'origem': '',
-        'patente': 'Recruta',
-        'nex': 0,
-        'deslocamento': 9,
-        'atributos': {'AGI': 1, 'FOR': 1, 'INT': 1, 'PRE': 1, 'VIG': 1},
-        'pv': 9,
-        'san': 8,
-        'pe': 2,
-        'defesaBonus': 0,
-        'protecao': '',
-        'resistencias': '',
-        'pericias': <String, dynamic>{},
-        'ataques': <dynamic>[],
-        'habilidades': <dynamic>[],
-        'rituais': <dynamic>[],
-        'inventario': <dynamic>[],
-        'nacionalidade': '',
-        'idade': 0,
-        'proficiencias': <dynamic>[],
-        'emCombate': false,
-        'morto': false,
-        'ocultarPv': false,
-        'ocultarSan': false,
-        'ocultarPe': false,
-        'historia': '',
-        'aparencia': '',
-        'primeiroEncontro': '',
-        'fobias': '',
-        'favoritos': '',
-        'personalidade': '',
-        'piorPesadelo': '',
-        'anotacoes': '',
-        'retrato': '',
-        'criadaEm': DateTime.now().toIso8601String(),
-      });
+    'id': id,
+    'nome': '',
+    'jogador': '',
+    'classe': 'Mundano',
+    'trilha': '',
+    'origem': '',
+    'patente': 'Recruta',
+    'nex': 0,
+    'deslocamento': 9,
+    'atributos': {'AGI': 1, 'FOR': 1, 'INT': 1, 'PRE': 1, 'VIG': 1},
+    'pv': 9,
+    'san': 8,
+    'pe': 2,
+    'defesaBonus': 0,
+    'protecao': '',
+    'resistencias': '',
+    'pericias': <String, dynamic>{},
+    'ataques': <dynamic>[],
+    'habilidades': <dynamic>[],
+    'rituais': <dynamic>[],
+    'inventario': <dynamic>[],
+    'nacionalidade': '',
+    'idade': 0,
+    'proficiencias': <dynamic>[],
+    'emCombate': false,
+    'morto': false,
+    'ocultarPv': false,
+    'ocultarSan': false,
+    'ocultarPe': false,
+    'historia': '',
+    'aparencia': '',
+    'primeiroEncontro': '',
+    'fobias': '',
+    'favoritos': '',
+    'personalidade': '',
+    'piorPesadelo': '',
+    'anotacoes': '',
+    'retrato': '',
+    'criadaEm': DateTime.now().toIso8601String(),
+  });
 
   /// Ficha de NPC/criatura do mestre. NPC não vai para a mesa online: a
   /// mesa publica o personagem do jogador, e o bestiário é do mestre.
@@ -118,15 +174,6 @@ class FichaOP {
   int get nex => (dados['nex'] ?? 0) as int;
   set nex(int v) => _mexendoNosMaximos(() => dados['nex'] = v.clamp(0, 99));
 
-  /// Estágio do Sobrevivente (1 a 5). Ele não sobe de NEX: sobe um estágio
-  /// no fim de cada missão. Classe normal ignora este campo.
-  int get estagio => ((dados['estagio'] ?? 1) as int).clamp(1, 5);
-  set estagio(int v) =>
-      _mexendoNosMaximos(() => dados['estagio'] = v.clamp(1, 5));
-
-  bool get porEstagio =>
-      DadosOP.classePorNome(classe)?.porEstagio ?? false;
-
   int get deslocamento => (dados['deslocamento'] ?? 9) as int;
   set deslocamento(int v) => dados['deslocamento'] = v;
 
@@ -163,14 +210,13 @@ class FichaOP {
   bool get morto => (dados['morto'] ?? false) as bool;
   set morto(bool v) => dados['morto'] = v;
 
-  /// O jogador pode esconder um recurso do painel do mestre — a ficha
-  /// oficial tem esses três botões, e quem joga com sanidade secreta usa.
-  bool oculto(String recurso) =>
-      (dados['ocultar${recurso[0].toUpperCase()}${recurso.substring(1)}'] ??
-          false) as bool;
+  /// Esconder recurso do mestre saiu da ficha (o estado na mesa é narrado,
+  /// não controlado pelo app): um valor antigo gravado não esconde mais nada.
+  bool oculto(String recurso) => false;
 
-  void definirOculto(String recurso, bool valor) => dados[
-      'ocultar${recurso[0].toUpperCase()}${recurso.substring(1)}'] = valor;
+  void definirOculto(String recurso, bool valor) =>
+      dados['ocultar${recurso[0].toUpperCase()}${recurso.substring(1)}'] =
+          valor;
 
   String get protecao => (dados['protecao'] ?? '') as String;
   set protecao(String v) => dados['protecao'] = v;
@@ -186,7 +232,8 @@ class FichaOP {
   /// Teto 5 na ficha comum; no modo livre vai a 20, que é onde as fichas
   /// de ameaça do livro chegam.
   void definirAtributo(String sigla, int valor) => _mexendoNosMaximos(
-      () => _atributos[sigla] = valor.clamp(0, modoLivre ? 20 : 5));
+    () => _atributos[sigla] = valor.clamp(0, modoLivre ? 20 : 5),
+  );
 
   /// O atual nunca passa do máximo: cura não enche além da conta, e bônus
   /// acima disso é PV temporário.
@@ -230,7 +277,11 @@ class FichaOP {
         DadosOP.classePorNome(classe) == null) {
       return null;
     }
-    return switch (recurso) { 'pv' => pvMax, 'san' => sanMax, _ => peMax };
+    return switch (recurso) {
+      'pv' => pvMax,
+      'san' => sanMax,
+      _ => peMax,
+    };
   }
 
   int _teto(String recurso) => _maximoReal(recurso) ?? 999;
@@ -274,8 +325,8 @@ class FichaOP {
   }
 
   /// Nível de exposição: NEX 5% = 1 … 99% = 20. Vários poderes de origem
-  /// somam "por 5% de NEX", que é o mesmo que por nível. Mundano e
-  /// Sobrevivente não têm NEX: um valor antigo guardado não conta.
+  /// somam "por 5% de NEX", que é o mesmo que por nível. O Mundano não tem
+  /// NEX: um valor antigo guardado não conta.
   int get nivelNex {
     if (classeOP?.agente == false) return 0;
     if (nex <= 0) return 0;
@@ -299,11 +350,8 @@ class FichaOP {
     final e = efeitosBase;
     final n = nivelNex;
     final vig = atributo('VIG');
-    var total = _baseSobrevivente('pv', c) ??
-        c.pvMax(nex, vig, estagio: estagio);
+    var total = c.pvMax(nex, vig);
     total += e.pvFixo + e.pvPorNivel * n;
-    // Ferimento debilitante no Vigor: −1 PV máximo por 5% de NEX (SAH p. 105).
-    total -= n * ferimentosEm('VIG');
     return total < 1 ? 1 : total;
   }
 
@@ -313,12 +361,12 @@ class FichaOP {
     final c = classeOP;
     if (c == null) return san;
     final e = efeitosBase;
-    var total = _baseSobrevivente('san', c) ?? c.sanMax(nex, estagio: estagio);
+    var total = c.sanMax(nex);
     total += e.sanFixo + e.sanPorNivel * nivelNex;
     // Transcender: não ganha a SAN do NEX em que transcendeu (p. 26).
     total -= transcendencias * (c.sanPorNivel + e.sanPorNivel);
     if (origemAtual?.flag('sanMetade') ?? false) {
-      final inicial = _sanInicial(c);
+      final inicial = c.sanIni;
       total -= inicial - inicial ~/ 2;
     }
     total -= sanPerdida;
@@ -332,8 +380,7 @@ class FichaOP {
     if (c == null) return pe;
     final e = efeitosBase;
     final n = nivelNex;
-    var total = _baseSobrevivente('pe', c) ??
-        c.peMax(nex, atributo('PRE'), estagio: estagio);
+    var total = c.peMax(nex, atributo('PRE'));
     total += e.peFixo + e.pePorNivel * n + e.pePorDoisNiveis * (n ~/ 2);
     if (e.peSomaAtributo.isNotEmpty) total += atributo(e.peSomaAtributo);
     final porImpar = origemAtual?.mod('pePorNivelImpar') ?? 0;
@@ -342,54 +389,6 @@ class FichaOP {
     }
     return total < 0 ? 0 : total;
   }
-
-  /// Sobrevivente que virou agente (Treinamento Especial, SAH p. 32): o
-  /// agente parte do que o sobrevivente já tinha, mais o bônus da classe,
-  /// e segue ganhando por NEX. Null se não é o caso.
-  int? _baseSobrevivente(String recurso, ClasseOP c) {
-    final e = exSobrevivente;
-    if (e <= 0 || !c.agente) return null;
-    final sobrevivente = DadosOP.classePorNome('Sobrevivente');
-    if (sobrevivente == null) return null;
-    final bonus = DadosOP.transicaoSobrevivente(c.nome);
-    final n = nivelNex < 1 ? 1 : nivelNex;
-    switch (recurso) {
-      case 'pv':
-        final vig = atributo('VIG');
-        return sobrevivente.pvMax(0, vig, estagio: e) +
-            (bonus['pvFixo'] ?? 0) +
-            (n - 1) * (c.pvPorNivel + vig);
-      case 'pe':
-        final pre = atributo('PRE');
-        return sobrevivente.peMax(0, pre, estagio: e) +
-            (bonus['peFixo'] ?? 0) +
-            (n - 1) * (c.pePorNivel + pre);
-      default:
-        return sobrevivente.sanMax(0, estagio: e) +
-            (bonus['sanFixo'] ?? 0) +
-            (n - 1) * c.sanPorNivel;
-    }
-  }
-
-  /// Sanidade com que o personagem começou o jogo: a do Sobrevivente, se
-  /// ele começou assim, senão a inicial da classe.
-  int _sanInicial(ClasseOP c) {
-    if (exSobrevivente > 0 && c.agente) {
-      final sobrevivente = DadosOP.classePorNome('Sobrevivente');
-      if (sobrevivente != null) return sobrevivente.sanIni;
-    }
-    return c.sanIni;
-  }
-
-  /// Estágio em que o sobrevivente virou agente (0 = nunca foi).
-  int get exSobrevivente => (dados['exSobrevivente'] ?? 0) as int;
-  set exSobrevivente(int v) => _mexendoNosMaximos(() {
-        if (v <= 0) {
-          dados.remove('exSobrevivente');
-        } else {
-          dados['exSobrevivente'] = v.clamp(1, 5);
-        }
-      });
 
   /// Quantos Transcender a ficha tem (poder paranormal conta um).
   int get transcendencias =>
@@ -565,7 +564,11 @@ class FichaOP {
   /// Espaços da proteção vestida e do escudo (p. 62): leve 2, pesada 5,
   /// escudo 2. Contam na carga mesmo fora do inventário.
   int get espacosProtecao =>
-      (protecaoTipo == 'Leve' ? 2 : protecaoTipo == 'Pesada' ? 5 : 0) +
+      (protecaoTipo == 'Leve'
+          ? 2
+          : protecaoTipo == 'Pesada'
+          ? 5
+          : 0) +
       (escudo ? 2 : 0);
 
   int get cargaUsada {
@@ -616,7 +619,7 @@ class FichaOP {
   }
 
   // ---------------------------------------------------------------------
-  // Efeitos: origem, poderes, idade, condições e ferimentos, já somados.
+  // Efeitos: origem, poderes, idade e proteção, já somados.
   // ---------------------------------------------------------------------
 
   /// O que muda os máximos e a carga. Não inclui o que depende de estado
@@ -673,12 +676,8 @@ class FichaOP {
     }
 
     if (estado) {
-      e.aplicarCondicoes(condicoes);
-      // Ferimento debilitante: −O no atributo (SAH p. 105). Soma com
-      // condição, por ser outra fonte.
-      for (final a in ferimentos) {
-        e.dadosPenalidade[a] = (e.dadosPenalidade[a] ?? 0) + 1;
-      }
+      // Condições não entram mais nas contas: quem controla é o mestre, na
+      // narrativa. Uma lista antiga gravada na ficha é ignorada.
       // Proteção ou escudo sem proficiência: −OO em For e Agi (p. 62).
       if (semProficienciaEmProtecao != null) {
         for (final a in ['FOR', 'AGI']) {
@@ -690,12 +689,14 @@ class FichaOP {
   }
 
   bool _vale(String quando) => switch (quando) {
-        'machucado' => estaMachucado,
-        'protecaoPesada' => protecaoTipo == 'Pesada',
-        'semProtecao' => protecaoTipo == 'Nenhuma',
-        'cenaDeAcao' => emCombate,
-        _ => false,
-      };
+    'machucado' => estaMachucado,
+    'protecaoPesada' => protecaoTipo == 'Pesada',
+    'semProtecao' => protecaoTipo == 'Nenhuma',
+    // "Em combate" saiu da ficha: bônus de cena de ação o jogador soma
+    // na hora, como o mestre narrar.
+    'cenaDeAcao' => false,
+    _ => false,
+  };
 
   // ---------------------------------------------------------------------
   // Estados que vêm dos recursos (p. 88 e p. 310–311).
@@ -747,10 +748,16 @@ class FichaOP {
   // Listas de estado.
   // ---------------------------------------------------------------------
 
+  /// Pendências que o jogador mandou ignorar (por id). O painel some
+  /// enquanto só restarem estas; uma nova faz ele voltar.
+  Set<String> get pendenciasIgnoradas => {..._textos('pendenciasIgnoradas')};
+  set pendenciasIgnoradas(Set<String> v) =>
+      _gravarTextos('pendenciasIgnoradas', v.toList()..sort());
+
   List<String> _textos(String chave) => [
-        for (final v in (dados[chave] ?? const []) as List)
-          if (v is String) v,
-      ];
+    for (final v in (dados[chave] ?? const []) as List)
+      if (v is String) v,
+  ];
 
   void _gravarTextos(String chave, List<String> v) {
     if (v.isEmpty) {
@@ -775,24 +782,15 @@ class FichaOP {
     condicoes = atuais;
   }
 
-  /// Ferimentos debilitantes (SAH p. 105): siglas de atributo.
-  List<String> get ferimentos => _textos('ferimentos');
-  set ferimentos(List<String> v) =>
-      _mexendoNosMaximos(() => _gravarTextos('ferimentos', v));
-
-  /// Ferimentos no mesmo atributo se acumulam (SAH p. 105).
-  int ferimentosEm(String sigla) =>
-      ferimentos.where((a) => a == sigla).length;
-
   /// Regra opcional de idade (p. 172): faixa etária e desvantagens.
   String get faixaEtaria => (dados['faixaEtaria'] ?? '') as String;
   set faixaEtaria(String v) => _mexendoNosMaximos(() {
-        if (v.isEmpty) {
-          dados.remove('faixaEtaria');
-        } else {
-          dados['faixaEtaria'] = v;
-        }
-      });
+    if (v.isEmpty) {
+      dados.remove('faixaEtaria');
+    } else {
+      dados['faixaEtaria'] = v;
+    }
+  });
 
   List<String> get desvantagens => _textos('desvantagens');
   set desvantagens(List<String> v) =>
@@ -801,40 +799,12 @@ class FichaOP {
   /// Elemento de afinidade, escolhido a partir do NEX 50% (p. 110).
   String get afinidade => (dados['afinidade'] ?? '') as String;
   set afinidade(String v) => _mexendoNosMaximos(() {
-        if (v.isEmpty) {
-          dados.remove('afinidade');
-        } else {
-          dados['afinidade'] = v;
-        }
-      });
-
-  /// Regra opcional "Jogando sem Sanidade" (SAH p. 104): Pontos de
-  /// Determinação no lugar de PE e SAN.
-  bool get regraDeterminacao => dados['regraDeterminacao'] == true;
-  set regraDeterminacao(bool v) {
-    if (v) {
-      dados['regraDeterminacao'] = true;
-      dados['pd'] ??= pdMax;
+    if (v.isEmpty) {
+      dados.remove('afinidade');
     } else {
-      dados.remove('regraDeterminacao');
+      dados['afinidade'] = v;
     }
-  }
-
-  int get pdMax {
-    final c = classeOP;
-    final pre = atributo('PRE');
-    final (ini, por, somaPre) = RegrasOpcionais.determinacao[c?.nome] ??
-        RegrasOpcionais.determinacao['Sobrevivente']!;
-    if (c == null || !c.agente) {
-      final e = c?.porEstagio == true ? estagio : 1;
-      return ini + pre + (e - 1) * por;
-    }
-    final n = nivelNex < 1 ? 1 : nivelNex;
-    return ini + pre + (n - 1) * (por + (somaPre ? pre : 0));
-  }
-
-  int get pd => ((dados['pd'] ?? pdMax) as int).clamp(0, pdMax);
-  set pd(int v) => dados['pd'] = v.clamp(0, pdMax);
+  });
 
   /// Custo real de um ritual: o do catálogo, +1 alquebrado, menos as
   /// reduções de poderes. Nunca abaixo de 1 PE (p. 78).
@@ -863,12 +833,32 @@ class FichaOP {
 
   static String _semCaixa(String s) => s.trim().toLowerCase();
 
-  /// Tem a proficiência? Sem diferença de maiúscula, e contando as que os
-  /// poderes dão.
-  bool proficiente(String nome) {
-    final alvo = _semCaixa(nome);
-    return proficiencias.any((p) => _semCaixa(p) == alvo) ||
-        efeitosBase.proficiencias.any((p) => _semCaixa(p) == alvo);
+  /// Tem a proficiência? Sem diferença de maiúscula, acento ou plural, e
+  /// contando as que os poderes e a origem dão.
+  bool proficiente(String nome) =>
+      proficienciaMarcada(nome) || proficienciaDePoder(nome);
+
+  /// Marcada na ficha (pela classe ou à mão).
+  bool proficienciaMarcada(String nome) {
+    final alvo = chaveDeProficiencia(nome);
+    return proficiencias.any((p) => chaveDeProficiencia(p) == alvo);
+  }
+
+  /// Dada por poder ou origem — não dá para desmarcar na ficha.
+  bool proficienciaDePoder(String nome) {
+    final alvo = chaveDeProficiencia(nome);
+    return efeitosBase.proficiencias.any((p) => chaveDeProficiencia(p) == alvo);
+  }
+
+  /// Liga ou desliga uma proficiência do livro.
+  void marcarProficiencia(String nome, bool tem) {
+    final alvo = chaveDeProficiencia(nome);
+    final lista = [
+      for (final p in proficiencias)
+        if (chaveDeProficiencia(p) != alvo) p,
+    ];
+    if (tem) lista.add(nome);
+    proficiencias = lista;
   }
 
   /// A proficiência que falta para a proteção e o escudo vestidos, ou null.
@@ -894,8 +884,8 @@ class FichaOP {
     final exigida = familia.contains('tática')
         ? 'Armas táticas'
         : familia.contains('pesada')
-            ? 'Armas pesadas'
-            : 'Armas simples';
+        ? 'Armas pesadas'
+        : 'Armas simples';
     return proficiente(exigida) ? null : exigida;
   }
 
@@ -919,25 +909,27 @@ class FichaOP {
       p.sofreCarga && (sobrecarregado || protecaoTipo == 'Pesada') ? 5 : 0;
 
   /// Quantos d20 e se fica com o melhor, depois de tirar [menos] dados.
-  /// Atributo 0 rola 2d20 e fica com o pior; cada ponto abaixo disso soma
-  /// mais um d20 no pior (SAH p. 81) — o livro básico não diz o que fazer
-  /// quando a penalidade passa do atributo.
+  /// Atributo 0 (ou menos, depois de penalidade) rola 2d20 e fica com o
+  /// pior (OPRPG, Testes).
   static (int, bool) dadosDoTeste(int atributo, int menos) {
     final efetivo = atributo - menos;
     if (efetivo >= 1) return (efetivo, true);
-    return (2 - efetivo, false);
+    return (2, false);
   }
 
   /// Dados e bônus do teste desta perícia: (quantidade de d20, melhor?,
-  /// bônus). Já com condições, ferimentos, carga, proteção e poderes.
-  (int, bool, int) testePericia(Pericia p, {String ataque = ''}) {
+  /// bônus). Já com carga, proteção e poderes.
+  (int, bool, int) testePericia(
+    Pericia p, {
+    String ataque = '',
+    String? atributoNoLugar,
+  }) {
     final e = efeitos;
-    final sigla = atributoPericia(p);
+    final sigla = atributoNoLugar ?? atributoPericia(p);
     final menos = e.dadosAMenos(p.nome, sigla, ataque: ataque);
     final (dados, melhor) = dadosDoTeste(atributo(sigla), menos);
-    final bonus = grauPericia(p.nome) +
-        bonusDeEfeitos(p.nome, e) -
-        penalidadeDeCarga(p);
+    final bonus =
+        grauPericia(p.nome) + bonusDeEfeitos(p.nome, e) - penalidadeDeCarga(p);
     return (dados, melhor, bonus);
   }
 
@@ -947,7 +939,7 @@ class FichaOP {
     final sigla = atributoPericia(p);
     final motivos = <String>[];
     final menos = e.dadosAMenos(p.nome, sigla, ataque: ataque);
-    if (menos > 0) motivos.add('−$menos d20 (condição/ferimento/proteção)');
+    if (menos > 0) motivos.add('−$menos d20 (proteção)');
     final carga = penalidadeDeCarga(p);
     if (carga > 0) {
       motivos.add(sobrecarregado ? '−5 sobrecarregado' : '−5 proteção pesada');
@@ -960,31 +952,73 @@ class FichaOP {
     return motivos;
   }
 
+  /// A arma do catálogo por trás deste ataque (pelo nome guardado em
+  /// `arma`, ou pelo nome do ataque), para ler as habilidades dela.
+  Map<String, dynamic>? armaDoCatalogo(Map<String, dynamic> a) =>
+      DadosOP.armaPorNome('${a['arma'] ?? a['nome'] ?? ''}');
+
+  /// Uma habilidade da arma: marcada no ataque ou na tabela do catálogo.
+  bool _flagDaArma(Map<String, dynamic> a, String flag) =>
+      a[flag] == true || armaDoCatalogo(a)?[flag] == true;
+
+  /// Modificações e maldições do ataque, com o que cabe na arma.
+  MelhoriasDoAtaque melhoriasDe(Map<String, dynamic> a) =>
+      MelhoriasDoAtaque(a, armaDoCatalogo(a));
+
   /// Teste de ataque e dano de uma arma da ficha, já com tudo aplicado.
-  ResumoAtaque resumoAtaque(Map<String, dynamic> a) {
+  /// [rajada]: arma automática disparando rajada (−1d20, +1 dado de dano).
+  ResumoAtaque resumoAtaque(Map<String, dynamic> a, {bool rajada = false}) {
+    final melhorias = melhoriasDe(a);
+    final ativas = melhorias.ativas;
+    int soma(int Function(Melhoria) f) =>
+        ativas.fold<int>(0, (s, m) => s + f(m));
     final e = efeitos;
     final periciaNome = '${a['pericia'] ?? 'Luta'}';
     final corpo = periciaNome == 'Luta';
+    final agil = _flagDaArma(a, 'agil');
+    final arremesso = _flagDaArma(a, 'arremesso') && periciaNome == 'Pontaria';
+    final somaForca = _flagDaArma(a, 'somaForca');
+    final automatica =
+        _flagDaArma(a, 'automatica') || ativas.any((m) => m.automatica);
+    final compensador = ativas.any((m) => m.compensador);
+    // Arma ágil: Agilidade no lugar da Força no ataque e no dano (p. 59).
+    final forca = atributo('FOR');
+    final usaAgi = agil && atributo('AGI') > forca;
+    final atributoDoDano = usaAgi ? 'AGI' : 'FOR';
     final uso = _semCaixa('${a['uso'] ?? ''}');
     final fogo = uso.contains('fogo');
-    final daOrigem = a['armaDaOrigem'] == true &&
+    final daOrigem =
+        a['armaDaOrigem'] == true &&
         (origemAtual?.flag('armaFavorita') ?? false);
     final pericia = DadosOP.pericias.where((x) => x.nome == periciaNome);
     var (dados, melhor, bonus) = pericia.isEmpty
         ? (1, true, 0)
-        : testePericia(pericia.first, ataque: corpo ? 'corpo' : 'distancia');
+        : testePericia(
+            pericia.first,
+            ataque: corpo ? 'corpo' : 'distancia',
+            atributoNoLugar: usaAgi && corpo ? 'AGI' : null,
+          );
     final prof = semProficienciaNaArma(a);
-    if (prof != null) {
-      (dados, melhor) = dadosDoTeste(
-          melhor ? dados : 2 - dados, 2);
+    // −d20 que a arma impõe: sem proficiência (2), motosserra (1), rajada (1).
+    final menosDados =
+        (prof != null ? 2 : 0) +
+        paraIntSeguro(
+          a['penalidadeDados'] ?? armaDoCatalogo(a)?['penalidadeDados'],
+        ) +
+        (rajada && automatica && !compensador ? 1 : 0);
+    if (menosDados > 0) {
+      (dados, melhor) = dadosDoTeste(melhor ? dados : 2 - dados, menosDados);
     }
-    bonus += paraIntSeguro(a['bonus']) + (daOrigem ? 1 : 0);
+    bonus +=
+        paraIntSeguro(a['bonus']) + (daOrigem ? 1 : 0) + soma((m) => m.ataque);
 
     var danoFixo = corpo ? e.danoCorpo : e.danoDistancia;
     if (fogo) danoFixo += e.danoFogo;
     if (daOrigem) danoFixo += 1;
-    // Força soma no dano corpo a corpo e de arremesso (p. 54).
-    if (corpo) danoFixo += atributo('FOR');
+    danoFixo += soma((m) => m.dano);
+    // Força soma no dano corpo a corpo e de arremesso (p. 54); o arco
+    // composto também soma (p. 58). Arma ágil troca pela Agilidade.
+    if (corpo || arremesso || somaForca) danoFixo += atributo(atributoDoDano);
     for (final (sigla, escopo) in e.danoSomaAtributo) {
       if (escopo == 'todos' ||
           (escopo == 'corpo' && corpo) ||
@@ -1005,12 +1039,30 @@ class FichaOP {
         margem = int.parse(t);
       }
     }
-    margem -= (corpo ? e.margemCorpo : e.margemDistancia) + (daOrigem ? 1 : 0);
-    mult += e.multiplicador;
+    // Predadora dobra a margem antes de qualquer aumento (p. 146):
+    // 19–20 (2 números) vira 17–20 (4 números).
+    if (ativas.any((m) => m.margemDobra)) margem = 21 - 2 * (21 - margem);
+    margem -=
+        (corpo ? e.margemCorpo : e.margemDistancia) +
+        (daOrigem ? 1 : 0) +
+        soma((m) => m.margem);
+    mult += e.multiplicador + soma((m) => m.multiplicador);
 
-    final danos = [
+    // "1d6/1d8" = uma mão / duas mãos; "1d6/1d6" (cajado) é um só.
+    final partes = {
       for (final d in '${a['dano'] ?? ''}'.split('/'))
         if (d.trim().isNotEmpty) d.trim(),
+    };
+    // Calibre grosso e rajada: +1 dado do tipo da arma. Lancinante: dados
+    // que entram junto com os da arma (multiplicam no crítico).
+    final maisDados = soma((m) => m.dadoArma) + (rajada && automatica ? 1 : 0);
+    final daArma = [
+      for (final m in ativas)
+        if (m.dadosArmaExtra.isNotEmpty) m.dadosArmaExtra,
+    ];
+    final danos = [
+      for (final d in partes)
+        [ResumoAtaque.maisDados(d, maisDados), ...daArma].join('+'),
     ];
     return ResumoAtaque(
       dados: dados,
@@ -1021,6 +1073,12 @@ class FichaOP {
       margem: margem.clamp(2, 20),
       multiplicador: mult,
       semProficiencia: prof,
+      automatica: automatica,
+      atributoNoDano: corpo || arremesso || somaForca ? atributoDoDano : '',
+      extras: [
+        for (final m in ativas)
+          if (m.danoExtra.isNotEmpty) m.danoExtra,
+      ],
     );
   }
 
@@ -1157,13 +1215,13 @@ class FichaOP {
     for (var i = 0; i < lista.length; i++) {
       final fonte = '${lista[i]['fonte'] ?? ''}';
       final nome = '${lista[i]['nome'] ?? ''}';
-      final daAntiga = fonte == 'classe:${antiga.nome}' ||
+      final daAntiga =
+          fonte == 'classe:${antiga.nome}' ||
           (fonte.isEmpty &&
               antiga.habilidades.any((h) => nome == '${h.nome} (classe)')) ||
           lista[i]['automatica'] == true;
-      final daNovaTambem = nova?.habilidades
-              .any((h) => nome == '${h.nome} (classe)') ??
-          false;
+      final daNovaTambem =
+          nova?.habilidades.any((h) => nome == '${h.nome} (classe)') ?? false;
       if (daAntiga && !daNovaTambem) indices.add(i);
     }
     return (profs, pericias, indices);
@@ -1186,25 +1244,21 @@ class FichaOP {
     });
   }
 
-  /// Habilidades que entram sozinhas pelo NEX (ou estágio): as da trilha
-  /// escolhida e as de classe que chegam depois da criação (Engenhosidade
-  /// em 40%, Cicatrizado no estágio 5). As de 5% já vêm com a classe.
+  /// Habilidades que entram sozinhas pelo NEX: as da trilha escolhida e as
+  /// de classe que chegam depois da criação (Engenhosidade em 40%). As de 5%
+  /// já vêm com a classe.
   List<Poder> get habilidadesDeTrilhaDevidas {
     final c = classeOP;
     if (c == null) return const [];
-    bool alcancou(Poder p) =>
-        c.porEstagio ? p.estagio <= estagio : p.nex <= nex;
-    final daClasse = {
-      for (final h in c.habilidades) _semCaixa(h.nome),
-    };
+    bool alcancou(Poder p) => p.nex <= nex;
+    final daClasse = {for (final h in c.habilidades) _semCaixa(h.nome)};
     return [
       for (final p in DadosOP.poderes)
         if (p.classe == c.nome &&
             alcancou(p) &&
             ((p.tipo == 'trilha' && trilha.isNotEmpty && p.trilha == trilha) ||
                 (p.tipo == 'habilidade' &&
-                    p.transicao.isEmpty &&
-                    (c.porEstagio ? p.estagio > 1 : p.nex > 5) &&
+                    p.nex > 5 &&
                     !daClasse.contains(_semCaixa(p.nome)))))
           p,
     ];
@@ -1263,9 +1317,7 @@ class FichaOP {
   static Map<String, dynamic> _copiaProfunda(Map<String, dynamic> m) {
     Object? copiar(Object? v) {
       if (v is Map) {
-        return {
-          for (final e in v.entries) e.key as String: copiar(e.value),
-        };
+        return {for (final e in v.entries) e.key as String: copiar(e.value)};
       }
       if (v is List) return [for (final i in v) copiar(i)];
       return v;
@@ -1290,6 +1342,18 @@ class ResumoAtaque {
   final int multiplicador;
   final String? semProficiencia;
 
+  /// A arma dispara rajadas (fuzil de assalto, submetralhadora,
+  /// metralhadora ou ferrolho automático).
+  final bool automatica;
+
+  /// Atributo que entrou no dano ('FOR', 'AGI' ou vazio em arma de disparo
+  /// e de fogo), para a tela explicar de onde veio o número.
+  final String atributoNoDano;
+
+  /// Dados extras que NÃO multiplicam no crítico (munição explosiva,
+  /// Erosiva…), somados a cada rolagem de dano.
+  final List<String> extras;
+
   const ResumoAtaque({
     required this.dados,
     required this.melhor,
@@ -1299,10 +1363,39 @@ class ResumoAtaque {
     required this.margem,
     required this.multiplicador,
     this.semProficiencia,
+    this.automatica = false,
+    this.atributoNoDano = '',
+    this.extras = const [],
   });
 
-  /// "1d8" + 3 → "1d8+3".
-  String expressaoDano(String dano) => danoFixo == 0
+  /// "1d8" + extras + 3 → "1d8+2d6+3".
+  String expressaoDano(String dano) {
+    final base = [dano, ...extras].join('+');
+    return danoFixo == 0 ? base : '$base${danoFixo > 0 ? '+' : ''}$danoFixo';
+  }
+
+  /// O dano do acerto crítico: só os dados da arma multiplicam; bônus fixo
+  /// e dados extras não (p. 54). "1d8" ×3 com +2 → "3d8+2".
+  String expressaoCritico(String dano) =>
+      expressaoDano(multiplicarDados(dano, multiplicador));
+
+  /// Margem de ameaça em texto: "20", "19–20", "18–20".
+  String get textoMargem => margem >= 20 ? '20' : '$margem–20';
+
+  static String multiplicarDados(String dano, int vezes) =>
+      dano.replaceAllMapped(RegExp(r'(\d*)d(\d+)'), (m) {
+        final n = (m[1]!.isEmpty ? 1 : int.parse(m[1]!)) * vezes;
+        return '${n}d${m[2]}';
+      });
+
+  /// Rajada: +1 dado do mesmo tipo no primeiro termo ("2d10" → "3d10").
+  static String maisUmDado(String dano) => maisDados(dano, 1);
+
+  /// +[n] dados do mesmo tipo no primeiro termo ("2d6" +2 → "4d6").
+  static String maisDados(String dano, int n) => n == 0
       ? dano
-      : '$dano${danoFixo > 0 ? '+' : ''}$danoFixo';
+      : dano.replaceFirstMapped(RegExp(r'(\d*)d(\d+)'), (m) {
+          final q = (m[1]!.isEmpty ? 1 : int.parse(m[1]!)) + n;
+          return '${q}d${m[2]}';
+        });
 }

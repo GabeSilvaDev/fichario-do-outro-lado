@@ -11,7 +11,6 @@ class Poder {
   final String classe;
   final String trilha;
   final int nex;
-  final int estagio;
   final String elemento;
   final String requisitos;
   final Map<String, dynamic> requisitosRegra;
@@ -20,7 +19,6 @@ class Poder {
   final bool repetivel;
   final Map<String, dynamic> efeitos;
   final Map<String, dynamic> efeitosAfinidade;
-  final Map<String, dynamic> transicao;
   final String fonte;
   final int pagina;
 
@@ -30,7 +28,6 @@ class Poder {
     this.classe = '',
     this.trilha = '',
     this.nex = 0,
-    this.estagio = 0,
     this.elemento = '',
     this.requisitos = '',
     this.requisitosRegra = const {},
@@ -39,7 +36,6 @@ class Poder {
     this.repetivel = false,
     this.efeitos = const {},
     this.efeitosAfinidade = const {},
-    this.transicao = const {},
     this.fonte = 'Livro de Regras',
     this.pagina = 0,
   });
@@ -54,7 +50,6 @@ class Poder {
       classe: '${j['classe'] ?? ''}',
       trilha: '${j['trilha'] ?? ''}',
       nex: inteiro(j['nex']),
-      estagio: inteiro(j['estagio']),
       elemento: '${j['elemento'] ?? ''}',
       requisitos: '${j['requisitos'] ?? ''}',
       requisitosRegra: mapa(j['requisitosRegra']),
@@ -63,7 +58,6 @@ class Poder {
       repetivel: j['repetivel'] == true,
       efeitos: mapa(j['efeitos']),
       efeitosAfinidade: mapa(j['efeitosAfinidade']),
-      transicao: mapa(j['transicao']),
       fonte: '${j['fonte'] ?? 'Livro de Regras'}',
       pagina: inteiro(j['pagina']),
     );
@@ -90,7 +84,6 @@ class Poder {
         if (efeitosAfinidade.isNotEmpty) 'efeitosAfinidade': efeitosAfinidade,
         if (transcende) 'transcender': true,
         if (nex > 0) 'nex': nex else if (nexAtual > 0) 'nex': nexAtual,
-        if (estagio > 0) 'estagio': estagio,
         if (automatica) 'automatica': true,
       };
 }
@@ -101,11 +94,32 @@ class Trilha {
   final String classe;
   final String fonte;
 
-  const Trilha(this.nome, this.classe, this.fonte);
+  /// Página do livro onde a trilha está.
+  final int pagina;
+
+  /// O que a trilha faz, em uma frase escrita aqui (não é texto do livro).
+  final String resumo;
+
+  /// Pré-requisito em texto curto ("Treinado em Medicina…"); vazio se não há.
+  final String requisitos;
+
+  const Trilha(
+    this.nome,
+    this.classe,
+    this.fonte, {
+    this.pagina = 0,
+    this.resumo = '',
+    this.requisitos = '',
+  });
+
+  bool get doLivroDeRegras => fonte == 'Livro de Regras';
 
   factory Trilha.fromJson(Map<String, dynamic> j) => Trilha(
     '${j['nome'] ?? ''}',
     '${j['classe'] ?? ''}',
     '${j['fonte'] ?? 'Livro de Regras'}',
+    pagina: j['pagina'] is num ? (j['pagina'] as num).toInt() : 0,
+    resumo: '${j['resumo'] ?? ''}',
+    requisitos: '${j['requisitos'] ?? ''}',
   );
 }

@@ -332,16 +332,15 @@ class _ListaFichasState extends State<_ListaFichas> {
       return 'VD ${f.vd}${tipo.isEmpty ? '' : ' · $tipo'}';
     }
     final c = f.classeOP;
+    final ignoradas = f.pendenciasIgnoradas;
     final pendencias = pendenciasDe(f)
-        .where((p) => p.gravidade != Gravidade.info)
+        .where(
+          (p) => p.gravidade != Gravidade.info && !ignoradas.contains(p.id),
+        )
         .length;
     return [
       f.classe,
-      if (c?.porEstagio ?? false)
-        'estágio ${f.estagio}'
-      else if (c?.agente ?? true) ...['NEX ${f.nex}%', f.patente],
-      if (f.morto) 'morto' else if (f.morrendo) 'morrendo',
-      if (f.insano) 'insano' else if (f.enlouquecendo) 'enlouquecendo',
+      if (c?.agente ?? true) ...['NEX ${f.nex}%', f.patente],
       if (pendencias > 0) '$pendencias pendência(s)',
     ].join(' · ');
   }

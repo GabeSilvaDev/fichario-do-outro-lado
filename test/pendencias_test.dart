@@ -164,69 +164,23 @@ void main() {
     });
   });
 
-  group('ferimentos debilitantes (SAH p. 105)', () {
-    test('dois no Vigor tiram 2 PV máx. por 5% de NEX', () {
-      final f = combatente()..nex = 50;
-      final base = f.pvMax;
-      f.ferimentos = ['VIG'];
-      expect(f.pvMax, base - 10);
-      f.ferimentos = ['VIG', 'VIG'];
-      expect(f.ferimentosEm('VIG'), 2);
-      expect(f.pvMax, base - 20);
-    });
-
-    test('cada ferimento no mesmo atributo tira mais um d20', () {
-      final f = combatente();
-      final fort = DadosOP.pericias.firstWhere((p) => p.nome == 'Fortitude');
-      f.ferimentos = ['VIG'];
-      final (um, melhorUm, _) = f.testePericia(fort);
-      f.ferimentos = ['VIG', 'VIG'];
-      final (dois, melhorDois, _) = f.testePericia(fort);
-      expect((um, melhorUm), (1, true));
-      expect((dois, melhorDois), (2, false));
-    });
-
-    test('tirar um ferimento deixa os outros do mesmo atributo', () {
-      final f = combatente()..ferimentos = ['VIG', 'VIG', 'AGI'];
-      final atuais = f.ferimentos..remove('VIG');
-      f.ferimentos = atuais;
-      expect(f.ferimentosEm('VIG'), 1);
-      expect(f.ferimentosEm('AGI'), 1);
-    });
-  });
+  group('ferimentos debilitantes (SAH p. 105)', () {});
 
   group('condições', () {
-    test('vulnerável + desprevenido tira 5, não 7 (p. 313)', () {
+    test('condição gravada não entra nas contas (mestre narra)', () {
       final f = combatente();
       final base = f.defesa;
-      f.condicoes = ['Vulnerável', 'Desprevenido'];
-      expect(f.defesa, base - 5);
+      final desloc = f.deslocamentoEfetivo;
+      f.condicoes = ['Vulnerável', 'Desprevenido', 'Lento'];
+      expect(f.defesa, base);
+      expect(f.deslocamentoEfetivo, desloc);
     });
 
-    test('fatigado = fraco + vulnerável: −O em Agi e −2 Defesa', () {
-      final f = combatente();
-      final acro = DadosOP.pericias.firstWhere((p) => p.nome == 'Acrobacia');
-      final (antes, _, _) = f.testePericia(acro);
-      final defesa = f.defesa;
-      f.condicoes = ['Fatigado'];
-      final (depois, _, _) = f.testePericia(acro);
-      expect(depois, antes - 1);
-      expect(f.defesa, defesa - 2);
-    });
-
-    test('atributo zerado por penalidade rola mais dados no pior', () {
+    test('atributo zerado por penalidade rola 2d20 e fica com o pior', () {
       expect(FichaOP.dadosDoTeste(1, 1), (2, false));
       expect(FichaOP.dadosDoTeste(0, 0), (2, false));
-      expect(FichaOP.dadosDoTeste(0, 2), (4, false));
+      expect(FichaOP.dadosDoTeste(0, 2), (2, false));
       expect(FichaOP.dadosDoTeste(3, 1), (2, true));
-    });
-
-    test('lento anda metade; imóvel não anda', () {
-      final f = combatente();
-      f.condicoes = ['Lento'];
-      expect(f.deslocamentoEfetivo, 4.5);
-      f.condicoes = ['Agarrado'];
-      expect(f.deslocamentoEfetivo, 0);
     });
   });
 
@@ -343,12 +297,6 @@ void main() {
       f.nex = 35;
       expect(f.sincronizarTrilha().$2, contains('Engenhosidade'));
     });
-
-    test('Cicatrizado no estágio 5 do Sobrevivente', () {
-      final f = FichaOP.nova('s')..classe = 'Sobrevivente';
-      f.estagio = 5;
-      expect(f.sincronizarTrilha().$1, contains('Cicatrizado'));
-    });
   });
 
   group('catálogo de poderes', () {
@@ -389,13 +337,16 @@ void main() {
       'pvPorEstagio',
     };
 
-    test('carregou os dois livros', () {
-      expect(DadosOP.poderes.length, greaterThan(250));
-      expect(DadosOP.trilhasDe('Combatente').length, greaterThanOrEqualTo(8));
-      expect(
-        DadosOP.trilhasDe('Sobrevivente').map((t) => t.nome),
-        containsAll(['Durão', 'Esperto', 'Esotérico']),
-      );
+    test('só o Livro de Regras: sem Sobrevivente nem poder geral', () {
+      expect(DadosOP.trilhasDe('Combatente'), hasLength(5));
+      expect(DadosOP.classePorNome('Sobrevivente'), isNull);
+      for (final p in DadosOP.poderes) {
+        expect(p.fonte, 'Livro de Regras', reason: p.nome);
+        expect(p.tipo, isNot('geral'), reason: p.nome);
+      }
+      for (final t in DadosOP.trilhas) {
+        expect(t.fonte, 'Livro de Regras', reason: t.nome);
+      }
     });
 
     test('notação curta, sem prosa do livro', () {
@@ -423,28 +374,5 @@ void main() {
     });
   });
 
-  group('Sobrevivendo ao Horror', () {
-    test('Durão: +4 PV no estágio 2', () {
-      final f = FichaOP.nova('s')..classe = 'Sobrevivente';
-      f.definirAtributo('VIG', 2);
-      f.estagio = 2;
-      final antes = f.pvMax;
-      f.trilha = 'Durão';
-      f.sincronizarTrilha();
-      expect(f.pvMax, antes + 4);
-    });
-
-    test('Treinamento Especial: agente parte do que o sobrevivente tinha', () {
-      final f = FichaOP.nova('s')..classe = 'Sobrevivente';
-      f.definirAtributo('VIG', 2);
-      f.estagio = 5;
-      final sobrevivente = f.pvMax;
-      f.exSobrevivente = 5;
-      f.classe = 'Combatente';
-      f.nex = 5;
-      expect(f.pvMax, sobrevivente + 8);
-      f.nex = 10;
-      expect(f.pvMax, sobrevivente + 8 + 4 + 2);
-    });
-  });
+  group('Sobrevivendo ao Horror', () {});
 }

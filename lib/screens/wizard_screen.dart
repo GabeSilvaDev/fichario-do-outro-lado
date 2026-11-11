@@ -6,6 +6,7 @@ import '../models/ficha_op.dart';
 import '../store/ficha_store.dart';
 import '../theme.dart';
 import '../widgets/retrato.dart';
+import '../widgets/seletor_trilha.dart';
 import 'catalogo_screen.dart';
 import 'ficha_screen.dart';
 
@@ -71,6 +72,18 @@ class _WizardScreenState extends State<WizardScreen> {
   static int _circuloDe(Map<String, dynamic> r) =>
       int.tryParse('${r['circulo']}'.replaceAll(RegExp(r'\D'), '')) ?? 1;
 
+  /// Por que o ritual escolhido [i] está fora da regra.
+  List<String> _avisosDoRitual(int i) {
+    if (_livre) return const [];
+    final n = _circuloDe(_rituais[i]);
+    return [
+      if (n > _circuloMaximo)
+        '$nº círculo: em NEX ${f.nex}% o máximo é o $_circuloMaximoº.',
+      if (i >= _rituaisDisponiveis)
+        'Além do limite: em NEX ${f.nex}% são $_rituaisDisponiveis.',
+    ];
+  }
+
   /// Baixar o NEX pode tirar círculos e vagas: corta o que sobrou.
   void _ajustarRituaisAoNex() {
     if (_livre) return;
@@ -94,8 +107,7 @@ class _WizardScreenState extends State<WizardScreen> {
   Set<String> get _daOrigem => {...(origem?.pericias ?? const [])};
 
   /// Aumentos de Atributo que o NEX escolhido já deu (20%, 50%, 80%, 95%).
-  int get _aumentos =>
-      _livre ? 0 : classe.aumentosAtributo(f.nex, estagio: f.estagio);
+  int get _aumentos => _livre ? 0 : classe.aumentosAtributo(f.nex);
 
   int get _pontosAtributoTotais {
     final zerado = [
@@ -204,10 +216,10 @@ class _WizardScreenState extends State<WizardScreen> {
       case 1:
         return f.origem.isNotEmpty;
       case 2:
+        // Ritual fora da regra (círculo acima, além do limite) não trava:
+        // fica marcado aqui e a ficha continua avisando.
         return f.classe.isNotEmpty &&
-            (!_ocultista ||
-                (_rituais.length == _rituaisDisponiveis &&
-                    _rituais.every((r) => _circuloDe(r) <= _circuloMaximo)));
+            (!_ocultista || _rituais.length >= _rituaisDisponiveis);
       case 3:
         return _pontosAtributoRestantes == 0 && _acimaDe3 <= _aumentos;
       case 4:
@@ -234,7 +246,14 @@ class _WizardScreenState extends State<WizardScreen> {
         if (!_ocultista) return null;
         final faltam = _rituaisDisponiveis - _rituais.length;
         if (faltam > 0) return 'Escolha mais $faltam ritual(is).';
-        if (faltam < 0) return 'Remova ${-faltam} ritual(is).';
+        final fora = [
+          for (var i = 0; i < _rituais.length; i++)
+            if (_avisosDoRitual(i).isNotEmpty) i,
+        ].length;
+        if (fora > 0) {
+          return '$fora ritual(is) fora da regra — dá para seguir; a ficha '
+              'vai avisar.';
+        }
         return null;
       case 3:
         final r = _pontosAtributoRestantes;
@@ -274,7 +293,7 @@ class _WizardScreenState extends State<WizardScreen> {
       _livres.clear();
       _rituais.clear();
       _graus.clear();
-      if (!DadosOP.trilhasDe(nome).any((t) => t.nome == f.trilha)) {
+      if (!DadosOP.trilhasParaEscolher(nome).any((t) => t.nome == f.trilha)) {
         f.trilha = '';
       }
     });
@@ -329,7 +348,7 @@ class _WizardScreenState extends State<WizardScreen> {
       f.adicionarEm('rituais', r);
     }
 
-    if (!_livre && !(f.porEstagio ? f.estagio >= 2 : f.nex >= 10)) {
+    if (!_livre && f.nex < 10) {
       f.trilha = '';
     }
     f.sincronizarTrilha();
@@ -686,9 +705,8 @@ class _WizardScreenState extends State<WizardScreen> {
     );
   }
 
-  /// Mundano e Sobrevivente são as classes de quem ainda não é agente:
-  /// as duas ficam em NEX 0%.
-  static bool _ehCivil(ClasseOP c) => c.nome == 'Mundano' || c.porEstagio;
+  /// Mundano é a classe de quem ainda não é agente: fica em NEX 0%.
+  static bool _ehCivil(ClasseOP c) => c.nome == 'Mundano';
 
   Widget _passoClasse() {
     final civil = f.nex == 0;
@@ -697,9 +715,8 @@ class _WizardScreenState extends State<WizardScreen> {
       children: [
         const _Explicacao(
           'NEX é o quanto do Outro Lado já entrou em você. Em 0% você ainda '
-          'não é agente — pode ser Mundano ou Sobrevivente (Sobrevivendo ao '
-          'Horror, que sobe por estágio em vez de NEX). A partir de 5% você é '
-          'agente e escolhe combatente, especialista ou ocultista.',
+          'não é agente — é Mundano. A partir de 5% você é agente e escolhe '
+          'combatente, especialista ou ocultista.',
         ),
         const SizedBox(height: 12),
         Card(
@@ -773,66 +790,6 @@ class _WizardScreenState extends State<WizardScreen> {
             ),
           ),
         ),
-        if (f.porEstagio) ...[
-          const SizedBox(height: 8),
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(14, 8, 14, 12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'ESTÁGIO',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 1.5,
-                      fontSize: 12,
-                      color: Cores.energiaViva,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  Row(
-                    children: [
-                      for (var e = 1; e <= 5; e++)
-                        Expanded(
-                          child: GestureDetector(
-                            onTap: () => setState(() => f.estagio = e),
-                            child: Container(
-                              margin: const EdgeInsets.symmetric(horizontal: 3),
-                              padding: const EdgeInsets.symmetric(vertical: 8),
-                              alignment: Alignment.center,
-                              decoration: BoxDecoration(
-                                color: e <= f.estagio
-                                    ? Cores.energia
-                                    : Colors.transparent,
-                                border: Border.all(color: Cores.linha),
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: Text(
-                                '$e',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: e <= f.estagio
-                                      ? Cores.tinta
-                                      : Cores.tinta2,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                  const SizedBox(height: 6),
-                  const Text(
-                    'O sobrevivente começa no estágio 1 e sobe um no fim de '
-                    'cada missão. Não usa NEX nem patente.',
-                    style: TextStyle(fontSize: 11, color: Cores.tinta2),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
         const FaixaSecao('Classe'),
         for (final c in DadosOP.classes)
           if (_livre || _ehCivil(c) == civil)
@@ -916,11 +873,11 @@ class _WizardScreenState extends State<WizardScreen> {
               ),
             ),
         const SizedBox(height: 12),
+        _campoTrilha(),
+        const SizedBox(height: 12),
         Row(
           children: [
-            Expanded(child: _campoTrilha()),
-            const SizedBox(width: 10),
-            // Mundano e Sobrevivente não têm patente (p. 171; SAH p. 31).
+            // Mundano não tem patente (p. 171).
             if (!_ehCivil(classe) && DadosOP.patentes.isNotEmpty)
               Expanded(
                 child: DropdownButtonFormField<String>(
@@ -944,37 +901,22 @@ class _WizardScreenState extends State<WizardScreen> {
     );
   }
 
-  /// Trilha do catálogo da classe; só abre quando o NEX (ou o estágio do
-  /// sobrevivente) já dá trilha. As habilidades entram sozinhas ao criar.
+  /// Trilha do Livro de Regras da classe, escolhida numa lista com o que
+  /// cada uma faz; só abre quando o NEX já dá
+  /// trilha — no modo livre abre sempre. As habilidades entram ao criar.
   Widget _campoTrilha() {
-    final opcoes = DadosOP.trilhasDe(f.classe);
-    final libera = f.porEstagio ? f.estagio >= 2 : f.nex >= 10;
-    if (opcoes.isEmpty || _livre) {
-      return TextFormField(
-        initialValue: f.trilha,
-        decoration: const InputDecoration(
-          labelText: 'Trilha (a partir do NEX 10%)',
-          hintText: 'Ex.: Aniquilador',
-        ),
-        onChanged: (v) => f.trilha = v,
-      );
+    // Mundano (NEX 0%) não tem trilha: nem mostra o campo.
+    if (!(DadosOP.classePorNome(f.classe)?.agente ?? true)) {
+      return const SizedBox.shrink();
     }
-    return DropdownButtonFormField<String>(
-      key: ValueKey('trilha-${f.classe}-$libera'),
-      isExpanded: true,
-      initialValue: opcoes.any((t) => t.nome == f.trilha) ? f.trilha : '',
-      decoration: InputDecoration(
-        labelText: libera
-            ? 'Trilha'
-            : (f.porEstagio ? 'Trilha (estágio 2)' : 'Trilha (NEX 10%)'),
-      ),
-      dropdownColor: Cores.carta2,
-      items: [
-        const DropdownMenuItem(value: '', child: Text('—')),
-        for (final t in opcoes)
-          DropdownMenuItem(value: t.nome, child: Text(t.nome)),
-      ],
-      onChanged: libera ? (v) => setState(() => f.trilha = v ?? '') : null,
+    final libera = _livre || f.nex >= 10;
+    return SeletorTrilha(
+      key: ValueKey('trilha-${f.classe}-$libera-${f.trilha}'),
+      classe: f.classe,
+      valor: f.trilha,
+      nex: f.nex,
+      bloqueio: libera ? null : 'libera em NEX 10%',
+      onChanged: libera ? (v) => setState(() => f.trilha = v) : null,
     );
   }
 
@@ -984,6 +926,10 @@ class _WizardScreenState extends State<WizardScreen> {
         builder: (_) => CatalogoScreen(
           escolhendo: true,
           circuloMaximo: _livre ? null : _circuloMaximo,
+          nex: f.nex,
+          rituaisRestantes: _livre
+              ? null
+              : _rituaisDisponiveis - _rituais.length,
           nomesExcluidos: {for (final r in _rituais) r['nome'] as String},
         ),
       ),
@@ -996,7 +942,6 @@ class _WizardScreenState extends State<WizardScreen> {
   /// cada NEX, com círculos novos em 25%, 55% e 85%.
   List<Widget> _secaoRituais() {
     final n = _rituaisDisponiveis;
-    final cheio = !_livre && _rituais.length >= n;
     return [
       const SizedBox(height: 12),
       const FaixaSecao('Rituais'),
@@ -1008,6 +953,13 @@ class _WizardScreenState extends State<WizardScreen> {
       ),
       for (var i = 0; i < _rituais.length; i++)
         Card(
+          key: ValueKey('wiz-ritual-$i'),
+          shape: _avisosDoRitual(i).isEmpty
+              ? null
+              : RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  side: const BorderSide(color: Cores.sangue, width: 1.5),
+                ),
           child: ListTile(
             dense: true,
             title: Text(
@@ -1015,8 +967,14 @@ class _WizardScreenState extends State<WizardScreen> {
               style: const TextStyle(fontWeight: FontWeight.bold),
             ),
             subtitle: Text(
-              '${_rituais[i]['circulo']} círculo · ${_rituais[i]['custo']}',
-              style: const TextStyle(fontSize: 12, color: Cores.tinta2),
+              [
+                '${_rituais[i]['circulo']} círculo · ${_rituais[i]['custo']}',
+                for (final a in _avisosDoRitual(i)) '⚠ $a',
+              ].join('\n'),
+              style: TextStyle(
+                fontSize: 12,
+                color: _avisosDoRitual(i).isEmpty ? Cores.tinta2 : Cores.sangue,
+              ),
             ),
             trailing: IconButton(
               icon: const Icon(Icons.close, size: 18),
@@ -1029,7 +987,7 @@ class _WizardScreenState extends State<WizardScreen> {
       Align(
         alignment: Alignment.centerLeft,
         child: FilledButton.tonalIcon(
-          onPressed: cheio ? null : _ritualDoCatalogo,
+          onPressed: _ritualDoCatalogo,
           icon: const Icon(Icons.auto_awesome, size: 16),
           label: const Text('Do catálogo de rituais'),
         ),
@@ -1064,11 +1022,10 @@ class _WizardScreenState extends State<WizardScreen> {
         if (_aumentos > 0) ...[
           const SizedBox(height: 8),
           _Explicacao(
-            '${f.porEstagio ? 'No estágio ${f.estagio}' : 'Em NEX ${f.nex}%'} '
-            'você já ganhou $_aumentos Aumento(s) de Atributo '
-            '(NEX 20%, 50%, 80% e 95%; estágio 3 no Sobrevivente): '
-            '+$_aumentos ponto(s), cada um +1 em um atributo. '
-            '${f.porEstagio ? 'No Sobrevivente, nem assim passa de 3.' : 'Só eles passam de 3, até 5. Acima de 3 agora: $_acimaDe3 de $_aumentos.'}',
+            'Em NEX ${f.nex}% você já ganhou $_aumentos Aumento(s) de '
+            'Atributo (NEX 20%, 50%, 80% e 95%): +$_aumentos ponto(s), cada '
+            'um +1 em um atributo. Só eles passam de 3, até 5. Acima de 3 '
+            'agora: $_acimaDe3 de $_aumentos.',
           ),
         ],
         const SizedBox(height: 14),
@@ -1470,10 +1427,7 @@ class _WizardScreenState extends State<WizardScreen> {
                         [
                           f.classe,
                           if (f.origem.isNotEmpty) f.origem,
-                          if (f.porEstagio)
-                            'estágio ${f.estagio}'
-                          else
-                            'NEX ${f.nex}%',
+                          'NEX ${f.nex}%',
                         ].join(' · '),
                         style: const TextStyle(
                           fontSize: 13,

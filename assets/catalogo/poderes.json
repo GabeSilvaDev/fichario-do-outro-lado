@@ -6,43 +6,50 @@
    "nome": "Aniquilador",
    "classe": "Combatente",
    "fonte": "Livro de Regras",
-   "pagina": 26
+   "pagina": 26,
+   "resumo": "Mestre de uma arma favorita: fica mais fácil de levar e mais mortal a cada NEX, com críticos e efeitos extras."
   },
   {
    "nome": "Comandante de Campo",
    "classe": "Combatente",
    "fonte": "Livro de Regras",
-   "pagina": 26
+   "pagina": 26,
+   "resumo": "Líder tático: faz aliados repetirem testes e ganharem ações extras. Brilha deixando o grupo melhor."
   },
   {
    "nome": "Guerreiro",
    "classe": "Combatente",
    "fonte": "Livro de Regras",
-   "pagina": 27
+   "pagina": 27,
+   "resumo": "Corpo a corpo: crítico mais fácil, contra-ataque ao bloquear e golpes que derrubam ou empurram."
   },
   {
    "nome": "Operações Especiais",
    "classe": "Combatente",
    "fonte": "Livro de Regras",
-   "pagina": 27
+   "pagina": 27,
+   "resumo": "Age primeiro e mais vezes: +Iniciativa, ataque extra e ações a mais por rodada."
   },
   {
    "nome": "Tropa de Choque",
    "classe": "Combatente",
    "fonte": "Livro de Regras",
-   "pagina": 27
+   "pagina": 27,
+   "resumo": "Tanque do grupo: mais PV, corta dano à metade e puxa para si os ataques contra aliados."
   },
   {
    "nome": "Atirador de Elite",
    "classe": "Especialista",
    "fonte": "Livro de Regras",
-   "pagina": 30
+   "pagina": 30,
+   "resumo": "Tiro de longe com armas de balas longas: +Int no dano, crítico mais fácil e disparos que derrubam ou desarmam."
   },
   {
    "nome": "Infiltrador",
    "classe": "Especialista",
    "fonte": "Livro de Regras",
-   "pagina": 30
+   "pagina": 30,
+   "resumo": "Furtivo: dano extra em alvo desprevenido, bônus em Atletismo e Crime e ataques sem ser notado."
   },
   {
    "nome": "Médico de Campo",
@@ -54,49 +61,57 @@
     "treinadas": [
      "Medicina"
     ]
-   }
+   },
+   "resumo": "Cura e socorre aliados no meio do combate. Exige treino em Medicina e kit de medicina."
   },
   {
    "nome": "Negociador",
    "classe": "Especialista",
    "fonte": "Livro de Regras",
-   "pagina": 31
+   "pagina": 31,
+   "resumo": "Resolve na conversa: fascina alvos, motiva o grupo, pede favores a contatos e imita aliados."
   },
   {
    "nome": "Técnico",
    "classe": "Especialista",
    "fonte": "Livro de Regras",
-   "pagina": 31
+   "pagina": 31,
+   "resumo": "Equipamento: carrega mais, conserta e improvisa itens e tira da bolsa o que o grupo precisa."
   },
   {
    "nome": "Conduíte",
    "classe": "Ocultista",
    "fonte": "Livro de Regras",
-   "pagina": 34
+   "pagina": 34,
+   "resumo": "Rituais mais longe e mais rápidos; depois, anula os rituais de outros conjuradores."
   },
   {
    "nome": "Flagelador",
    "classe": "Ocultista",
    "fonte": "Livro de Regras",
-   "pagina": 34
+   "pagina": 34,
+   "resumo": "Usa a dor: paga rituais com PV, reduz dano à metade e ganha PE ao derrubar inimigos."
   },
   {
    "nome": "Graduado",
    "classe": "Ocultista",
    "fonte": "Livro de Regras",
-   "pagina": 35
+   "pagina": 35,
+   "resumo": "Conjurador estudioso: conhece mais rituais que o normal, tem um grimório e rituais mais difíceis de resistir."
   },
   {
    "nome": "Intuitivo",
    "classe": "Ocultista",
    "fonte": "Livro de Regras",
-   "pagina": 35
+   "pagina": 35,
+   "resumo": "Mente blindada: resiste a efeitos paranormais e mentais e soma Presença no PE para conjurar."
   },
   {
    "nome": "Lâmina Paranormal",
    "classe": "Ocultista",
    "fonte": "Livro de Regras",
-   "pagina": 35
+   "pagina": 35,
+   "resumo": "Mistura luta e ritual: ataca com Ocultismo, ganha PE ao acertar e ataca junto com o ritual."
   }
  ],
  "poderes": [

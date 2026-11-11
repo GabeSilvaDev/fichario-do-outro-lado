@@ -87,25 +87,84 @@ ThemeData construirTema() {
 /// Título de seção com fio, usado nas listas da mesa e da ficha.
 class FaixaSecao extends StatelessWidget {
   final String texto;
-  const FaixaSecao(this.texto, {super.key});
+
+  /// Lápis no fim da faixa: abre a edição só desta seção. Null = sem lápis
+  /// (seção que só mostra, ou ficha aberta pelo mestre).
+  final VoidCallback? onEditar;
+
+  /// Esta seção está em edição: o lápis vira Cancelar / Salvar.
+  final bool editando;
+  final VoidCallback? onSalvar;
+  final VoidCallback? onCancelar;
+
+  const FaixaSecao(
+    this.texto, {
+    super.key,
+    this.onEditar,
+    this.editando = false,
+    this.onSalvar,
+    this.onCancelar,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final cor = editando ? Cores.energiaViva : Cores.conhecimento;
     return Padding(
-      padding: const EdgeInsets.only(top: 18, bottom: 6),
+      padding: EdgeInsets.only(
+        top: 18,
+        bottom: onEditar != null || editando ? 2 : 6,
+      ),
       child: Row(
         children: [
-          Text(
-            texto.toUpperCase(),
-            style: const TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
-              letterSpacing: 2,
-              color: Cores.conhecimento,
+          if (editando) ...[
+            Icon(Icons.edit, size: 14, color: cor),
+            const SizedBox(width: 6),
+          ],
+          Flexible(
+            child: Text(
+              texto.toUpperCase(),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 2,
+                color: cor,
+              ),
             ),
           ),
           const SizedBox(width: 10),
-          const Expanded(child: Divider()),
+          if (editando) const Spacer() else const Expanded(child: Divider()),
+          if (editando) ...[
+            TextButton(
+              key: ValueKey('cancelar-$texto'),
+              onPressed: onCancelar,
+              style: TextButton.styleFrom(
+                foregroundColor: Cores.tinta2,
+                visualDensity: VisualDensity.compact,
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+              ),
+              child: const Text('Cancelar'),
+            ),
+            FilledButton.icon(
+              key: ValueKey('salvar-$texto'),
+              onPressed: onSalvar,
+              style: FilledButton.styleFrom(
+                visualDensity: VisualDensity.compact,
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+              ),
+              icon: const Icon(Icons.check, size: 18),
+              label: const Text('Salvar'),
+            ),
+          ] else if (onEditar != null)
+            IconButton(
+              key: ValueKey('editar-$texto'),
+              tooltip: 'Editar ${texto.toLowerCase()}',
+              onPressed: onEditar,
+              visualDensity: VisualDensity.compact,
+              icon: const Icon(Icons.edit_outlined, size: 20),
+              color: Cores.tinta2,
+            ),
         ],
       ),
     );

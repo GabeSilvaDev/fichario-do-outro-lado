@@ -9,7 +9,23 @@ class PainelPendencias extends StatelessWidget {
   final List<Pendencia> pendencias;
   final ValueChanged<String>? aoIrPara;
 
-  const PainelPendencias({super.key, required this.pendencias, this.aoIrPara});
+  /// "Ignorar": esconde o painel até surgir uma pendência nova. O ícone da
+  /// barra continua lá para abrir de novo.
+  final VoidCallback? aoIgnorar;
+
+  /// Painel aberto pelo ícone com as pendências já ignoradas: o botão vira
+  /// "Voltar a mostrar", que desfaz o Ignorar.
+  final bool ignoradas;
+  final VoidCallback? aoReativar;
+
+  const PainelPendencias({
+    super.key,
+    required this.pendencias,
+    this.aoIrPara,
+    this.aoIgnorar,
+    this.ignoradas = false,
+    this.aoReativar,
+  });
 
   static Color cor(Gravidade g) => switch (g) {
     Gravidade.erro => Cores.sangue,
@@ -87,6 +103,28 @@ class PainelPendencias extends StatelessWidget {
                     ),
                   ],
                 ),
+              ),
+            ),
+          if (ignoradas && aoReativar != null)
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton.icon(
+                key: const ValueKey('reativar-pendencias'),
+                onPressed: aoReativar,
+                icon: const Icon(Icons.visibility_outlined, size: 18),
+                label: const Text('Voltar a mostrar'),
+                style: TextButton.styleFrom(foregroundColor: Cores.tinta2),
+              ),
+            )
+          else if (aoIgnorar != null && erros + avisos > 0)
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton.icon(
+                key: const ValueKey('ignorar-pendencias'),
+                onPressed: aoIgnorar,
+                icon: const Icon(Icons.visibility_off_outlined, size: 18),
+                label: const Text('Ignorar'),
+                style: TextButton.styleFrom(foregroundColor: Cores.tinta2),
               ),
             ),
         ],

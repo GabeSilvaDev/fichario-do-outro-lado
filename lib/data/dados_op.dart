@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/services.dart' show rootBundle;
 
+import '../regras/melhorias.dart';
 import '../regras/poderes.dart';
 
 /// Uma perícia do sistema (TABELA 2.1 do Livro de Regras v1.3).
@@ -69,11 +70,6 @@ class ClasseOP {
   /// (Eclético e Perito); as outras classes, uma.
   final List<HabilidadeClasse> habilidades;
 
-  /// Progressão por estágio em vez de NEX — só o Sobrevivente de
-  /// *Sobrevivendo ao Horror* usa. Estágio 1 a 5, e o limite de PE fica
-  /// travado em 1 em qualquer estágio.
-  final bool porEstagio;
-
   /// De qual livro a classe veio.
   final String fonte;
 
@@ -102,7 +98,6 @@ class ClasseOP {
     this.periciasEscolha = const [],
     this.periciasLivresBase = 0,
     this.habilidades = const [],
-    this.porEstagio = false,
     this.fonte = 'Livro de Regras',
     this.periciasPorGrau = 0,
   });
@@ -120,27 +115,25 @@ class ClasseOP {
     descricao: (j['descricao'] ?? '') as String,
   );
 
-  /// Quantos passos de progressão a ficha já deu. Classe normal conta pelo
-  /// NEX; o Sobrevivente conta pelo estágio, que vai de 1 a 5.
-  int nivelDe(int nex, int estagio) =>
-      porEstagio ? estagio.clamp(1, 5) : _nivel(nex);
+  /// Quantos passos de progressão a ficha já deu: NEX 5% = 1 … 99% = 20.
+  int nivelDe(int nex) => _nivel(nex);
 
-  int pvMax(int nex, int vig, {int estagio = 1}) {
-    final nivel = nivelDe(nex, estagio);
+  int pvMax(int nex, int vig) {
+    final nivel = nivelDe(nex);
     if (nivel == 0) return pvIni + vig;
     final ganho = pvPorNivel + (pvNivelAtributo ? vig : 0);
     return pvIni + vig + (nivel - 1) * ganho;
   }
 
-  int peMax(int nex, int pre, {int estagio = 1}) {
-    final nivel = nivelDe(nex, estagio);
+  int peMax(int nex, int pre) {
+    final nivel = nivelDe(nex);
     if (nivel == 0) return peIni + pre;
     final ganho = pePorNivel + (peNivelAtributo ? pre : 0);
     return peIni + pre + (nivel - 1) * ganho;
   }
 
-  int sanMax(int nex, {int estagio = 1}) {
-    final nivel = nivelDe(nex, estagio);
+  int sanMax(int nex) {
+    final nivel = nivelDe(nex);
     if (nivel == 0) return sanIni;
     return sanIni + (nivel - 1) * sanPorNivel;
   }
@@ -151,14 +144,12 @@ class ClasseOP {
     return nex ~/ 5;
   }
 
-  /// Pontos de atributo na criação: o agente recebe 4; quem ainda é civil
-  /// (Mundano em NEX 0%, Sobrevivente) recebe 3, por não ter passado pelo
-  /// treinamento da Ordem.
-  int get pontosAtributo => (nome == 'Mundano' || porEstagio) ? 3 : 4;
+  /// Pontos de atributo na criação: o agente recebe 4; o Mundano (NEX 0%)
+  /// recebe 3, por não ter passado pelo treinamento da Ordem.
+  int get pontosAtributo => nome == 'Mundano' ? 3 : 4;
 
-  /// Limite de PE por turno = nível de exposição. O Sobrevivente fica em 1
-  /// em qualquer estágio (SAH p. 31).
-  int limitePe(int nex) => porEstagio ? 1 : limitePeTurno(nex);
+  /// Limite de PE por turno = nível de exposição.
+  int limitePe(int nex) => limitePeTurno(nex);
 
   static int limitePeTurno(int nex) {
     final n = _nivel(nex);
@@ -166,19 +157,17 @@ class ClasseOP {
   }
 
   /// Combatente, especialista e ocultista — quem sobe pela tabela de NEX.
-  bool get agente => !porEstagio && nome != 'Mundano';
+  bool get agente => nome != 'Mundano';
 
   /// Aumentos de Atributo já ganhos: NEX 20%, 50%, 80% e 95%, cada um +1 em
-  /// um atributo, até 5. O Sobrevivente ganha o dele no estágio 3.
-  int aumentosAtributo(int nex, {int estagio = 1}) {
-    if (porEstagio) return estagio >= 3 ? 1 : 0;
+  /// um atributo, até 5.
+  int aumentosAtributo(int nex) {
     if (!agente) return 0;
     return [20, 50, 80, 95].where((m) => nex >= m).length;
   }
 
-  /// Até onde um Aumento de Atributo leva: 5 no agente; o do Sobrevivente
-  /// não passa de 3 (SAH p. 31).
-  int get tetoAumento => porEstagio ? 3 : 5;
+  /// Até onde um Aumento de Atributo leva.
+  int get tetoAumento => 5;
 
   /// Graus de Treinamento já ganhos: NEX 35% e 70%.
   int grausTreinamento(int nex) {
@@ -267,8 +256,8 @@ class ClasseOP {
     final tabela = _melhoraDaClasse[nome];
     if (tabela == null) return const [];
     final porHabilidade = <String, String>{};
-    for (final e in (tabela.entries.toList()
-      ..sort((a, b) => a.key.compareTo(b.key)))) {
+    for (final e
+        in (tabela.entries.toList()..sort((a, b) => a.key.compareTo(b.key)))) {
       if (e.key > nex) continue;
       porHabilidade[e.value.split(':').first] = e.value;
     }
@@ -302,9 +291,7 @@ class Origem {
   final String poder;
   final String poderDescricao;
 
-  /// De qual livro a origem veio — as 26 do básico e as 20 de
-  /// *Sobrevivendo ao Horror* aparecem juntas, mas a mesa precisa saber
-  /// qual material está em uso antes de liberar as novas.
+  /// De qual livro a origem veio. A ficha usa só o Livro de Regras.
   final String fonte;
 
   /// O que o poder muda nos números da ficha, para o jogador não ter de
@@ -392,6 +379,25 @@ class DadosOP {
   /// Poderes, habilidades de trilha e trilhas dos dois livros. Vazio se o
   /// catálogo não carregou — a ficha segue funcionando, só sem automação.
   static List<Poder> poderes = const [];
+
+  /// Tabela de armas do catálogo (assets/catalogo/armas.json), com as
+  /// habilidades (ágil, automática, arremesso…) que mexem nas contas do
+  /// ataque. Vazia se o asset falhar: aí o ataque usa só o que a ficha tem.
+  static List<Map<String, dynamic>> armas = const [];
+
+  /// Catálogo de rituais (nome → ficha técnica), para completar ritual
+  /// antigo da ficha que foi gravado sem elemento.
+  static Map<String, Map<String, dynamic>> rituais = const {};
+
+  static Map<String, dynamic>? ritualPorNome(String nome) => rituais[nome];
+
+  static Map<String, dynamic>? armaPorNome(String nome) {
+    for (final a in armas) {
+      if (a['nome'] == nome) return a;
+    }
+    return null;
+  }
+
   static List<Trilha> trilhas = const [];
 
   static List<Trilha> trilhasDe(String classe) => [
@@ -399,33 +405,32 @@ class DadosOP {
       if (t.classe == classe) t,
   ];
 
+  /// As trilhas que a ficha oferece para escolher: as do Livro de Regras
+  /// (p. 26–35) para combatente, especialista e ocultista.
+  static List<Trilha> trilhasParaEscolher(String classe) => [
+    for (final t in trilhasDe(classe))
+      if (t.doLivroDeRegras) t,
+  ];
+
+  static Trilha? trilhaPorNome(String nome) {
+    for (final t in trilhas) {
+      if (t.nome == nome) return t;
+    }
+    return null;
+  }
+
+  /// As 4 habilidades da trilha (NEX 10, 40, 65 e 99%), em ordem.
+  static List<Poder> habilidadesDaTrilha(String trilha) => [
+    for (final p in poderes)
+      if (p.tipo == 'trilha' && p.trilha == trilha) p,
+  ]..sort((a, b) => a.nex.compareTo(b.nex));
+
   static Poder? poderPorNome(String nome) {
     for (final p in poderes) {
       if (p.nome == nome) return p;
     }
     return null;
   }
-
-  /// Treinamento Especial (SAH p. 32): o que o sobrevivente ganha ao virar
-  /// agente desta classe, por cima do que já tinha.
-  static Map<String, int> transicaoSobrevivente(String classe) {
-    for (final p in poderes) {
-      final t = p.transicao[classe];
-      if (t is Map) {
-        return {
-          for (final e in t.entries)
-            if (e.value is num) '${e.key}': (e.value as num).toInt(),
-        };
-      }
-    }
-    return _transicaoPadrao[classe] ?? const {};
-  }
-
-  static const Map<String, Map<String, int>> _transicaoPadrao = {
-    'Combatente': {'pvFixo': 8},
-    'Especialista': {'pvFixo': 4, 'peFixo': 1, 'sanFixo': 4},
-    'Ocultista': {'peFixo': 2, 'sanFixo': 8},
-  };
 
   /// OPRPG v1.3, caixas de características de cada classe.
   static const List<ClasseOP> classes = [
@@ -530,27 +535,6 @@ class DadosOP {
         ),
       ],
     ),
-    ClasseOP(
-      nome: 'Sobrevivente',
-      pvIni: 8,
-      pvPorNivel: 2,
-      pvNivelAtributo: false,
-      peIni: 2,
-      pePorNivel: 1,
-      peNivelAtributo: false,
-      sanIni: 8,
-      sanPorNivel: 2,
-      descricao:
-          'PV 8+Vig (+2/estágio) · PE 2+Pre (+1/estágio) · '
-          'SAN 8 (+2/estágio). Limite de PE sempre 1.',
-      proficiencias: ['Armas simples'],
-      periciasLivresBase: 1,
-      porEstagio: true,
-      fonte: 'Sobrevivendo ao Horror',
-      habilidades: [
-        HabilidadeClasse('Empenho', '1 PE → +2 em um teste de perícia.'),
-      ],
-    ),
   ];
 
   /// Lê um asset como texto sem `loadString`: acima de 50 KB ele decodifica
@@ -577,7 +561,7 @@ class DadosOP {
 
     final ps = <Poder>[];
     final ts = <Trilha>[];
-    for (final arquivo in ['poderes.json', 'poderes_sah.json']) {
+    for (final arquivo in ['poderes.json']) {
       try {
         final j =
             jsonDecode(await _texto('assets/catalogo/$arquivo'))
@@ -594,6 +578,29 @@ class DadosOP {
     }
     poderes = ps;
     trilhas = ts;
+    try {
+      final j =
+          jsonDecode(await _texto('assets/catalogo/armas.json'))
+              as Map<String, dynamic>;
+      armas = [
+        for (final a in (j['armas'] ?? const []) as List)
+          (a as Map).cast<String, dynamic>(),
+      ];
+      Melhorias.carregar(j);
+    } catch (_) {
+      armas = const [];
+    }
+    try {
+      final j =
+          jsonDecode(await _texto('assets/catalogo/rituais.json'))
+              as Map<String, dynamic>;
+      rituais = {
+        for (final r in (j['rituais'] ?? const []) as List)
+          '${(r as Map)['nome']}': r.cast<String, dynamic>(),
+      };
+    } catch (_) {
+      rituais = const {};
+    }
   }
 
   static ClasseOP? classePorNome(String nome) {

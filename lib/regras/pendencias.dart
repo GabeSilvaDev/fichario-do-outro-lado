@@ -89,8 +89,7 @@ void _classeENex(FichaOP f, ClasseOP c, _Add add) {
   if (c.agente && f.nex == 0) {
     add(
       'nex',
-      'Agente começa em NEX 5%. Em 0%, a classe é Mundano '
-          '(ou Sobrevivente).',
+      'Agente começa em NEX 5%. Em 0%, a classe é Mundano.',
       Gravidade.erro,
       'geral',
     );
@@ -112,12 +111,8 @@ void _atributos(FichaOP f, ClasseOP c, _Add add) {
   final faixa = RegrasOpcionais.faixa(f.faixaEtaria);
   final forcados = {...?faixa?.tetoAtributo.keys};
 
-  var base = c.pontosAtributo;
-  var aumentos = c.aumentosAtributo(f.nex, estagio: f.estagio);
-  if (f.exSobrevivente > 0) {
-    base = 3;
-    aumentos += f.exSobrevivente >= 3 ? 1 : 0;
-  }
+  final base = c.pontosAtributo;
+  final aumentos = c.aumentosAtributo(f.nex);
 
   var soma = 0;
   var zerosVoluntarios = 0;
@@ -140,9 +135,8 @@ void _atributos(FichaOP f, ClasseOP c, _Add add) {
     if (v > c.tetoAumento) {
       add(
         'attr-teto-$s',
-        '$s acima de ${c.tetoAumento}: '
-            '${c.porEstagio ? 'o Sobrevivente não passa de 3' : 'o Aumento de '
-                      'Atributo não leva além de 5'}.',
+        '$s acima de ${c.tetoAumento}: o Aumento de Atributo não leva '
+            'além de 5.',
         Gravidade.erro,
         'geral',
       );
@@ -213,21 +207,11 @@ void _pericias(FichaOP f, ClasseOP c, _Add add) {
   final origemMin = beneficios >= 3 ? 2 : (beneficios == 2 ? 1 : 0);
   final origemMax = beneficios >= 2 ? 2 : 1;
 
-  int classe;
-  if (f.exSobrevivente > 0 && c.agente) {
-    final t = DadosOP.transicaoSobrevivente(c.nome);
-    classe =
-        1 +
-        intelecto +
-        (t['treinaPericias'] ?? 0) +
-        (c.nome == 'Ocultista' ? 2 : 0);
-  } else {
-    classe =
-        c.periciasFixas.length +
-        c.periciasEscolha.length +
-        c.periciasLivresBase +
-        intelecto;
-  }
+  final classe =
+      c.periciasFixas.length +
+      c.periciasEscolha.length +
+      c.periciasLivresBase +
+      intelecto;
   final poderes = e.treinaPericias + e.treina.length;
   final minimo = origemMin + classe + poderes;
   final maximo = origemMax + classe + poderes;
@@ -251,7 +235,7 @@ void _pericias(FichaOP f, ClasseOP c, _Add add) {
     );
   }
 
-  if (c.nome == 'Combatente' && f.exSobrevivente == 0) {
+  if (c.nome == 'Combatente') {
     for (final par in c.periciasEscolha) {
       if (!par.any((p) => (graus[p] ?? 0) > 0)) {
         add(
@@ -349,15 +333,6 @@ void _trilhaEPoderes(FichaOP f, ClasseOP c, _Add add) {
     if (f.nex < 10 && f.trilha.isNotEmpty) {
       add('trilha', 'Trilha só a partir de NEX 10%.', Gravidade.erro, 'geral');
     }
-  } else if (c.porEstagio) {
-    if (f.estagio >= 2 && f.trilha.isEmpty) {
-      add(
-        'trilha',
-        'Estágio 2: escolha a trilha do Sobrevivente.',
-        Gravidade.aviso,
-        'geral',
-      );
-    }
   }
   if (f.trilha.isNotEmpty &&
       trilhasDaClasse.isNotEmpty &&
@@ -406,20 +381,8 @@ void _trilhaEPoderes(FichaOP f, ClasseOP c, _Add add) {
   // Poderes à escolha: de classe (inclui Transcender/paranormal e gerais),
   // Versatilidade em 50% e o de Vivência (idade adulta).
   if (c.agente) {
-    final poderClasse = 'Poder de ${c.nome.toLowerCase()}';
-    var esperado = 0;
-    for (final n in ClasseOP.reguaNex) {
-      if (n <= f.nex && c.marcos(n).contains(poderClasse)) esperado++;
-    }
-    if (f.nex >= 50) esperado++;
-    esperado += RegrasOpcionais.faixa(f.faixaEtaria)?.poderesExtras ?? 0;
-    final tem = f.habilidades.where((h) {
-      final tipo = '${h['tipoPoder'] ?? ''}';
-      if (const {'classe', 'paranormal', 'geral'}.contains(tipo)) return true;
-      return tipo == 'trilha' &&
-          h['automatica'] != true &&
-          h['trilha'] != f.trilha;
-    }).length;
+    final esperado = poderesQueONexDa(f);
+    final tem = f.habilidades.where((h) => ehPoderEscolhido(f, h)).length;
     if (tem < esperado) {
       add(
         'poderes-n',
@@ -464,6 +427,97 @@ void _trilhaEPoderes(FichaOP f, ClasseOP c, _Add add) {
       );
     }
   }
+}
+
+/// Quantos poderes à escolha o NEX dá: os de classe da tabela,
+/// Versatilidade em 50% e o de Vivência (idade adulta).
+int poderesQueONexDa(FichaOP f) {
+  final c = f.classeOP;
+  if (c == null || !c.agente) return 0;
+  final poderClasse = 'Poder de ${c.nome.toLowerCase()}';
+  var esperado = 0;
+  for (final n in ClasseOP.reguaNex) {
+    if (n <= f.nex && c.marcos(n).contains(poderClasse)) esperado++;
+  }
+  if (f.nex >= 50) esperado++;
+  esperado += RegrasOpcionais.faixa(f.faixaEtaria)?.poderesExtras ?? 0;
+  return esperado;
+}
+
+/// Conta como poder escolhido: de classe, paranormal, geral, ou o 1º de
+/// outra trilha (Versatilidade). Habilidade da própria trilha não conta.
+bool ehPoderEscolhido(FichaOP f, Map<String, dynamic> h) {
+  final tipo = '${h['tipoPoder'] ?? ''}';
+  if (const {'classe', 'paranormal', 'geral'}.contains(tipo)) return true;
+  return tipo == 'trilha' && h['automatica'] != true && h['trilha'] != f.trilha;
+}
+
+/// Por que cada habilidade da ficha está fora da regra (índice → motivos).
+/// Fica na própria habilidade enquanto continuar fora. NPC e modo livre
+/// não são cobrados.
+Map<int, List<String>> avisosDasHabilidades(FichaOP f) {
+  if (f.ehNpc || f.modoLivre) return const {};
+  final saida = <int, List<String>>{};
+  void add(int i, String t) => (saida[i] ??= []).add(t);
+  final lista = f.habilidades;
+  final esperado = poderesQueONexDa(f);
+  var escolhidos = 0;
+  final vistos = <String>{};
+  for (var i = 0; i < lista.length; i++) {
+    final h = lista[i];
+    final nome = '${h['poder'] ?? ''}';
+    final p = nome.isEmpty ? null : DadosOP.poderPorNome(nome);
+    if (p != null && h['automatica'] != true) {
+      final falta = requisitoQueFalta(f, p.requisitosRegra);
+      if (falta != null) add(i, 'Exige $falta.');
+      if (p.tipo == 'trilha' && p.nex > f.nex) {
+        add(i, 'É de NEX ${p.nex}%; a ficha está em ${f.nex}%.');
+      }
+    }
+    if (p != null && !p.repetivel && !vistos.add(nome)) {
+      add(i, 'Repetido: este poder não se escolhe de novo.');
+    }
+    if ((f.classeOP?.agente ?? false) && ehPoderEscolhido(f, h)) {
+      escolhidos++;
+      if (escolhidos > esperado) {
+        add(
+          i,
+          'A mais: em NEX ${f.nex}% a ficha tem direito a $esperado '
+          'poder(es) à escolha.',
+        );
+      }
+    }
+  }
+  return saida;
+}
+
+/// Por que cada ritual da ficha está fora da regra (índice → motivos):
+/// círculo acima do NEX, além do limite de rituais ou repetido.
+Map<int, List<String>> avisosDosRituais(FichaOP f) {
+  if (f.ehNpc || f.modoLivre) return const {};
+  final saida = <int, List<String>>{};
+  void add(int i, String t) => (saida[i] ??= []).add(t);
+  final (limite, _, _) = limiteDeRituais(f);
+  final maximo = circuloMaximoDe(f);
+  final vistos = <String>{};
+  final lista = f.rituais;
+  for (var i = 0; i < lista.length; i++) {
+    final r = lista[i];
+    final n = circuloDoRitual(r);
+    if (n > maximo) {
+      add(i, '$nº círculo: em NEX ${f.nex}% o máximo é o $maximoº.');
+    }
+    if (i >= limite) {
+      add(
+        i,
+        limite == 0
+            ? 'A ficha não aprende rituais (classe ou poder).'
+            : 'Além do limite: a ficha conhece $limite ritual(is).',
+      );
+    }
+    if (!vistos.add('${r['nome'] ?? ''}')) add(i, 'Ritual repetido.');
+  }
+  return saida;
 }
 
 /// O primeiro pré-requisito que a ficha não cumpre, em texto; null se
@@ -511,8 +565,8 @@ String? requisitoQueFalta(FichaOP f, Map<String, dynamic> r) {
 }
 
 /// Quantos rituais a ficha conhece pela regra: os do Ocultista pelo NEX
-/// (p. 32), os de Aprender Ritual até o Intelecto (p. 119) e o do Iniciado
-/// (Esotérico, SAH p. 32). Devolve (limite, da classe, do poder).
+/// (p. 32) e os de Aprender Ritual até o Intelecto (p. 119). Devolve
+/// (limite, da classe, do poder).
 (int, int, int) limiteDeRituais(FichaOP f) {
   final c = f.classeOP;
   final aprender = f.habilidades
@@ -521,10 +575,7 @@ String? requisitoQueFalta(FichaOP f, Map<String, dynamic> r) {
   final intelecto = f.atributo('INT');
   final daClasse = c?.nome == 'Ocultista' ? DadosOP.rituaisPorNex(f.nex) : 0;
   final doPoder = aprender < intelecto ? aprender : intelecto;
-  final extras = f.habilidades
-      .where((h) => h['poder'] == 'Iniciado' || h['nome'] == 'Iniciado')
-      .length;
-  return (daClasse + doPoder + extras, daClasse, doPoder);
+  return (daClasse + doPoder, daClasse, doPoder);
 }
 
 /// Círculo mais alto que a ficha pode aprender neste NEX. Ocultista pela
@@ -630,6 +681,19 @@ void _equipamento(FichaOP f, ClasseOP c, _Add add) {
     }
   } else {
     final patente = DadosOP.patentePorNome(f.patente);
+    final acimaDeIV =
+        (porCategoria['V'] ?? 0) +
+        (porCategoria['VI'] ?? 0) +
+        (porCategoria['VII'] ?? 0);
+    if (acimaDeIV > 0) {
+      add(
+        'itens-acima-iv',
+        '$acimaDeIV item(ns) acima da categoria IV (modificações e '
+            'maldições somadas): nenhuma patente libera.',
+        Gravidade.erro,
+        'inventario',
+      );
+    }
     if (patente != null) {
       for (final cat in const ['I', 'II', 'III', 'IV']) {
         final tem = porCategoria[cat] ?? 0;
