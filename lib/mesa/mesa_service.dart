@@ -49,12 +49,30 @@ class FichaNaMesa {
   };
 }
 
+/// Em que gaveta da galeria a imagem mora. Imagem antiga (sem categoria)
+/// cai em [outro].
+enum CategoriaGaleria {
+  monstro('Monstros', 'Monstro'),
+  npc('NPCs', 'NPC'),
+  documento('Documentos e pistas', 'Documento'),
+  local('Locais', 'Local'),
+  outro('Outros', 'Outro');
+
+  final String plural;
+  final String singular;
+  const CategoriaGaleria(this.plural, this.singular);
+
+  static CategoriaGaleria porNome(String? nome) => CategoriaGaleria.values
+      .firstWhere((c) => c.name == nome, orElse: () => CategoriaGaleria.outro);
+}
+
 class ItemGaleria {
   final String id;
   final String legenda;
   final String porUid;
   final String miniaturaBase64;
   final DateTime em;
+  final CategoriaGaleria categoria;
 
   const ItemGaleria({
     required this.id,
@@ -62,6 +80,7 @@ class ItemGaleria {
     required this.porUid,
     required this.miniaturaBase64,
     required this.em,
+    this.categoria = CategoriaGaleria.outro,
   });
 
   factory ItemGaleria.fromJson(String id, Map<String, dynamic> j) =>
@@ -71,6 +90,7 @@ class ItemGaleria {
         porUid: (j['porUid'] ?? '') as String,
         miniaturaBase64: (j['miniatura'] ?? '') as String,
         em: DateTime.parse(j['em'] as String),
+        categoria: CategoriaGaleria.porNome(j['categoria'] as String?),
       );
 
   Map<String, dynamic> toJson() => {
@@ -78,6 +98,7 @@ class ItemGaleria {
     'porUid': porUid,
     'miniatura': miniaturaBase64,
     'em': em.toIso8601String(),
+    'categoria': categoria.name,
   };
 }
 
@@ -293,11 +314,26 @@ class ImagemDeMapa {
   final String miniaturaBase64;
   final DateTime em;
 
+  /// Grupo livre do mestre (ex.: "Missão 3") — a faixa de mapas separa por
+  /// ele. Vazio = sem grupo.
+  final String grupo;
+
+  /// Posição na faixa (menor primeiro). Planta antiga sem ordem vai pelo
+  /// tempo.
+  final int ordem;
+
+  /// Onde estavam as peças na última vez que este mapa saiu da mesa. Voltar
+  /// a ele traz cada uma de volta. Null = mapa nunca usado.
+  final List<TokenMapa>? pecas;
+
   const ImagemDeMapa({
     required this.id,
     required this.nome,
     required this.miniaturaBase64,
     required this.em,
+    this.grupo = '',
+    this.ordem = 0,
+    this.pecas,
   });
 
   factory ImagemDeMapa.fromJson(String id, Map<String, dynamic> j) =>
@@ -306,12 +342,22 @@ class ImagemDeMapa {
         nome: (j['nome'] ?? '') as String,
         miniaturaBase64: (j['miniatura'] ?? '') as String,
         em: DateTime.parse(j['em'] as String),
+        grupo: (j['grupo'] ?? '') as String,
+        ordem: (j['ordem'] as num?)?.toInt() ?? 0,
+        pecas: j['pecas'] is List
+            ? [
+                for (final t in j['pecas'] as List)
+                  TokenMapa.fromJson((t as Map).cast<String, dynamic>()),
+              ]
+            : null,
       );
 
   Map<String, dynamic> toJson() => {
     'nome': nome,
     'miniatura': miniaturaBase64,
     'em': em.toIso8601String(),
+    'grupo': grupo,
+    'ordem': ordem,
   };
 }
 
@@ -428,7 +474,15 @@ abstract class MesaService {
     String mesaId,
     String imagemBase64,
     String miniaturaBase64,
-    String legenda,
+    String legenda, {
+    CategoriaGaleria categoria = CategoriaGaleria.outro,
+  });
+
+  /// Só o mestre. Muda a gaveta de uma imagem da galeria.
+  Future<void> mudarCategoria(
+    String mesaId,
+    String imagemId,
+    CategoriaGaleria categoria,
   );
 
   /// Só o mestre.
@@ -466,6 +520,23 @@ abstract class MesaService {
 
   /// Só o mestre. Tira uma planta da biblioteca (não mexe no mapa aberto).
   Future<void> apagarMapaGuardado(String mesaId, String imagemId);
+
+  /// Só o mestre. Renomeia, muda de grupo ou de posição na faixa.
+  Future<void> editarMapaGuardado(
+    String mesaId,
+    String imagemId, {
+    String? nome,
+    String? grupo,
+    int? ordem,
+  });
+
+  /// Só o mestre. Guarda na planta onde estavam as peças — é o que deixa
+  /// voltar a um mapa já usado com tudo no lugar.
+  Future<void> guardarPecasDoMapa(
+    String mesaId,
+    String imagemId,
+    List<TokenMapa> pecas,
+  );
 
   /// Só o mestre. Põe (ou troca) o mapa da cena, apontando para uma planta
   /// da biblioteca.

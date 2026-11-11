@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 
+import '../../theme.dart';
 import '../../widgets/visualizador_imagem.dart';
 import '../mesa_service.dart';
 
@@ -29,6 +30,56 @@ class _GaleriaMesaState extends State<GaleriaMesa> {
   /// cima só da miniatura dela — as outras continuam clicáveis.
   String? _carregando;
 
+  /// Gaveta escolhida no filtro (null = todas, separadas por título).
+  CategoriaGaleria? _filtro;
+
+  static const Map<CategoriaGaleria, IconData> _icones = {
+    CategoriaGaleria.monstro: Icons.pest_control_outlined,
+    CategoriaGaleria.npc: Icons.person_outline,
+    CategoriaGaleria.documento: Icons.description_outlined,
+    CategoriaGaleria.local: Icons.place_outlined,
+    CategoriaGaleria.outro: Icons.image_outlined,
+  };
+
+  Future<void> _mudarCategoria(ItemGaleria item) async {
+    final nova = await showModalBottomSheet<CategoriaGaleria>(
+      context: context,
+      backgroundColor: Cores.carta,
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
+              child: Text(
+                item.legenda.isEmpty
+                    ? 'Mover para…'
+                    : 'Mover "${item.legenda}" para…',
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ),
+            for (final c in CategoriaGaleria.values)
+              ListTile(
+                key: ValueKey('mover-${c.name}'),
+                leading: Icon(_icones[c]),
+                title: Text(c.plural),
+                trailing: c == item.categoria
+                    ? const Icon(Icons.check, color: Cores.energiaViva)
+                    : null,
+                onTap: () => Navigator.pop(ctx, c),
+              ),
+          ],
+        ),
+      ),
+    );
+    if (nova == null || nova == item.categoria) return;
+    try {
+      await widget.servico.mudarCategoria(widget.mesaId, item.id, nova);
+    } catch (e) {
+      _erro(e);
+    }
+  }
+
   void _erro(Object e) {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
@@ -41,7 +92,8 @@ class _GaleriaMesaState extends State<GaleriaMesa> {
       if (!mounted) return;
       if (cheia == null) {
         ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Não consegui carregar a imagem.')));
+          const SnackBar(content: Text('Não consegui carregar a imagem.')),
+        );
         return;
       }
       VisualizadorImagem.abrir(context, base64Decode(cheia), item.legenda);
@@ -66,15 +118,18 @@ class _GaleriaMesaState extends State<GaleriaMesa> {
       builder: (ctx) => AlertDialog(
         title: const Text('Apagar esta imagem?'),
         content: const Text(
-            'Ela some da galeria e do mural (se estiver em destaque). Isso '
-            'não pode ser desfeito.'),
+          'Ela some da galeria e do mural (se estiver em destaque). Isso '
+          'não pode ser desfeito.',
+        ),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('Cancelar')),
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancelar'),
+          ),
           TextButton(
-              onPressed: () => Navigator.pop(ctx, true),
-              child: const Text('Apagar')),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Apagar'),
+          ),
         ],
       ),
     );
@@ -92,7 +147,43 @@ class _GaleriaMesaState extends State<GaleriaMesa> {
       stream: widget.servico.observarGaleria(widget.mesaId),
       builder: (context, snap) {
         final itens = snap.data ?? const <ItemGaleria>[];
-        return itens.isEmpty ? _vazia() : _grade(itens);
+        if (itens.isEmpty) return _vazia();
+        final porCategoria = <CategoriaGaleria, List<ItemGaleria>>{
+          for (final c in CategoriaGaleria.values)
+            c: [
+              for (final i in itens)
+                if (i.categoria == c) i,
+            ],
+        }..removeWhere((_, v) => v.isEmpty);
+        final filtro = porCategoria.containsKey(_filtro) ? _filtro : null;
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _filtros(itens.length, porCategoria, filtro),
+            for (final e in porCategoria.entries)
+              if (filtro == null || filtro == e.key) ...[
+                if (filtro == null)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(4, 10, 4, 2),
+                    child: Row(
+                      children: [
+                        Icon(_icones[e.key], size: 16, color: Cores.tinta2),
+                        const SizedBox(width: 6),
+                        Text(
+                          '${e.key.plural} · ${e.value.length}',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: Cores.tinta2,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                _grade(e.value),
+              ],
+          ],
+        );
       },
     );
   }
@@ -104,10 +195,50 @@ class _GaleriaMesaState extends State<GaleriaMesa> {
         child: Text(
           widget.souMestre
               ? 'Nenhuma imagem nesta mesa ainda. Use "Mostrar imagem para a '
-                'mesa" acima.'
+                    'mesa" acima.'
               : 'Nenhuma imagem nesta mesa ainda.',
           style: const TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
         ),
+      ),
+    );
+  }
+
+  Widget _filtros(
+    int total,
+    Map<CategoriaGaleria, List<ItemGaleria>> porCategoria,
+    CategoriaGaleria? filtro,
+  ) {
+    return SizedBox(
+      height: 40,
+      child: ListView(
+        scrollDirection: Axis.horizontal,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(right: 6),
+            child: ChoiceChip(
+              key: const ValueKey('galeria-todas'),
+              label: Text('Todas · $total'),
+              selected: filtro == null,
+              showCheckmark: false,
+              visualDensity: VisualDensity.compact,
+              onSelected: (_) => setState(() => _filtro = null),
+            ),
+          ),
+          for (final e in porCategoria.entries)
+            Padding(
+              padding: const EdgeInsets.only(right: 6),
+              child: ChoiceChip(
+                key: ValueKey('galeria-${e.key.name}'),
+                avatar: Icon(_icones[e.key], size: 16),
+                label: Text('${e.key.plural} · ${e.value.length}'),
+                selected: filtro == e.key,
+                showCheckmark: false,
+                visualDensity: VisualDensity.compact,
+                onSelected: (_) =>
+                    setState(() => _filtro = filtro == e.key ? null : e.key),
+              ),
+            ),
+        ],
       ),
     );
   }
@@ -161,23 +292,45 @@ class _GaleriaMesaState extends State<GaleriaMesa> {
                 overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.center,
                 style: const TextStyle(
-                    fontSize: 12, fontWeight: FontWeight.bold),
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
             if (widget.souMestre)
               Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  IconButton(
-                    tooltip: 'Mostrar agora',
-                    icon: const Icon(Icons.present_to_all, size: 18),
-                    onPressed: () => _mostrarAgora(item),
-                  ),
-                  IconButton(
-                    tooltip: 'Apagar da galeria',
-                    icon: const Icon(Icons.delete_outline, size: 18),
-                    onPressed: () => _apagar(item),
-                  ),
+                  for (final b in [
+                    IconButton(
+                      tooltip: 'Mostrar agora',
+                      icon: const Icon(Icons.present_to_all, size: 18),
+                      onPressed: () => _mostrarAgora(item),
+                    ),
+                    IconButton(
+                      key: ValueKey('categoria-${item.id}'),
+                      tooltip: 'Mudar categoria',
+                      icon: Icon(_icones[item.categoria], size: 18),
+                      onPressed: () => _mudarCategoria(item),
+                    ),
+                    IconButton(
+                      tooltip: 'Apagar da galeria',
+                      icon: const Icon(Icons.delete_outline, size: 18),
+                      onPressed: () => _apagar(item),
+                    ),
+                  ])
+                    // Três botões numa célula de ~100dp: sem o mínimo de
+                    // 48dp do Material, que estourava no celular.
+                    IconButtonTheme(
+                      data: IconButtonThemeData(
+                        style: IconButton.styleFrom(
+                          minimumSize: const Size(30, 30),
+                          padding: const EdgeInsets.all(4),
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
+                      ),
+                      child: b,
+                    ),
                 ],
               ),
           ],

@@ -52,7 +52,7 @@ class _MuralDaMesaState extends State<MuralDaMesa> {
 
     final resultado = await _pedirLegenda();
     if (resultado == null || !mounted) return;
-    final (legenda, mostrarAgora) = resultado;
+    final (legenda, mostrarAgora, categoria) = resultado;
 
     setState(() => _enviando = true);
     try {
@@ -61,6 +61,7 @@ class _MuralDaMesaState extends State<MuralDaMesa> {
         ImagemMural.preparar(bytes),
         ImagemMural.miniatura(bytes),
         legenda,
+        categoria: categoria,
       );
       if (mostrarAgora) await servico.mostrarAgora(mesaId, imagemId);
     } catch (e) {
@@ -70,33 +71,64 @@ class _MuralDaMesaState extends State<MuralDaMesa> {
     }
   }
 
-  /// null quando cancela. Do contrário, a legenda e se é para pôr em
-  /// destaque agora ou só guardar no acervo.
-  Future<(String, bool)?> _pedirLegenda() {
+  /// null quando cancela. Do contrário, a legenda, se é para pôr em
+  /// destaque agora ou só guardar, e em que gaveta da galeria ela entra.
+  Future<(String, bool, CategoriaGaleria)?> _pedirLegenda() {
     final campo = TextEditingController();
-    return showDialog<(String, bool)>(
+    var categoria = CategoriaGaleria.outro;
+    return showDialog<(String, bool, CategoriaGaleria)>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Legenda (opcional)'),
-        content: TextField(
-          controller: campo,
-          autofocus: true,
-          decoration: const InputDecoration(
-              hintText: 'Ex.: a pista que vocês acham na cena'),
-        ),
-        actions: [
-          TextButton(
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setLocal) => AlertDialog(
+          title: const Text('Nova imagem'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              TextField(
+                controller: campo,
+                autofocus: true,
+                decoration: const InputDecoration(
+                  labelText: 'Legenda (opcional)',
+                  hintText: 'Ex.: a pista que vocês acham na cena',
+                ),
+              ),
+              const SizedBox(height: 14),
+              const Text('Categoria', style: TextStyle(fontSize: 12)),
+              const SizedBox(height: 6),
+              Wrap(
+                spacing: 6,
+                runSpacing: 6,
+                children: [
+                  for (final c in CategoriaGaleria.values)
+                    ChoiceChip(
+                      key: ValueKey('nova-${c.name}'),
+                      label: Text(c.singular),
+                      selected: categoria == c,
+                      showCheckmark: false,
+                      onSelected: (_) => setLocal(() => categoria = c),
+                    ),
+                ],
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
               onPressed: () => Navigator.pop(ctx),
-              child: const Text('Cancelar')),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, (campo.text.trim(), false)),
-            child: const Text('Guardar na galeria'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, (campo.text.trim(), true)),
-            child: const Text('Mostrar agora'),
-          ),
-        ],
+              child: const Text('Cancelar'),
+            ),
+            TextButton(
+              onPressed: () =>
+                  Navigator.pop(ctx, (campo.text.trim(), false, categoria)),
+              child: const Text('Guardar na galeria'),
+            ),
+            TextButton(
+              onPressed: () =>
+                  Navigator.pop(ctx, (campo.text.trim(), true, categoria)),
+              child: const Text('Mostrar agora'),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -203,12 +235,17 @@ class _CartaoDestaque extends StatefulWidget {
 }
 
 class _CartaoDestaqueState extends State<_CartaoDestaque> {
-  late final Future<String?> _futuro =
-      widget.servico.imagemCheia(widget.mesaId, widget.imagemId);
+  late final Future<String?> _futuro = widget.servico.imagemCheia(
+    widget.mesaId,
+    widget.imagemId,
+  );
 
   void _abrirTelaCheia(String imagemBase64) {
     VisualizadorImagem.abrir(
-        context, base64Decode(imagemBase64), widget.legenda);
+      context,
+      base64Decode(imagemBase64),
+      widget.legenda,
+    );
   }
 
   @override
@@ -229,7 +266,8 @@ class _CartaoDestaqueState extends State<_CartaoDestaque> {
             child: Padding(
               padding: EdgeInsets.all(14),
               child: Text(
-                  'Não consegui carregar a imagem. Confira sua conexão.'),
+                'Não consegui carregar a imagem. Confira sua conexão.',
+              ),
             ),
           );
         }
@@ -264,9 +302,11 @@ class _CartaoDestaqueState extends State<_CartaoDestaque> {
                 ),
                 if (widget.legenda.isNotEmpty) ...[
                   const SizedBox(height: 6),
-                  Text(widget.legenda,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(fontWeight: FontWeight.bold)),
+                  Text(
+                    widget.legenda,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
                 ],
                 Wrap(
                   alignment: WrapAlignment.center,
@@ -279,8 +319,10 @@ class _CartaoDestaqueState extends State<_CartaoDestaque> {
                     if (widget.souMestre)
                       TextButton.icon(
                         onPressed: widget.aoTirar,
-                        icon: const Icon(Icons.visibility_off_outlined,
-                            size: 18),
+                        icon: const Icon(
+                          Icons.visibility_off_outlined,
+                          size: 18,
+                        ),
                         label: const Text('Tirar do mural'),
                       ),
                   ],

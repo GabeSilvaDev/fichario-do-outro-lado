@@ -306,8 +306,9 @@ class MesaFirestore implements MesaService {
     String mesaId,
     String imagemBase64,
     String miniaturaBase64,
-    String legenda,
-  ) async {
+    String legenda, {
+    CategoriaGaleria categoria = CategoriaGaleria.outro,
+  }) async {
     final meuUid = uid;
     if (meuUid == null) throw SemPermissao();
     final ref = _galeria(mesaId).doc();
@@ -320,9 +321,26 @@ class MesaFirestore implements MesaService {
           porUid: meuUid,
           miniaturaBase64: miniaturaBase64,
           em: DateTime.now(),
+          categoria: categoria,
         ).toJson(),
       );
       return ref.id;
+    } on FirebaseException catch (e) {
+      if (e.code == 'permission-denied') throw SemPermissao();
+      rethrow;
+    }
+  }
+
+  @override
+  Future<void> mudarCategoria(
+    String mesaId,
+    String imagemId,
+    CategoriaGaleria categoria,
+  ) async {
+    try {
+      await _galeria(
+        mesaId,
+      ).doc(imagemId).update({'categoria': categoria.name});
     } on FirebaseException catch (e) {
       if (e.code == 'permission-denied') throw SemPermissao();
       rethrow;
@@ -516,6 +534,8 @@ class MesaFirestore implements MesaService {
           nome: nome,
           miniaturaBase64: miniaturaBase64,
           em: DateTime.now(),
+          // Planta nova vai para o fim da faixa.
+          ordem: DateTime.now().millisecondsSinceEpoch ~/ 1000,
         ).toJson(),
       );
       return ref.id;
@@ -530,7 +550,10 @@ class MesaFirestore implements MesaService {
       _mapas(mesaId).snapshots().map((q) {
         final itens =
             q.docs.map((d) => ImagemDeMapa.fromJson(d.id, d.data())).toList()
-              ..sort((a, b) => b.em.compareTo(a.em));
+              ..sort((a, b) {
+                final o = a.ordem.compareTo(b.ordem);
+                return o != 0 ? o : a.em.compareTo(b.em);
+              });
         return itens;
       });
 
@@ -548,6 +571,41 @@ class MesaFirestore implements MesaService {
       await _mapas(mesaId).doc(imagemId).delete();
     } on FirebaseException catch (e) {
       if (e.code == 'permission-denied') throw SemPermissao();
+      rethrow;
+    }
+  }
+
+  @override
+  Future<void> editarMapaGuardado(
+    String mesaId,
+    String imagemId, {
+    String? nome,
+    String? grupo,
+    int? ordem,
+  }) async {
+    try {
+      await _mapas(
+        mesaId,
+      ).doc(imagemId).update({'nome': ?nome, 'grupo': ?grupo, 'ordem': ?ordem});
+    } on FirebaseException catch (e) {
+      if (e.code == 'permission-denied') throw SemPermissao();
+      rethrow;
+    }
+  }
+
+  @override
+  Future<void> guardarPecasDoMapa(
+    String mesaId,
+    String imagemId,
+    List<TokenMapa> pecas,
+  ) async {
+    try {
+      await _mapas(mesaId).doc(imagemId).update({
+        'pecas': [for (final t in pecas) t.toJson()],
+      });
+    } on FirebaseException catch (e) {
+      if (e.code == 'permission-denied') throw SemPermissao();
+      if (e.code == 'not-found') return;
       rethrow;
     }
   }

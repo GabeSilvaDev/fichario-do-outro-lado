@@ -164,4 +164,44 @@ void main() {
       }
     });
   });
+
+  group('galeria e biblioteca de plantas', () {
+    test('categoria da imagem vai e volta; antiga cai em Outros', () {
+      final item = ItemGaleria(
+        id: 'g1',
+        legenda: 'Cultista',
+        porUid: 'm',
+        miniaturaBase64: '',
+        em: DateTime(2026),
+        categoria: CategoriaGaleria.monstro,
+      );
+      final volta = ItemGaleria.fromJson('g1', item.toJson());
+      expect(volta.categoria, CategoriaGaleria.monstro);
+      final antiga = ItemGaleria.fromJson('g2', {
+        'legenda': 'x',
+        'em': DateTime(2026).toIso8601String(),
+      });
+      expect(antiga.categoria, CategoriaGaleria.outro);
+    });
+
+    test('planta guarda grupo, ordem e as peças da última vez', () {
+      final m = ImagemDeMapa.fromJson('p1', {
+        'nome': 'Porão',
+        'miniatura': '',
+        'em': DateTime(2026).toIso8601String(),
+        'grupo': 'Missão 3',
+        'ordem': 20,
+        'pecas': [peca(nome: 'Ana', x: .1, y: .2).toJson()],
+      });
+      expect(m.grupo, 'Missão 3');
+      expect(m.ordem, 20);
+      expect(m.pecas!.single.x, .1);
+      final nova = ImagemDeMapa.fromJson('p2', {
+        'nome': 'Térreo',
+        'em': DateTime(2026).toIso8601String(),
+      });
+      expect(nova.pecas, isNull);
+      expect(nova.grupo, '');
+    });
+  });
 }
