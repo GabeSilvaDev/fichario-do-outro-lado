@@ -71,8 +71,8 @@ class CartaoMapa extends StatelessWidget {
                                   ? 'Abra para subir a planta do lugar e pôr '
                                       'as peças.'
                                   : 'Quando o mestre puser um, aparece aqui.')
-                              : '${mapa.tokens.length} peça(s) · atualiza ao '
-                                  'vivo enquanto o mestre move',
+                              : '${mapa.tokens.length} peça(s) · ao vivo · '
+                                  '${souMestre ? 'você move todas' : 'você move a sua'}',
                           style: const TextStyle(
                               fontSize: 12, color: Cores.tinta2),
                         ),

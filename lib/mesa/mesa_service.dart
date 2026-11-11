@@ -42,11 +42,11 @@ class FichaNaMesa {
       );
 
   Map<String, dynamic> toJson() => {
-        'dono': donoUid,
-        'nome': nome,
-        'atualizadaEm': atualizadaEm.toIso8601String(),
-        'ficha': ficha,
-      };
+    'dono': donoUid,
+    'nome': nome,
+    'atualizadaEm': atualizadaEm.toIso8601String(),
+    'ficha': ficha,
+  };
 }
 
 class ItemGaleria {
@@ -74,11 +74,11 @@ class ItemGaleria {
       );
 
   Map<String, dynamic> toJson() => {
-        'legenda': legenda,
-        'porUid': porUid,
-        'miniatura': miniaturaBase64,
-        'em': em.toIso8601String(),
-      };
+    'legenda': legenda,
+    'porUid': porUid,
+    'miniatura': miniaturaBase64,
+    'em': em.toIso8601String(),
+  };
 }
 
 /// O que está em destaque no mural agora. Aponta para uma imagem da galeria;
@@ -96,13 +96,16 @@ class ItemMural {
   });
 
   factory ItemMural.fromJson(Map<String, dynamic> j) => ItemMural(
-        imagemId: (j['imagemId'] ?? '') as String,
-        legenda: (j['legenda'] ?? '') as String,
-        em: DateTime.parse(j['em'] as String),
-      );
+    imagemId: (j['imagemId'] ?? '') as String,
+    legenda: (j['legenda'] ?? '') as String,
+    em: DateTime.parse(j['em'] as String),
+  );
 
-  Map<String, dynamic> toJson() =>
-      {'imagemId': imagemId, 'legenda': legenda, 'em': em.toIso8601String()};
+  Map<String, dynamic> toJson() => {
+    'imagemId': imagemId,
+    'legenda': legenda,
+    'em': em.toIso8601String(),
+  };
 }
 
 /// Uma rolagem publicada na mesa — o "Últimos testes" do mestre, ao vivo.
@@ -149,16 +152,16 @@ class RolagemNaMesa {
       );
 
   Map<String, dynamic> toJson() => {
-        'porUid': porUid,
-        'porNome': porNome,
-        'titulo': titulo,
-        'formula': formula,
-        'detalhe': detalhe,
-        'total': total,
-        'critico': critico,
-        'desastre': desastre,
-        'em': em.toIso8601String(),
-      };
+    'porUid': porUid,
+    'porNome': porNome,
+    'titulo': titulo,
+    'formula': formula,
+    'detalhe': detalhe,
+    'total': total,
+    'critico': critico,
+    'desastre': desastre,
+    'em': em.toIso8601String(),
+  };
 }
 
 /// Uma peça no mapa da cena: quem está onde.
@@ -211,10 +214,8 @@ class TokenMapa {
     return String.fromCharCode(limpo.runes.first).toUpperCase();
   }
 
-  TokenMapa mover(double novoX, double novoY) => copiar(
-        x: novoX.clamp(0.0, 1.0),
-        y: novoY.clamp(0.0, 1.0),
-      );
+  TokenMapa mover(double novoX, double novoY) =>
+      copiar(x: novoX.clamp(0.0, 1.0), y: novoY.clamp(0.0, 1.0));
 
   /// Entre 0,4× e 3×: menor que isso some no mapa, maior cobre a cena.
   TokenMapa comEscala(double nova) => copiar(escala: nova.clamp(0.4, 3.0));
@@ -227,39 +228,58 @@ class TokenMapa {
     double? y,
     bool? inimigo,
     double? escala,
-  }) =>
-      TokenMapa(
-        id: id,
-        nome: nome ?? this.nome,
-        retrato: retrato ?? this.retrato,
-        cor: cor ?? this.cor,
-        x: x ?? this.x,
-        y: y ?? this.y,
-        inimigo: inimigo ?? this.inimigo,
-        escala: escala ?? this.escala,
-      );
+  }) => TokenMapa(
+    id: id,
+    nome: nome ?? this.nome,
+    retrato: retrato ?? this.retrato,
+    cor: cor ?? this.cor,
+    x: x ?? this.x,
+    y: y ?? this.y,
+    inimigo: inimigo ?? this.inimigo,
+    escala: escala ?? this.escala,
+  );
 
   factory TokenMapa.fromJson(Map<String, dynamic> j) => TokenMapa(
-        id: (j['id'] ?? '') as String,
-        nome: (j['nome'] ?? '') as String,
-        retrato: (j['retrato'] ?? '') as String,
-        cor: (j['cor'] ?? 0xFFA06BFF) as int,
-        x: ((j['x'] ?? 0.5) as num).toDouble().clamp(0.0, 1.0),
-        y: ((j['y'] ?? 0.5) as num).toDouble().clamp(0.0, 1.0),
-        inimigo: (j['inimigo'] ?? false) as bool,
-        escala: ((j['escala'] ?? 1) as num).toDouble().clamp(0.4, 3.0),
-      );
+    id: (j['id'] ?? '') as String,
+    nome: (j['nome'] ?? '') as String,
+    retrato: (j['retrato'] ?? '') as String,
+    cor: (j['cor'] ?? 0xFFA06BFF) as int,
+    x: ((j['x'] ?? 0.5) as num).toDouble().clamp(0.0, 1.0),
+    y: ((j['y'] ?? 0.5) as num).toDouble().clamp(0.0, 1.0),
+    inimigo: (j['inimigo'] ?? false) as bool,
+    escala: ((j['escala'] ?? 1) as num).toDouble().clamp(0.4, 3.0),
+  );
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'nome': nome,
-        'retrato': retrato,
-        'cor': cor,
-        'x': x,
-        'y': y,
-        'inimigo': inimigo,
-        'escala': escala,
-      };
+    'id': id,
+    'nome': nome,
+    'retrato': retrato,
+    'cor': cor,
+    'x': x,
+    'y': y,
+    'inimigo': inimigo,
+    'escala': escala,
+  };
+}
+
+/// Cor da peça. Ameaça é sempre vermelha — no meio do combate, ninguém tem
+/// tempo de decorar quem é quem. Agente ganha uma cor estável a partir do
+/// nome, para a mesma pessoa ter sempre a mesma peça.
+int corDaPeca(String nome, {required bool inimigo}) {
+  if (inimigo) return 0xFFE05545; // Cores.sangue
+  const paleta = [
+    0xFFA06BFF,
+    0xFF57B98A,
+    0xFFD9A441,
+    0xFF4FA8E0,
+    0xFFE07FB8,
+    0xFF8CD17D,
+  ];
+  var soma = 0;
+  for (final c in nome.codeUnits) {
+    soma += c;
+  }
+  return paleta[soma % paleta.length];
 }
 
 /// Uma planta guardada na mesa, pronta para virar cena.
@@ -289,10 +309,10 @@ class ImagemDeMapa {
       );
 
   Map<String, dynamic> toJson() => {
-        'nome': nome,
-        'miniatura': miniaturaBase64,
-        'em': em.toIso8601String(),
-      };
+    'nome': nome,
+    'miniatura': miniaturaBase64,
+    'em': em.toIso8601String(),
+  };
 }
 
 /// O mapa da cena: a imagem que está na mesa e as peças em cima dela.
@@ -315,21 +335,21 @@ class MapaMesa {
   });
 
   factory MapaMesa.fromJson(Map<String, dynamic> j) => MapaMesa(
-        imagemId: (j['imagemId'] ?? '') as String,
-        titulo: (j['titulo'] ?? '') as String,
-        tokens: [
-          for (final t in (j['tokens'] ?? const []) as List)
-            TokenMapa.fromJson((t as Map).cast<String, dynamic>())
-        ],
-        em: DateTime.parse(j['em'] as String),
-      );
+    imagemId: (j['imagemId'] ?? '') as String,
+    titulo: (j['titulo'] ?? '') as String,
+    tokens: [
+      for (final t in (j['tokens'] ?? const []) as List)
+        TokenMapa.fromJson((t as Map).cast<String, dynamic>()),
+    ],
+    em: DateTime.parse(j['em'] as String),
+  );
 
   Map<String, dynamic> toJson() => {
-        'imagemId': imagemId,
-        'titulo': titulo,
-        'tokens': [for (final t in tokens) t.toJson()],
-        'em': em.toIso8601String(),
-      };
+    'imagemId': imagemId,
+    'titulo': titulo,
+    'tokens': [for (final t in tokens) t.toJson()],
+    'em': em.toIso8601String(),
+  };
 }
 
 /// Tudo que o app precisa da mesa online. Interface para as telas serem
@@ -380,7 +400,10 @@ abstract class MesaService {
 
   /// Publica (ou atualiza) a MINHA ficha nesta mesa.
   Future<void> publicarFicha(
-      String mesaId, Map<String, dynamic> ficha, String nome);
+    String mesaId,
+    Map<String, dynamic> ficha,
+    String nome,
+  );
 
   /// Tira a minha ficha da mesa.
   Future<void> despublicarFicha(String mesaId);
@@ -395,12 +418,18 @@ abstract class MesaService {
   Future<void> publicarRolagem(String mesaId, RolagemNaMesa rolagem);
 
   /// As últimas rolagens, mais recente primeiro.
-  Stream<List<RolagemNaMesa>> observarRolagens(String mesaId,
-      {int limite = 30});
+  Stream<List<RolagemNaMesa>> observarRolagens(
+    String mesaId, {
+    int limite = 30,
+  });
 
   /// Só o mestre. Guarda a imagem na galeria e devolve o id dela.
-  Future<String> guardarNaGaleria(String mesaId, String imagemBase64,
-      String miniaturaBase64, String legenda);
+  Future<String> guardarNaGaleria(
+    String mesaId,
+    String imagemBase64,
+    String miniaturaBase64,
+    String legenda,
+  );
 
   /// Só o mestre.
   Future<void> apagarDaGaleria(String mesaId, String imagemId);
@@ -423,7 +452,11 @@ abstract class MesaService {
   /// Só o mestre. Guarda uma planta na biblioteca de mapas da mesa e
   /// devolve o id dela. Não passa pela galeria do mural.
   Future<String> guardarMapa(
-      String mesaId, String imagemBase64, String miniaturaBase64, String nome);
+    String mesaId,
+    String imagemBase64,
+    String miniaturaBase64,
+    String nome,
+  );
 
   /// As plantas guardadas nesta mesa, mais recente primeiro. Só miniaturas.
   Stream<List<ImagemDeMapa>> observarMapasGuardados(String mesaId);
@@ -436,11 +469,27 @@ abstract class MesaService {
 
   /// Só o mestre. Põe (ou troca) o mapa da cena, apontando para uma planta
   /// da biblioteca.
-  Future<void> abrirMapa(String mesaId, String imagemId, String titulo,
-      List<TokenMapa> tokens);
+  Future<void> abrirMapa(
+    String mesaId,
+    String imagemId,
+    String titulo,
+    List<TokenMapa> tokens,
+  );
 
   /// Só o mestre. Reescreve as peças — é assim que se move uma.
   Future<void> salvarTokens(String mesaId, List<TokenMapa> tokens);
+
+  /// Jogador: move ou redimensiona a PRÓPRIA peça (id = uid). A regra do
+  /// Firestore só deixa mudar posição e tamanho dela.
+  Future<void> moverMinhaPeca(String mesaId, TokenMapa peca);
+
+  /// Jogador que publicou a ficha: põe a própria peça no mapa aberto (se
+  /// ainda não estiver) e mantém nome e retrato iguais aos da ficha.
+  Future<void> sincronizarMinhaPeca(
+    String mesaId,
+    String nome,
+    String retratoBase64,
+  );
 
   /// Só o mestre. Tira o mapa da mesa.
   Future<void> fecharMapa(String mesaId);

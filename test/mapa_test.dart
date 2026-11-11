@@ -1,6 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ordem_paranormal/mesa/mesa_service.dart';
-import 'package:ordem_paranormal/mesa/telas/mapa_da_cena.dart';
 import 'package:ordem_paranormal/theme.dart';
 
 /// O mapa da cena. O que está travado aqui é o que faz a peça cair no mesmo
@@ -54,7 +53,10 @@ void main() {
       final antes = MapaMesa(
         imagemId: 'img1',
         titulo: 'Vagão 3',
-        tokens: [peca(nome: 'Ana', x: .2, y: .3), peca(nome: 'Bia')],
+        tokens: [
+          peca(nome: 'Ana', x: .2, y: .3),
+          peca(nome: 'Bia'),
+        ],
         em: DateTime.parse('2026-08-19T02:00:00.000'),
       );
       final depois = MapaMesa.fromJson(antes.toJson());
@@ -76,8 +78,13 @@ void main() {
     });
 
     test('posição fora da faixa chega presa na borda', () {
-      final t = TokenMapa.fromJson(
-          {'id': 'x', 'nome': 'n', 'cor': 1, 'x': 4.0, 'y': -2.0});
+      final t = TokenMapa.fromJson({
+        'id': 'x',
+        'nome': 'n',
+        'cor': 1,
+        'x': 4.0,
+        'y': -2.0,
+      });
       expect(t.x, 1.0);
       expect(t.y, 0.0);
     });
@@ -96,15 +103,25 @@ void main() {
     });
 
     test('ficha antiga, sem escala, entra em 1', () {
-      final t = TokenMapa.fromJson(
-          {'id': 'x', 'nome': 'n', 'cor': 1, 'x': .5, 'y': .5});
+      final t = TokenMapa.fromJson({
+        'id': 'x',
+        'nome': 'n',
+        'cor': 1,
+        'x': .5,
+        'y': .5,
+      });
       expect(t.escala, 1.0);
     });
 
     test('mudar tamanho não move nem descolore a peça', () {
       final t = TokenMapa(
-        id: 'u1', nome: 'Ana', retrato: 'AAA', cor: 0xFF112233,
-        x: .2, y: .3, inimigo: true,
+        id: 'u1',
+        nome: 'Ana',
+        retrato: 'AAA',
+        cor: 0xFF112233,
+        x: .2,
+        y: .3,
+        inimigo: true,
       ).comEscala(1.8);
       expect(t.x, .2);
       expect(t.y, .3);
@@ -135,14 +152,15 @@ void main() {
     });
 
     test('o mesmo agente tem sempre a mesma cor', () {
-      expect(corDaPeca('Márcia Nogueira', inimigo: false),
-          corDaPeca('Márcia Nogueira', inimigo: false));
+      expect(
+        corDaPeca('Márcia Nogueira', inimigo: false),
+        corDaPeca('Márcia Nogueira', inimigo: false),
+      );
     });
 
     test('agente não recebe a cor de ameaça', () {
       for (final nome in ['Ana', 'Bia', 'Caio', 'Duda', 'Edu', 'Fê', 'Gu']) {
-        expect(corDaPeca(nome, inimigo: false),
-            isNot(Cores.sangue.toARGB32()));
+        expect(corDaPeca(nome, inimigo: false), isNot(Cores.sangue.toARGB32()));
       }
     });
   });

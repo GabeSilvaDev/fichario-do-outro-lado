@@ -82,6 +82,5 @@ void main() {
     mesa.umaFicha.add(_publicada(3));
     await t.pumpAndSettle();
     expect(vida(), 3);
-    expect(find.text('Machucado'), findsOneWidget);
   });
 }

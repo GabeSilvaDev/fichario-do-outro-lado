@@ -21,7 +21,9 @@ import '../mesa_service.dart';
 /// (`mapas`), separada da galeria: imagem do mural abre na cara de todo
 /// mundo, mapa fica de pé para consulta.
 ///
-/// Jogador só olha — mover é do mestre, e a regra do Firestore diz o mesmo.
+/// O mestre mexe em todas as peças. O jogador mexe só na dele — a peça que
+/// entra quando ele publica a ficha (foto da ficha, ou a inicial) — e a
+/// regra do Firestore diz o mesmo.
 class MapaDaCena extends StatefulWidget {
   final MesaService servico;
   final String mesaId;
@@ -57,14 +59,11 @@ class _MapaDaCenaState extends State<MapaDaCena> {
   @override
   void initState() {
     super.initState();
-    _assinatura = widget.servico.observarMapa(widget.mesaId).listen(
-      (m) {
-        if (!mounted) return;
-        setState(() => _mapa = m);
-        if (m != null && m.imagemId != _imagemCarregada) _carregarImagem(m);
-      },
-      onError: (_) {},
-    );
+    _assinatura = widget.servico.observarMapa(widget.mesaId).listen((m) {
+      if (!mounted) return;
+      setState(() => _mapa = m);
+      if (m != null && m.imagemId != _imagemCarregada) _carregarImagem(m);
+    }, onError: (_) {});
   }
 
   @override
@@ -117,41 +116,70 @@ class _MapaDaCenaState extends State<MapaDaCena> {
     _gravarArrasto();
   }
 
+  /// A peça é minha (jogador): o id dela é o meu uid.
+  bool _minha(TokenMapa t) =>
+      !widget.mestre && t.id.isNotEmpty && t.id == widget.servico.uid;
+
+  bool _podeMexer(TokenMapa t) => widget.mestre || _minha(t);
+
   Future<void> _gravarArrasto() async {
     final mapa = _mapa;
     if (mapa == null || _arrastando.isEmpty) return;
+    if (!widget.mestre) {
+      for (final t in mapa.tokens) {
+        final p = _arrastando[t.id];
+        if (p != null && _minha(t)) {
+          try {
+            await widget.servico.moverMinhaPeca(
+              widget.mesaId,
+              t.mover(p.dx, p.dy),
+            );
+          } catch (_) {}
+        }
+      }
+      return;
+    }
     await _salvar([
       for (final t in mapa.tokens)
         _arrastando.containsKey(t.id)
             ? t.mover(_arrastando[t.id]!.dx, _arrastando[t.id]!.dy)
-            : t
+            : t,
     ]);
   }
 
   Future<void> _salvar(List<TokenMapa> tokens) async {
     try {
       await widget.servico.salvarTokens(widget.mesaId, tokens);
-    } catch (_) {
-    }
+    } catch (_) {}
   }
 
   Offset _posicao(TokenMapa t) => _arrastando[t.id] ?? Offset(t.x, t.y);
 
   List<TokenMapa> get _tokens => _mapa?.tokens ?? const [];
 
-  Future<void> _trocarToken(TokenMapa novo) =>
-      _salvar([for (final t in _tokens) t.id == novo.id ? novo : t]);
+  Future<void> _trocarToken(TokenMapa novo) async {
+    if (!widget.mestre) {
+      try {
+        await widget.servico.moverMinhaPeca(widget.mesaId, novo);
+      } catch (_) {}
+      return;
+    }
+    await _salvar([for (final t in _tokens) t.id == novo.id ? novo : t]);
+  }
 
-  Future<void> _removerToken(TokenMapa alvo) =>
-      _salvar([for (final t in _tokens) if (t.id != alvo.id) t]);
+  Future<void> _removerToken(TokenMapa alvo) => _salvar([
+    for (final t in _tokens)
+      if (t.id != alvo.id) t,
+  ]);
 
   void _abrirPeca(TokenMapa token) {
-    if (!widget.mestre) return;
+    if (!_podeMexer(token)) return;
     showModalBottomSheet<void>(
       context: context,
       backgroundColor: Cores.carta,
       builder: (_) => _FolhaDaPeca(
         token: token,
+        mestre: widget.mestre,
         aoMudar: _trocarToken,
         aoRemover: () {
           Navigator.pop(context);
@@ -172,11 +200,8 @@ class _MapaDaCenaState extends State<MapaDaCena> {
       context: context,
       backgroundColor: Cores.carta,
       isScrollControlled: true,
-      builder: (_) => _FolhaPecas(
-        fichas: fichas,
-        tokens: _tokens,
-        aoTrocar: _salvar,
-      ),
+      builder: (_) =>
+          _FolhaPecas(fichas: fichas, tokens: _tokens, aoTrocar: _salvar),
     );
   }
 
@@ -210,8 +235,9 @@ class _MapaDaCenaState extends State<MapaDaCena> {
         TokenMapa(
           id: fichas[i].donoUid,
           nome: fichas[i].nome.isEmpty ? 'Sem nome' : fichas[i].nome,
-          retrato:
-              ImagemMural.peca((fichas[i].ficha['retrato'] ?? '') as String),
+          retrato: ImagemMural.peca(
+            (fichas[i].ficha['retrato'] ?? '') as String,
+          ),
           cor: corDaPeca(fichas[i].nome, inimigo: false),
           x: (i + 1) / (fichas.length + 1),
           y: .88,
@@ -222,7 +248,13 @@ class _MapaDaCenaState extends State<MapaDaCena> {
   Future<void> _porNaMesa(String imagemId, String nome) async {
     setState(() => _ocupado = true);
     try {
-      final tokens = _tokens.isEmpty ? await _pecasIniciais() : _tokens;
+      // Quem publicou a ficha e ainda não tem peça entra junto, na base.
+      final iniciais = await _pecasIniciais();
+      final tokens = [
+        ..._tokens,
+        for (final p in iniciais)
+          if (!_tokens.any((t) => t.id == p.id)) p,
+      ];
       await widget.servico.abrirMapa(widget.mesaId, imagemId, nome, tokens);
     } catch (e) {
       _erro(e);
@@ -259,7 +291,8 @@ class _MapaDaCenaState extends State<MapaDaCena> {
 
   Future<String?> _pedirNome(String sugestao) {
     final campo = TextEditingController(
-        text: sugestao.replaceAll(RegExp(r'\.[A-Za-z0-9]+$'), ''));
+      text: sugestao.replaceAll(RegExp(r'\.[A-Za-z0-9]+$'), ''),
+    );
     return showDialog<String>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -268,15 +301,18 @@ class _MapaDaCenaState extends State<MapaDaCena> {
           controller: campo,
           autofocus: true,
           decoration: const InputDecoration(
-              hintText: 'Ex.: Vagão 3 · Porão da vinícola'),
+            hintText: 'Ex.: Vagão 3 · Porão da vinícola',
+          ),
         ),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: const Text('Cancelar')),
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancelar'),
+          ),
           TextButton(
-              onPressed: () => Navigator.pop(ctx, campo.text.trim()),
-              child: const Text('Guardar')),
+            onPressed: () => Navigator.pop(ctx, campo.text.trim()),
+            child: const Text('Guardar'),
+          ),
         ],
       ),
     );
@@ -288,15 +324,18 @@ class _MapaDaCenaState extends State<MapaDaCena> {
       builder: (ctx) => AlertDialog(
         title: const Text('Tirar o mapa da mesa?'),
         content: const Text(
-            'O mapa some da tela de todo mundo. A planta continua guardada '
-            'na biblioteca da mesa.'),
+          'O mapa some da tela de todo mundo. A planta continua guardada '
+          'na biblioteca da mesa.',
+        ),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('Cancelar')),
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancelar'),
+          ),
           TextButton(
-              onPressed: () => Navigator.pop(ctx, true),
-              child: const Text('Tirar mapa')),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Tirar mapa'),
+          ),
         ],
       ),
     );
@@ -354,15 +393,16 @@ class _MapaDaCenaState extends State<MapaDaCena> {
         icone: Icons.map_outlined,
         texto: widget.mestre
             ? 'Nenhum mapa na mesa. Toque no ícone de planta lá em cima '
-                'para escolher uma — ou subir a primeira.'
+                  'para escolher uma — ou subir a primeira.'
             : 'O mestre ainda não pôs mapa nesta cena. Esta tela fica '
-                'aberta: quando ele puser, aparece aqui na hora.',
+                  'aberta: quando ele puser, aparece aqui na hora.',
       );
     }
     if (_erroImagem) {
       return const _Recado(
         icone: Icons.broken_image_outlined,
-        texto: 'A imagem do mapa não veio. Verifique a internet e volte a '
+        texto:
+            'A imagem do mapa não veio. Verifique a internet e volte a '
             'abrir.',
       );
     }
@@ -374,8 +414,10 @@ class _MapaDaCenaState extends State<MapaDaCena> {
 
     return LayoutBuilder(
       builder: (context, limites) {
-        final escala = (limites.maxWidth / tamanho.width)
-            .clamp(0.0, limites.maxHeight / tamanho.height);
+        final escala = (limites.maxWidth / tamanho.width).clamp(
+          0.0,
+          limites.maxHeight / tamanho.height,
+        );
         final largura = tamanho.width * escala;
         final altura = tamanho.height * escala;
 
@@ -389,8 +431,7 @@ class _MapaDaCenaState extends State<MapaDaCena> {
               child: Stack(
                 children: [
                   Positioned.fill(child: Image.memory(bytes, fit: BoxFit.fill)),
-                  for (final t in mapa.tokens)
-                    _peca(t, Size(largura, altura)),
+                  for (final t in mapa.tokens) _peca(t, Size(largura, altura)),
                 ],
               ),
             ),
@@ -408,7 +449,7 @@ class _MapaDaCenaState extends State<MapaDaCena> {
     return Positioned(
       left: pos.dx * mapa.width - lado / 2,
       top: pos.dy * mapa.height - lado / 2,
-      child: widget.mestre
+      child: _podeMexer(t)
           ? GestureDetector(
               behavior: HitTestBehavior.opaque,
               onTap: () => _abrirPeca(t),
@@ -468,9 +509,10 @@ class _PecaMapa extends StatelessWidget {
                   child: Text(
                     token.inicial,
                     style: TextStyle(
-                        fontSize: lado * .45,
-                        fontWeight: FontWeight.bold,
-                        color: cor),
+                      fontSize: lado * .45,
+                      fontWeight: FontWeight.bold,
+                      color: cor,
+                    ),
                   ),
                 )
               : Image.memory(base64Decode(token.retrato), fit: BoxFit.cover),
@@ -499,11 +541,15 @@ class _PecaMapa extends StatelessWidget {
 /// O que abre ao tocar numa peça: tamanho, marca de ameaça e remover.
 class _FolhaDaPeca extends StatefulWidget {
   final TokenMapa token;
+
+  /// Jogador na própria peça: só o tamanho. Ameaça e remover são do mestre.
+  final bool mestre;
   final Future<void> Function(TokenMapa) aoMudar;
   final VoidCallback aoRemover;
 
   const _FolhaDaPeca({
     required this.token,
+    this.mestre = true,
     required this.aoMudar,
     required this.aoRemover,
   });
@@ -534,15 +580,21 @@ class _FolhaDaPecaState extends State<_FolhaDaPeca> {
                 _PecaMapa(token: _token, lado: 46 * _token.escala),
                 const SizedBox(width: 16),
                 Expanded(
-                  child: Text(_token.nome,
-                      style: const TextStyle(
-                          fontWeight: FontWeight.bold, fontSize: 16)),
+                  child: Text(
+                    _token.nome,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
                 ),
               ],
             ),
             const SizedBox(height: 8),
-            Text('Tamanho da peça: ${(_token.escala * 100).round()}%',
-                style: const TextStyle(fontSize: 12, color: Cores.tinta2)),
+            Text(
+              'Tamanho da peça: ${(_token.escala * 100).round()}%',
+              style: const TextStyle(fontSize: 12, color: Cores.tinta2),
+            ),
             Slider(
               value: _token.escala,
               min: 0.4,
@@ -557,27 +609,46 @@ class _FolhaDaPecaState extends State<_FolhaDaPeca> {
               'pequena. Criatura Enorme merece o dobro de um agente.',
               style: TextStyle(fontSize: 11, color: Cores.tinta2),
             ),
-            SwitchListTile(
-              dense: true,
-              contentPadding: EdgeInsets.zero,
-              value: _token.inimigo,
-              onChanged: (v) => _aplicar(_token.copiar(
-                inimigo: v,
-                cor: corDaPeca(_token.nome, inimigo: v),
-              )),
-              title: const Text('É ameaça (peça vermelha)',
-                  style: TextStyle(fontSize: 13)),
-            ),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: TextButton.icon(
-                onPressed: widget.aoRemover,
-                icon: const Icon(Icons.delete_outline, size: 18,
-                    color: Cores.sangue),
-                label: const Text('Tirar do mapa',
-                    style: TextStyle(color: Cores.sangue)),
+            if (widget.mestre) ...[
+              SwitchListTile(
+                dense: true,
+                contentPadding: EdgeInsets.zero,
+                value: _token.inimigo,
+                onChanged: (v) => _aplicar(
+                  _token.copiar(
+                    inimigo: v,
+                    cor: corDaPeca(_token.nome, inimigo: v),
+                  ),
+                ),
+                title: const Text(
+                  'É ameaça (peça vermelha)',
+                  style: TextStyle(fontSize: 13),
+                ),
               ),
-            ),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: TextButton.icon(
+                  onPressed: widget.aoRemover,
+                  icon: const Icon(
+                    Icons.delete_outline,
+                    size: 18,
+                    color: Cores.sangue,
+                  ),
+                  label: const Text(
+                    'Tirar do mapa',
+                    style: TextStyle(color: Cores.sangue),
+                  ),
+                ),
+              ),
+            ] else
+              const Padding(
+                padding: EdgeInsets.only(top: 8, bottom: 8),
+                child: Text(
+                  'Esta é a sua peça: arraste no mapa para mover. A foto vem '
+                  'da sua ficha publicada.',
+                  style: TextStyle(fontSize: 12, color: Cores.tinta2),
+                ),
+              ),
           ],
         ),
       ),
@@ -612,9 +683,10 @@ class _FolhaPlantas extends StatelessWidget {
             shrinkWrap: true,
             padding: const EdgeInsets.all(16),
             children: [
-              const Text('Plantas desta mesa',
-                  style:
-                      TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+              const Text(
+                'Plantas desta mesa',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              ),
               const SizedBox(height: 4),
               const Text(
                 'Ficam guardadas aqui, fora da galeria do mural — mapa não '
@@ -634,23 +706,29 @@ class _FolhaPlantas extends StatelessWidget {
               if (plantas.isEmpty)
                 const Padding(
                   padding: EdgeInsets.symmetric(vertical: 12),
-                  child: Text('Nenhuma planta guardada ainda.',
-                      style: TextStyle(fontSize: 13, color: Cores.tinta2)),
+                  child: Text(
+                    'Nenhuma planta guardada ainda.',
+                    style: TextStyle(fontSize: 13, color: Cores.tinta2),
+                  ),
                 ),
               for (final p in plantas)
                 ListTile(
                   dense: true,
                   leading: _Miniatura(base64: p.miniaturaBase64),
-                  title: Text(p.nome.isEmpty ? 'Sem nome' : p.nome,
-                      style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: p.id == atual
-                              ? FontWeight.bold
-                              : FontWeight.normal)),
+                  title: Text(
+                    p.nome.isEmpty ? 'Sem nome' : p.nome,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: p.id == atual
+                          ? FontWeight.bold
+                          : FontWeight.normal,
+                    ),
+                  ),
                   subtitle: p.id == atual
-                      ? const Text('na mesa agora',
-                          style:
-                              TextStyle(fontSize: 11, color: Cores.estavel))
+                      ? const Text(
+                          'na mesa agora',
+                          style: TextStyle(fontSize: 11, color: Cores.estavel),
+                        )
                       : null,
                   onTap: () => aoEscolher(p),
                   trailing: IconButton(
@@ -679,8 +757,12 @@ class _Miniatura extends StatelessWidget {
     }
     return ClipRRect(
       borderRadius: BorderRadius.circular(4),
-      child: Image.memory(base64Decode(base64),
-          width: 48, height: 48, fit: BoxFit.cover),
+      child: Image.memory(
+        base64Decode(base64),
+        width: 48,
+        height: 48,
+        fit: BoxFit.cover,
+      ),
     );
   }
 }
@@ -719,14 +801,16 @@ class _FolhaPecasState extends State<_FolhaPecas> {
       if (_tokens.any((t) => t.id == f.donoUid)) {
         _tokens.removeWhere((t) => t.id == f.donoUid);
       } else {
-        _tokens.add(TokenMapa(
-          id: f.donoUid,
-          nome: f.nome.isEmpty ? 'Sem nome' : f.nome,
-          retrato: ImagemMural.peca((f.ficha['retrato'] ?? '') as String),
-          cor: corDaPeca(f.nome, inimigo: false),
-          x: .5,
-          y: .5,
-        ));
+        _tokens.add(
+          TokenMapa(
+            id: f.donoUid,
+            nome: f.nome.isEmpty ? 'Sem nome' : f.nome,
+            retrato: ImagemMural.peca((f.ficha['retrato'] ?? '') as String),
+            cor: corDaPeca(f.nome, inimigo: false),
+            x: .5,
+            y: .5,
+          ),
+        );
       }
     });
     _salvar();
@@ -736,15 +820,17 @@ class _FolhaPecasState extends State<_FolhaPecas> {
   /// aparece na lista de fichas.
   void _porNpc(String nome, String retrato) {
     setState(() {
-      _tokens.add(TokenMapa(
-        id: 'npc:${DateTime.now().microsecondsSinceEpoch}',
-        nome: nome,
-        retrato: ImagemMural.peca(retrato),
-        cor: corDaPeca(nome, inimigo: true),
-        x: .5,
-        y: .5,
-        inimigo: true,
-      ));
+      _tokens.add(
+        TokenMapa(
+          id: 'npc:${DateTime.now().microsecondsSinceEpoch}',
+          nome: nome,
+          retrato: ImagemMural.peca(retrato),
+          cor: corDaPeca(nome, inimigo: true),
+          x: .5,
+          y: .5,
+          inimigo: true,
+        ),
+      );
     });
     _salvar();
   }
@@ -753,9 +839,14 @@ class _FolhaPecasState extends State<_FolhaPecas> {
     final npcs = FichaStore.todas().where((f) => f.ehNpc).toList();
     if (!mounted) return;
     if (npcs.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('Nenhum NPC no aparelho. Importe o bestiário na '
-              'aba Fichas.')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Nenhum NPC no aparelho. Importe o bestiário na '
+            'aba Fichas.',
+          ),
+        ),
+      );
       return;
     }
     final busca = TextEditingController();
@@ -767,21 +858,24 @@ class _FolhaPecasState extends State<_FolhaPecas> {
         builder: (context, refazer) {
           final filtro = busca.text.trim().toLowerCase();
           final lista = npcs
-              .where((f) => filtro.isEmpty ||
-                  f.nome.toLowerCase().contains(filtro))
+              .where(
+                (f) => filtro.isEmpty || f.nome.toLowerCase().contains(filtro),
+              )
               .take(60)
               .toList();
           return SafeArea(
             child: Padding(
               padding: EdgeInsets.only(
-                  bottom: MediaQuery.of(context).viewInsets.bottom),
+                bottom: MediaQuery.of(context).viewInsets.bottom,
+              ),
               child: ListView(
                 shrinkWrap: true,
                 padding: const EdgeInsets.all(16),
                 children: [
-                  const Text('Pôr NPC do bestiário',
-                      style: TextStyle(
-                          fontWeight: FontWeight.bold, fontSize: 16)),
+                  const Text(
+                    'Pôr NPC do bestiário',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  ),
                   const SizedBox(height: 8),
                   TextField(
                     controller: busca,
@@ -808,8 +902,7 @@ class _FolhaPecasState extends State<_FolhaPecas> {
                         lado: 30,
                         comNome: false,
                       ),
-                      title: Text(f.nome,
-                          style: const TextStyle(fontSize: 13)),
+                      title: Text(f.nome, style: const TextStyle(fontSize: 13)),
                       onTap: () {
                         Navigator.pop(context);
                         _porNpc(f.nome, f.retrato);
@@ -828,14 +921,16 @@ class _FolhaPecasState extends State<_FolhaPecas> {
     final nome = _nome.text.trim();
     if (nome.isEmpty) return;
     setState(() {
-      _tokens.add(TokenMapa(
-        id: 'npc:${DateTime.now().microsecondsSinceEpoch}',
-        nome: nome,
-        cor: corDaPeca(nome, inimigo: _inimigo),
-        x: .5,
-        y: .5,
-        inimigo: _inimigo,
-      ));
+      _tokens.add(
+        TokenMapa(
+          id: 'npc:${DateTime.now().microsecondsSinceEpoch}',
+          nome: nome,
+          cor: corDaPeca(nome, inimigo: _inimigo),
+          x: .5,
+          y: .5,
+          inimigo: _inimigo,
+        ),
+      );
       _nome.clear();
     });
     _salvar();
@@ -850,14 +945,17 @@ class _FolhaPecasState extends State<_FolhaPecas> {
   Widget build(BuildContext context) {
     return SafeArea(
       child: Padding(
-        padding:
-            EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+        ),
         child: ListView(
           shrinkWrap: true,
           padding: const EdgeInsets.all(16),
           children: [
-            const Text('Peças no mapa',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+            const Text(
+              'Peças no mapa',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+            ),
             const SizedBox(height: 4),
             const Text(
               'Agente com ficha publicada entra com o retrato dele. NPC do '
@@ -867,8 +965,10 @@ class _FolhaPecasState extends State<_FolhaPecas> {
             ),
             const SizedBox(height: 12),
             if (widget.fichas.isEmpty)
-              const Text('Ninguém publicou ficha nesta mesa ainda.',
-                  style: TextStyle(fontSize: 13, color: Cores.tinta2)),
+              const Text(
+                'Ninguém publicou ficha nesta mesa ainda.',
+                style: TextStyle(fontSize: 13, color: Cores.tinta2),
+              ),
             for (final f in widget.fichas)
               CheckboxListTile(
                 dense: true,
@@ -886,8 +986,10 @@ class _FolhaPecasState extends State<_FolhaPecas> {
               ),
             ),
             const SizedBox(height: 12),
-            const Text('Peça avulsa (marcador, porta, refém…)',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+            const Text(
+              'Peça avulsa (marcador, porta, refém…)',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+            ),
             const SizedBox(height: 8),
             Row(
               children: [
@@ -895,7 +997,9 @@ class _FolhaPecasState extends State<_FolhaPecas> {
                   child: TextField(
                     controller: _nome,
                     decoration: const InputDecoration(
-                        labelText: 'Nome da peça', isDense: true),
+                      labelText: 'Nome da peça',
+                      isDense: true,
+                    ),
                     onSubmitted: (_) => _novoAvulso(),
                   ),
                 ),
@@ -907,20 +1011,26 @@ class _FolhaPecasState extends State<_FolhaPecas> {
               dense: true,
               value: _inimigo,
               onChanged: (v) => setState(() => _inimigo = v),
-              title: const Text('É ameaça (peça vermelha)',
-                  style: TextStyle(fontSize: 13)),
+              title: const Text(
+                'É ameaça (peça vermelha)',
+                style: TextStyle(fontSize: 13),
+              ),
             ),
             if (_tokens.isNotEmpty) ...[
               const Divider(height: 24),
-              const Text('No mapa agora',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+              const Text(
+                'No mapa agora',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+              ),
               for (final t in _tokens)
                 ListTile(
                   dense: true,
                   leading: _PecaMapa(token: t, lado: 28, comNome: false),
                   title: Text(t.nome, style: const TextStyle(fontSize: 13)),
-                  subtitle: Text('tamanho ${(t.escala * 100).round()}%',
-                      style: const TextStyle(fontSize: 11)),
+                  subtitle: Text(
+                    'tamanho ${(t.escala * 100).round()}%',
+                    style: const TextStyle(fontSize: 11),
+                  ),
                   trailing: IconButton(
                     icon: const Icon(Icons.close, size: 18),
                     onPressed: () => _remover(t),
@@ -933,26 +1043,6 @@ class _FolhaPecasState extends State<_FolhaPecas> {
       ),
     );
   }
-}
-
-/// Cor da peça. Ameaça é sempre vermelha — no meio do combate, ninguém tem
-/// tempo de decorar quem é quem. Agente ganha uma cor estável a partir do
-/// nome, para a mesma pessoa ter sempre a mesma peça.
-int corDaPeca(String nome, {required bool inimigo}) {
-  if (inimigo) return Cores.sangue.toARGB32();
-  const paleta = [
-    0xFFA06BFF,
-    0xFF57B98A,
-    0xFFD9A441,
-    0xFF4FA8E0,
-    0xFFE07FB8,
-    0xFF8CD17D,
-  ];
-  var soma = 0;
-  for (final c in nome.codeUnits) {
-    soma += c;
-  }
-  return paleta[soma % paleta.length];
 }
 
 class _Recado extends StatelessWidget {
@@ -971,9 +1061,11 @@ class _Recado extends StatelessWidget {
           children: [
             Icon(icone, size: 44, color: Cores.tinta2),
             const SizedBox(height: 12),
-            Text(texto,
-                textAlign: TextAlign.center,
-                style: const TextStyle(color: Cores.tinta2)),
+            Text(
+              texto,
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: Cores.tinta2),
+            ),
           ],
         ),
       ),

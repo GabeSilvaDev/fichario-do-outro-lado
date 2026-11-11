@@ -98,6 +98,35 @@ service cloud.firestore {
       match /mapa/{doc} {
         allow read:  if souMembro(mesaId) || souMestre(mesaId);
         allow write: if souMestre(mesaId);
+
+        // Uma peça por documento. O mestre mexe em todas; o jogador só na
+        // dele (id = uid): cria quando publica a ficha, move e muda o
+        // tamanho, acompanha nome e foto, e tira ao sair. Cor, marca de
+        // ameaça e as peças dos outros continuam do mestre.
+        match /pecas/{pecaId} {
+          function escalaOk(d) {
+            return d.escala is number && d.escala >= 0.4 && d.escala <= 3;
+          }
+          function posicaoOk(d) {
+            return d.x is number && d.x >= 0 && d.x <= 1 &&
+                   d.y is number && d.y >= 0 && d.y <= 1;
+          }
+          function minha() { return souMembro(mesaId) && pecaId == uid(); }
+
+          allow read:   if souMembro(mesaId) || souMestre(mesaId);
+          allow write:  if souMestre(mesaId);
+          allow create: if minha() &&
+            request.resource.data.id == uid() &&
+            request.resource.data.inimigo == false &&
+            escalaOk(request.resource.data) &&
+            posicaoOk(request.resource.data);
+          allow update: if minha() &&
+            request.resource.data.diff(resource.data).affectedKeys()
+              .hasOnly(['x', 'y', 'escala', 'nome', 'retrato']) &&
+            escalaOk(request.resource.data) &&
+            posicaoOk(request.resource.data);
+          allow delete: if minha();
+        }
       }
 
       match /mural/{doc} {

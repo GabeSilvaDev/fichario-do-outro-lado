@@ -87,30 +87,12 @@ class PainelMestre extends StatelessWidget {
                               style: const TextStyle(
                                   fontWeight: FontWeight.bold, fontSize: 16)),
                         ),
-                        if (ficha.emCombate) _selo('COMBATE', Cores.conhecimento),
-                        if (ficha.morto)
-                          _selo('MORTO', Cores.sangue)
-                        else if (!ficha.oculto('pv') && ficha.morrendo)
-                          _selo('MORRENDO ${ficha.turnosMorrendo}/3',
-                              Cores.sangue)
-                        else if (!ficha.oculto('pv') && ficha.estaMachucado)
-                          _selo('MACHUCADO', Cores.sangue),
-                        if (!ficha.oculto('san')) ...[
-                          if (ficha.insano)
-                            _selo('INSANO', Cores.energia)
-                          else if (ficha.enlouquecendo)
-                            _selo('ENLOUQUECENDO ${ficha.turnosEnlouquecendo}/3',
-                                Cores.energia)
-                          else if (ficha.perturbado)
-                            _selo('PERTURBADO', Cores.energia),
-                        ],
                       ],
                     ),
                     Text(
                       '${ficha.classe} · '
-                      '${ficha.porEstagio ? 'estágio ${ficha.estagio}' : 'NEX ${ficha.nex}%'} · '
-                      'Defesa ${ficha.defesa}'
-                      '${ficha.condicoes.isEmpty ? '' : ' · ${ficha.condicoes.join(', ')}'}',
+                      'NEX ${ficha.nex}% · '
+                      'Defesa ${ficha.defesa}',
                       style: const TextStyle(
                           fontSize: 12, color: Cores.tinta2),
                     ),
