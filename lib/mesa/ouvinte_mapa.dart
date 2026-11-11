@@ -49,23 +49,24 @@ class _OuvinteMapaState extends State<OuvinteMapa> {
       return;
     }
     if (!mounted) return;
-    _assinatura = widget.servico.observarMapa(widget.mesaId).listen(
-      (mapa) {
-        final id = mapa?.imagemId ?? '';
-        final primeira = _jaVisto == null;
-        if (id == _jaVisto) return;
-        _jaVisto = id;
-        if (primeira || id.isEmpty || !mounted) return;
-        Navigator.of(context).push(MaterialPageRoute(
+    _assinatura = widget.servico.observarMapa(widget.mesaId).listen((mapa) {
+      final id = mapa?.imagemId ?? '';
+      final primeira = _jaVisto == null;
+      if (id == _jaVisto) return;
+      _jaVisto = id;
+      if (primeira || id.isEmpty || !mounted) return;
+      // Já está no mapa: a tela aberta troca sozinha.
+      if (MapaDaCena.abertas > 0) return;
+      Navigator.of(context).push(
+        MaterialPageRoute(
           builder: (_) => MapaDaCena(
             servico: widget.servico,
             mesaId: widget.mesaId,
             mestre: widget.mestre,
           ),
-        ));
-      },
-      onError: (_) {},
-    );
+        ),
+      );
+    }, onError: (_) {});
   }
 
   @override

@@ -39,6 +39,11 @@ class MapaDaCena extends StatefulWidget {
     required this.mestre,
   });
 
+  /// Quantas telas de mapa estão abertas agora. Quem já está no mapa vê a
+  /// troca ali mesmo: abrir outra por cima empilhava telas iguais e o
+  /// "voltar" parecia não funcionar.
+  static int abertas = 0;
+
   @override
   State<MapaDaCena> createState() => _MapaDaCenaState();
 }
@@ -73,6 +78,7 @@ class _MapaDaCenaState extends State<MapaDaCena> {
   @override
   void initState() {
     super.initState();
+    MapaDaCena.abertas++;
     _assinatura = widget.servico.observarMapa(widget.mesaId).listen((m) {
       if (!mounted) return;
       setState(() => _mapa = m);
@@ -91,6 +97,7 @@ class _MapaDaCenaState extends State<MapaDaCena> {
 
   @override
   void dispose() {
+    MapaDaCena.abertas--;
     _debounce?.cancel();
     _assinatura?.cancel();
     _assinaturaIniciativa?.cancel();
