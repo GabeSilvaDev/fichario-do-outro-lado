@@ -613,6 +613,16 @@ class MesaFirestore implements MesaService {
   }
 
   @override
+  Future<void> salvarPeca(String mesaId, TokenMapa peca) async {
+    try {
+      await _pecas(mesaId).doc(peca.id).set(peca.toJson());
+    } on FirebaseException catch (e) {
+      if (e.code == 'permission-denied') throw SemPermissao();
+      rethrow;
+    }
+  }
+
+  @override
   Future<void> sincronizarMinhaPeca(
     String mesaId,
     String nome,

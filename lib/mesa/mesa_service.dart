@@ -483,6 +483,10 @@ abstract class MesaService {
   /// Firestore só deixa mudar posição e tamanho dela.
   Future<void> moverMinhaPeca(String mesaId, TokenMapa peca);
 
+  /// Mestre: grava UMA peça (posição, tamanho, cor, marca de ameaça) sem
+  /// reescrever as outras — dois arrastos seguidos não brigam entre si.
+  Future<void> salvarPeca(String mesaId, TokenMapa peca);
+
   /// Jogador que publicou a ficha: põe a própria peça no mapa aberto (se
   /// ainda não estiver) e mantém nome e retrato iguais aos da ficha.
   Future<void> sincronizarMinhaPeca(

@@ -29,6 +29,9 @@ class _MesaFalsa implements MesaService {
       movidas.add(peca);
 
   @override
+  Future<void> salvarPeca(String mesaId, TokenMapa peca) async {}
+
+  @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 

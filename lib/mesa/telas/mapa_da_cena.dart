@@ -111,9 +111,19 @@ class _MapaDaCenaState extends State<MapaDaCena> {
     _debounce = Timer(const Duration(milliseconds: 120), _gravarArrasto);
   }
 
-  void _soltar() {
+  /// Soltou: grava a posição final e devolve a peça ao que vem da mesa —
+  /// senão este aparelho ficaria preso na posição local e não veria mais
+  /// quando outra pessoa (mestre ou dono) movesse a mesma peça.
+  Future<void> _soltar() async {
     _debounce?.cancel();
-    _gravarArrasto();
+    final soltas = _arrastando.keys.toList();
+    await _gravarArrasto();
+    if (!mounted) return;
+    setState(() {
+      for (final id in soltas) {
+        _arrastando.remove(id);
+      }
+    });
   }
 
   /// A peça é minha (jogador): o id dela é o meu uid.
@@ -139,12 +149,15 @@ class _MapaDaCenaState extends State<MapaDaCena> {
       }
       return;
     }
-    await _salvar([
-      for (final t in mapa.tokens)
-        _arrastando.containsKey(t.id)
-            ? t.mover(_arrastando[t.id]!.dx, _arrastando[t.id]!.dy)
-            : t,
-    ]);
+    // Uma peça por vez: regravar a lista inteira a cada arrasto deixava
+    // duas gravações seguidas chegarem fora de ordem.
+    for (final t in mapa.tokens) {
+      final p = _arrastando[t.id];
+      if (p == null) continue;
+      try {
+        await widget.servico.salvarPeca(widget.mesaId, t.mover(p.dx, p.dy));
+      } catch (_) {}
+    }
   }
 
   Future<void> _salvar(List<TokenMapa> tokens) async {
@@ -164,7 +177,9 @@ class _MapaDaCenaState extends State<MapaDaCena> {
       } catch (_) {}
       return;
     }
-    await _salvar([for (final t in _tokens) t.id == novo.id ? novo : t]);
+    try {
+      await widget.servico.salvarPeca(widget.mesaId, novo);
+    } catch (_) {}
   }
 
   Future<void> _removerToken(TokenMapa alvo) => _salvar([
