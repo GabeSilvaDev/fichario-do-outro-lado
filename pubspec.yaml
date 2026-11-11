@@ -4,7 +4,7 @@ description: "Fichário do Outro Lado: ficha de personagem e mesa online para RP
   Ordem Paranormal."
 publish_to: 'none'
 
-version: 0.19.1+29
+version: 0.20.1+31
 
 environment:
   sdk: ^3.12.0
