@@ -17,6 +17,7 @@ import 'cartao_mapa.dart';
 import 'galeria_mesa.dart';
 import 'mural_da_mesa.dart';
 import 'painel_mestre.dart';
+import 'pistas_mesa.dart';
 
 /// A aba Mesa: criar, entrar, ver quem está online e sair.
 ///
@@ -685,8 +686,13 @@ class _MesaAbaState extends State<MesaAba> {
           WidgetsBinding.instance
               .addPostFrameCallback((_) => _tratarMesaSumida(estado));
         }
-        return ListView(
+        // Rolagem que mantém tudo montado: a ListView descartava o mural,
+        // a galeria e as fichas ao sair da tela, e eles voltavam com outra
+        // altura (carregando) — a página pulava no meio da rolagem.
+        return SingleChildScrollView(
           padding: const EdgeInsets.all(16),
+          child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Card(
               child: Padding(
@@ -786,6 +792,11 @@ class _MesaAbaState extends State<MesaAba> {
                 servico: _servico,
                 mesaId: estado.mesaId,
                 souMestre: souMestre),
+            FaixaSecao(souMestre ? 'Pistas entregues' : 'Minhas pistas'),
+            PistasDaMesa(
+                servico: _servico,
+                mesaId: estado.mesaId,
+                souMestre: souMestre),
             if (souMestre)
               PainelMestre(servico: _servico, mesaId: estado.mesaId),
             const FaixaSecao('Minha ficha nesta mesa'),
@@ -811,6 +822,7 @@ class _MesaAbaState extends State<MesaAba> {
                 ],
               ),
           ],
+        ),
         );
       },
     );

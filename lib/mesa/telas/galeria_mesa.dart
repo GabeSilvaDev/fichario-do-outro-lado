@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../../theme.dart';
 import '../../widgets/visualizador_imagem.dart';
 import '../mesa_service.dart';
+import 'pistas_mesa.dart';
 
 /// O acervo de imagens da mesa: tudo que o mestre já guardou, mais recente
 /// primeiro. O que está em destaque agora mora em [MuralDaMesa] — aqui é o
@@ -146,7 +147,14 @@ class _GaleriaMesaState extends State<GaleriaMesa> {
     return StreamBuilder<List<ItemGaleria>>(
       stream: widget.servico.observarGaleria(widget.mesaId),
       builder: (context, snap) {
-        final itens = snap.data ?? const <ItemGaleria>[];
+        final todas = snap.data ?? const <ItemGaleria>[];
+        // Jogador vê só o que já foi mostrado; o resto é surpresa do mestre.
+        final itens = widget.souMestre
+            ? todas
+            : [
+                for (final i in todas)
+                  if (i.mostrada) i,
+              ];
         if (itens.isEmpty) return _vazia();
         final porCategoria = <CategoriaGaleria, List<ItemGaleria>>{
           for (final c in CategoriaGaleria.values)
@@ -308,6 +316,17 @@ class _GaleriaMesaState extends State<GaleriaMesa> {
                       onPressed: () => _mostrarAgora(item),
                     ),
                     IconButton(
+                      key: ValueKey('pista-${item.id}'),
+                      tooltip: 'Entregar como pista',
+                      icon: const Icon(Icons.key_outlined, size: 18),
+                      onPressed: () => entregarComoPista(
+                        context,
+                        widget.servico,
+                        widget.mesaId,
+                        item,
+                      ),
+                    ),
+                    IconButton(
                       key: ValueKey('categoria-${item.id}'),
                       tooltip: 'Mudar categoria',
                       icon: Icon(_icones[item.categoria], size: 18),
@@ -319,7 +338,7 @@ class _GaleriaMesaState extends State<GaleriaMesa> {
                       onPressed: () => _apagar(item),
                     ),
                   ])
-                    // Três botões numa célula de ~100dp: sem o mínimo de
+                    // Quatro botões numa célula de ~120dp: sem o mínimo de
                     // 48dp do Material, que estourava no celular.
                     IconButtonTheme(
                       data: IconButtonThemeData(

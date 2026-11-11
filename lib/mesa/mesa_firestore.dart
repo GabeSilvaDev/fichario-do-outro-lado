@@ -322,6 +322,7 @@ class MesaFirestore implements MesaService {
           miniaturaBase64: miniaturaBase64,
           em: DateTime.now(),
           categoria: categoria,
+          mostrada: false,
         ).toJson(),
       );
       return ref.id;
@@ -384,6 +385,7 @@ class MesaFirestore implements MesaService {
       final legenda = item.exists
           ? (item.data()!['legenda'] ?? '') as String
           : '';
+      if (item.exists) await item.reference.update({'mostrada': true});
       await _mural(mesaId).set(
         ItemMural(
           imagemId: imagemId,
@@ -479,6 +481,9 @@ class MesaFirestore implements MesaService {
       await _mapa(mesaId).delete();
       // Senão a imagem da sessão passada pula na tela de todos na próxima.
       await _mural(mesaId).delete();
+      // O combate não passa de uma sessão para a outra; as pistas, sim.
+      await _iniciativa(mesaId).delete();
+      await _pvDeCombate(mesaId).delete();
     } on FirebaseException catch (e) {
       if (e.code == 'permission-denied') throw SemPermissao();
       rethrow;
@@ -499,6 +504,8 @@ class MesaFirestore implements MesaService {
         'fichas',
         'rolagens',
         'membros',
+        'pistas',
+        'pistasImagens',
       ]) {
         final docs = await _mesa(mesaId).collection(c).get();
         for (final d in docs.docs) {
@@ -507,6 +514,8 @@ class MesaFirestore implements MesaService {
       }
       await _mesa(mesaId).collection('privado').doc('chave').delete();
       await _mesa(mesaId).collection('privado').doc('pedido').delete();
+      await _pvDeCombate(mesaId).delete();
+      await _iniciativa(mesaId).delete();
       await _mural(mesaId).delete();
       await _apagarPecas(mesaId);
       await _mapa(mesaId).delete();
@@ -615,15 +624,40 @@ class MesaFirestore implements MesaService {
     String mesaId,
     String imagemId,
     String titulo,
-    List<TokenMapa> tokens,
-  ) async {
+    List<TokenMapa> tokens, {
+    double quadrado = 0,
+  }) async {
     try {
       await _mapa(mesaId).set({
         'imagemId': imagemId,
         'titulo': titulo,
         'em': DateTime.now().toIso8601String(),
+        if (quadrado > 0) 'quadrado': quadrado,
       });
       await salvarTokens(mesaId, tokens);
+    } on FirebaseException catch (e) {
+      if (e.code == 'permission-denied') throw SemPermissao();
+      rethrow;
+    }
+  }
+
+  @override
+  Future<void> calibrarMapa(
+    String mesaId,
+    String imagemId,
+    double quadrado,
+  ) async {
+    try {
+      try {
+        await _mapas(mesaId).doc(imagemId).update({'quadrado': quadrado});
+      } on FirebaseException catch (e) {
+        // Planta antiga, aberta pela galeria: só o mapa da mesa guarda.
+        if (e.code != 'not-found') rethrow;
+      }
+      final atual = await _mapa(mesaId).get();
+      if (atual.exists && atual.data()!['imagemId'] == imagemId) {
+        await _mapa(mesaId).update({'quadrado': quadrado});
+      }
     } on FirebaseException catch (e) {
       if (e.code == 'permission-denied') throw SemPermissao();
       rethrow;
@@ -754,6 +788,7 @@ class MesaFirestore implements MesaService {
           titulo: base.titulo,
           tokens: daColecao.isNotEmpty ? daColecao : base.tokens,
           em: base.em,
+          quadrado: base.quadrado,
         ),
       );
     }
@@ -779,5 +814,156 @@ class MesaFirestore implements MesaService {
       },
     );
     return saida.stream;
+  }
+
+  CollectionReference<Map<String, dynamic>> _pistas(String mesaId) =>
+      _mesa(mesaId).collection('pistas');
+
+  CollectionReference<Map<String, dynamic>> _pistasImagens(String mesaId) =>
+      _mesa(mesaId).collection('pistasImagens');
+
+  DocumentReference<Map<String, dynamic>> _iniciativa(String mesaId) =>
+      _mesa(mesaId).collection('mapa').doc('iniciativa');
+
+  DocumentReference<Map<String, dynamic>> _pvDeCombate(String mesaId) =>
+      _mesa(mesaId).collection('privado').doc('combate');
+
+  @override
+  Future<void> entregarPista(
+    String mesaId,
+    ItemGaleria imagem,
+    List<String> uids,
+  ) async {
+    final cheia = await imagemCheia(mesaId, imagem.id);
+    if (cheia == null) throw StateError('A imagem não está mais na galeria.');
+    final ref = _pistas(mesaId).doc();
+    try {
+      // A pista antes da imagem: a regra da imagem confere a lista de quem
+      // vê na pista. Quem abrir no meio do caminho espera um instante.
+      await ref.set(
+        Pista(
+          id: ref.id,
+          legenda: imagem.legenda,
+          miniaturaBase64: imagem.miniaturaBase64,
+          veem: uids,
+          em: DateTime.now(),
+        ).toJson(),
+      );
+      await _pistasImagens(mesaId).doc(ref.id).set({'imagem': cheia});
+    } on FirebaseException catch (e) {
+      if (e.code == 'permission-denied') throw SemPermissao();
+      rethrow;
+    }
+  }
+
+  @override
+  Future<void> mudarQuemVe(
+    String mesaId,
+    String pistaId,
+    List<String> uids,
+  ) async {
+    try {
+      await _pistas(mesaId).doc(pistaId).update({'veem': uids});
+    } on FirebaseException catch (e) {
+      if (e.code == 'permission-denied') throw SemPermissao();
+      rethrow;
+    }
+  }
+
+  @override
+  Future<void> repassarPista(
+    String mesaId,
+    String pistaId,
+    RepasseDePista repasse,
+  ) async {
+    try {
+      await _pistas(mesaId).doc(pistaId).update({
+        'veem': FieldValue.arrayUnion([repasse.paraUid]),
+        'repasses': FieldValue.arrayUnion([repasse.toJson()]),
+      });
+    } on FirebaseException catch (e) {
+      if (e.code == 'permission-denied') throw SemPermissao();
+      rethrow;
+    }
+  }
+
+  @override
+  Future<void> apagarPista(String mesaId, String pistaId) async {
+    try {
+      await _pistasImagens(mesaId).doc(pistaId).delete();
+      await _pistas(mesaId).doc(pistaId).delete();
+    } on FirebaseException catch (e) {
+      if (e.code == 'permission-denied') throw SemPermissao();
+      rethrow;
+    }
+  }
+
+  @override
+  Stream<List<Pista>> observarPistas(String mesaId, {required bool mestre}) {
+    final meuUid = uid;
+    // Jogador só pode listar o que a regra deixa ler: a consulta tem que
+    // filtrar por ele, senão o Firestore recusa a lista inteira.
+    final consulta = mestre
+        ? _pistas(mesaId)
+        : _pistas(mesaId).where('veem', arrayContains: meuUid ?? '-');
+    return consulta.snapshots().map(
+      (q) =>
+          q.docs.map((d) => Pista.fromJson(d.id, d.data())).toList()
+            ..sort((a, b) => b.em.compareTo(a.em)),
+    );
+  }
+
+  @override
+  Future<String?> imagemDaPista(String mesaId, String pistaId) async {
+    final doc = await _pistasImagens(mesaId).doc(pistaId).get();
+    if (!doc.exists) return null;
+    return doc.data()!['imagem'] as String?;
+  }
+
+  @override
+  Stream<Iniciativa?> observarIniciativa(String mesaId) => _iniciativa(
+    mesaId,
+  ).snapshots().map((d) => d.exists ? Iniciativa.fromJson(d.data()!) : null);
+
+  @override
+  Future<void> salvarIniciativa(String mesaId, Iniciativa? iniciativa) async {
+    try {
+      if (iniciativa == null) {
+        await _iniciativa(mesaId).delete();
+        await _pvDeCombate(mesaId).delete();
+      } else {
+        await _iniciativa(mesaId).set(iniciativa.toJson());
+      }
+    } on FirebaseException catch (e) {
+      if (e.code == 'permission-denied') throw SemPermissao();
+      rethrow;
+    }
+  }
+
+  @override
+  Stream<Map<String, PvDeCombate>> observarPvDeCombate(String mesaId) =>
+      _pvDeCombate(mesaId).snapshots().map((d) {
+        final pv = (d.data()?['pv'] ?? const {}) as Map;
+        return {
+          for (final e in pv.entries)
+            '${e.key}': PvDeCombate.fromJson(
+              (e.value as Map).cast<String, dynamic>(),
+            ),
+        };
+      });
+
+  @override
+  Future<void> salvarPvDeCombate(
+    String mesaId,
+    Map<String, PvDeCombate> pv,
+  ) async {
+    try {
+      await _pvDeCombate(mesaId).set({
+        'pv': {for (final e in pv.entries) e.key: e.value.toJson()},
+      });
+    } on FirebaseException catch (e) {
+      if (e.code == 'permission-denied') throw SemPermissao();
+      rethrow;
+    }
   }
 }

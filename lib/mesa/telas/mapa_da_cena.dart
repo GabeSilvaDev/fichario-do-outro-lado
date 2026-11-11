@@ -4,12 +4,15 @@ import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
 import '../../store/ficha_store.dart';
 import '../../theme.dart';
 import '../imagem_mural.dart';
 import '../mesa_service.dart';
+import '../regua.dart';
+import 'iniciativa_mesa.dart';
 
 /// O mapa da cena: a planta do lugar com uma peça por personagem.
 ///
@@ -56,6 +59,17 @@ class _MapaDaCenaState extends State<MapaDaCena> {
   final Map<String, Offset> _arrastando = {};
   Timer? _debounce;
 
+  StreamSubscription<Iniciativa?>? _assinaturaIniciativa;
+  Iniciativa? _iniciativa;
+
+  /// Régua ligada: arrastar no mapa mede em vez de mover a imagem.
+  bool _regua = false;
+
+  /// Mestre marcou "calibrar": a próxima linha vira o tamanho da grade.
+  bool _calibrando = false;
+  Offset? _reguaDe;
+  Offset? _reguaAte;
+
   @override
   void initState() {
     super.initState();
@@ -64,12 +78,22 @@ class _MapaDaCenaState extends State<MapaDaCena> {
       setState(() => _mapa = m);
       if (m != null && m.imagemId != _imagemCarregada) _carregarImagem(m);
     }, onError: (_) {});
+    try {
+      _assinaturaIniciativa = widget.servico
+          .observarIniciativa(widget.mesaId)
+          .listen((i) {
+            if (mounted) setState(() => _iniciativa = i);
+          }, onError: (_) {});
+    } catch (_) {
+      // Serviço sem combate (testes antigos): o mapa funciona sem.
+    }
   }
 
   @override
   void dispose() {
     _debounce?.cancel();
     _assinatura?.cancel();
+    _assinaturaIniciativa?.cancel();
     super.dispose();
   }
 
@@ -215,8 +239,13 @@ class _MapaDaCenaState extends State<MapaDaCena> {
       context: context,
       backgroundColor: Cores.carta,
       isScrollControlled: true,
-      builder: (_) =>
-          _FolhaPecas(fichas: fichas, tokens: _tokens, aoTrocar: _salvar),
+      builder: (_) => _FolhaPecas(
+        servico: widget.servico,
+        mesaId: widget.mesaId,
+        fichas: fichas,
+        tokens: _tokens,
+        aoTrocar: _salvar,
+      ),
     );
   }
 
@@ -286,7 +315,7 @@ class _MapaDaCenaState extends State<MapaDaCena> {
         );
       }
       // A planta da faixa pode estar velha: lê as peças guardadas de agora.
-      final guardadas =
+      final daBiblioteca =
           (await widget.servico
                   .observarMapasGuardados(widget.mesaId)
                   .first
@@ -295,9 +324,9 @@ class _MapaDaCenaState extends State<MapaDaCena> {
                     onTimeout: () => const [],
                   ))
               .where((m) => m.id == destino.id)
-              .firstOrNull
-              ?.pecas ??
-          destino.pecas;
+              .firstOrNull;
+      final guardadas = daBiblioteca?.pecas ?? destino.pecas;
+      final quadrado = daBiblioteca?.quadrado ?? destino.quadrado;
       final agentes = await _pecasIniciais();
       final publicados = {for (final a in agentes) a.id: a};
       final tokens = <TokenMapa>[
@@ -316,6 +345,7 @@ class _MapaDaCenaState extends State<MapaDaCena> {
         destino.id,
         destino.nome,
         tokens,
+        quadrado: quadrado,
       );
     } catch (e) {
       _erro(e);
@@ -404,6 +434,128 @@ class _MapaDaCenaState extends State<MapaDaCena> {
     await widget.servico.fecharMapa(widget.mesaId);
   }
 
+  void _alternarRegua() => setState(() {
+    _regua = !_regua;
+    _calibrando = false;
+    _reguaDe = null;
+    _reguaAte = null;
+  });
+
+  /// Começar a medir em cima de uma peça prende a ponta no centro dela —
+  /// medir "do Asafe até o zumbi" sem precisar de pontaria.
+  Offset _grudar(Offset p, Size mapa) {
+    for (final t in _tokens) {
+      final c = _posicao(t);
+      final raio = 23.0 * t.escala;
+      final dx = (c.dx - p.dx) * mapa.width;
+      final dy = (c.dy - p.dy) * mapa.height;
+      if (dx * dx + dy * dy <= raio * raio) return c;
+    }
+    return p;
+  }
+
+  Future<void> _fimDaRegua() async {
+    final mapa = _mapa;
+    final a = _reguaDe;
+    final b = _reguaAte;
+    final tamanho = _tamanho;
+    if (!widget.mestre || mapa == null || a == null || b == null) return;
+    if (tamanho == null) return;
+    if (!_calibrando && mapa.quadrado > 0) return;
+    final n = await _pedirQuadrados();
+    if (n == null || n <= 0 || !mounted) return;
+    final lado = Regua.calibrar(a, b, tamanho, n);
+    if (lado <= 0) return;
+    setState(() => _calibrando = false);
+    try {
+      await widget.servico.calibrarMapa(widget.mesaId, mapa.imagemId, lado);
+    } catch (e) {
+      _erro(e);
+    }
+  }
+
+  Future<int?> _pedirQuadrados() {
+    final campo = TextEditingController();
+    return showDialog<int>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Quantos quadrados tem essa linha?'),
+        content: TextField(
+          key: const ValueKey('quadrados-calibrar'),
+          controller: campo,
+          autofocus: true,
+          keyboardType: TextInputType.number,
+          decoration: const InputDecoration(
+            hintText: 'Conte os quadrados da grade',
+          ),
+          onSubmitted: (t) => Navigator.pop(ctx, int.tryParse(t.trim())),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            key: const ValueKey('ok-calibrar'),
+            onPressed: () =>
+                Navigator.pop(ctx, int.tryParse(campo.text.trim())),
+            child: const Text('Calibrar'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _abrirIniciativa() {
+    final i = _iniciativa;
+    if (widget.mestre) {
+      PainelIniciativa.abrir(context, widget.servico, widget.mesaId, _tokens);
+    } else if (i != null) {
+      verOrdem(context, i);
+    }
+  }
+
+  Widget _avisoRegua(MapaMesa mapa) {
+    final calibrado = mapa.quadrado > 0;
+    final texto = _calibrando
+        ? 'Arraste por cima de alguns quadrados da grade (quanto mais, '
+              'mais preciso).'
+        : calibrado
+        ? 'Arraste de um ponto a outro. Começar numa peça prende nela.'
+        : widget.mestre
+        ? 'Grade ainda não calibrada: arraste por cima de alguns quadrados '
+              'e diga quantos são.'
+        : 'O mestre ainda não calibrou a grade deste mapa.';
+    return Material(
+      color: Cores.fundo,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(12, 2, 4, 2),
+        child: Row(
+          children: [
+            const Icon(Icons.straighten, size: 16, color: Cores.tinta2),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                texto,
+                style: const TextStyle(fontSize: 12, color: Cores.tinta2),
+              ),
+            ),
+            if (widget.mestre && calibrado && !_calibrando)
+              TextButton(
+                key: const ValueKey('recalibrar'),
+                onPressed: () => setState(() {
+                  _calibrando = true;
+                  _reguaDe = null;
+                  _reguaAte = null;
+                }),
+                child: const Text('Calibrar'),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
   void _erro(Object e) {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
@@ -421,6 +573,22 @@ class _MapaDaCenaState extends State<MapaDaCena> {
           style: const TextStyle(fontSize: 16),
         ),
         actions: [
+          if (mapa != null)
+            IconButton(
+              key: const ValueKey('botao-regua'),
+              tooltip: _regua ? 'Desligar a régua' : 'Régua',
+              isSelected: _regua,
+              icon: const Icon(Icons.straighten),
+              color: _regua ? Cores.energiaViva : null,
+              onPressed: _alternarRegua,
+            ),
+          if (widget.mestre && mapa != null)
+            IconButton(
+              key: const ValueKey('botao-iniciativa'),
+              tooltip: 'Iniciativa',
+              icon: const Icon(Icons.swap_vert),
+              onPressed: _abrirIniciativa,
+            ),
           if (widget.mestre) ...[
             IconButton(
               tooltip: 'Plantas da mesa',
@@ -453,6 +621,15 @@ class _MapaDaCenaState extends State<MapaDaCena> {
               aoSubir: _subirPlanta,
               aoErro: _erro,
             ),
+          if (mapa != null)
+            FaixaIniciativa(
+              servico: widget.servico,
+              mesaId: widget.mesaId,
+              mestre: widget.mestre,
+              iniciativa: _iniciativa,
+              aoAbrir: _abrirIniciativa,
+            ),
+          if (_regua && mapa != null) _avisoRegua(mapa),
           Expanded(
             child: _ocupado
                 ? const Center(child: CircularProgressIndicator())
@@ -501,6 +678,8 @@ class _MapaDaCenaState extends State<MapaDaCena> {
           child: InteractiveViewer(
             minScale: 1,
             maxScale: 6,
+            // Com a régua, um dedo mede; zoom continua com dois dedos.
+            panEnabled: !_regua,
             child: SizedBox(
               width: largura,
               height: altura,
@@ -508,6 +687,8 @@ class _MapaDaCenaState extends State<MapaDaCena> {
                 children: [
                   Positioned.fill(child: Image.memory(bytes, fit: BoxFit.fill)),
                   for (final t in mapa.tokens) _peca(t, Size(largura, altura)),
+                  if (_regua)
+                    _camadaRegua(mapa, Size(largura, altura), tamanho),
                 ],
               ),
             ),
@@ -517,10 +698,52 @@ class _MapaDaCenaState extends State<MapaDaCena> {
     );
   }
 
+  Widget _camadaRegua(MapaMesa mapa, Size tela, Size imagem) {
+    Offset rel(Offset local) => Offset(
+      (local.dx / tela.width).clamp(0.0, 1.0),
+      (local.dy / tela.height).clamp(0.0, 1.0),
+    );
+    final a = _reguaDe;
+    final b = _reguaAte;
+    String? rotulo;
+    if (a != null && b != null) {
+      if (_calibrando || mapa.quadrado <= 0) {
+        rotulo = widget.mestre ? 'Solte para dizer quantos quadrados' : null;
+      } else {
+        rotulo = Regua.rotulo(a, b, imagem, mapa.quadrado);
+      }
+    }
+    return Positioned.fill(
+      child: GestureDetector(
+        key: const ValueKey('camada-regua'),
+        behavior: HitTestBehavior.opaque,
+        // A linha começa onde o dedo encostou, não onde o arrasto foi
+        // reconhecido (uns 36 px depois) — senão a calibragem sai torta.
+        dragStartBehavior: DragStartBehavior.down,
+        onPanStart: (d) => setState(() {
+          _reguaDe = _grudar(rel(d.localPosition), tela);
+          _reguaAte = _reguaDe;
+        }),
+        onPanUpdate: (d) =>
+            setState(() => _reguaAte = _grudar(rel(d.localPosition), tela)),
+        onPanEnd: (_) => _fimDaRegua(),
+        child: CustomPaint(
+          painter: _PintorRegua(
+            de: a,
+            ate: b,
+            rotulo: rotulo,
+            calibrando: _calibrando || mapa.quadrado <= 0,
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _peca(TokenMapa t, Size mapa) {
     final lado = 46.0 * t.escala;
     final pos = _posicao(t);
-    final peca = _PecaMapa(token: t, lado: lado);
+    final daVez = _iniciativa?.atual?.id == t.id;
+    final peca = _PecaMapa(token: t, lado: lado, daVez: daVez);
 
     return Positioned(
       left: pos.dx * mapa.width - lado / 2,
@@ -547,7 +770,6 @@ class _MapaDaCenaState extends State<MapaDaCena> {
   }
 }
 
-/// A peça em si: retrato quando existe, inicial quando não.
 /// A faixa de plantas do mestre, em cima do mapa: um toque troca o mapa de
 /// todo mundo. Agrupa pelo grupo que o mestre der ("Missão 3"); segurar
 /// abre renomear, grupo, mover e apagar.
@@ -879,9 +1101,13 @@ class _FaixaMapas extends StatelessWidget {
   }
 }
 
+/// A peça em si: retrato quando existe, inicial quando não.
 class _PecaMapa extends StatelessWidget {
   final TokenMapa token;
   final double lado;
+
+  /// É a vez dela na iniciativa: ganha um halo para ninguém procurar.
+  final bool daVez;
 
   /// No mapa a etiqueta com o nome é essencial; nas listas o nome já está
   /// do lado, e repetir embaixo do círculo só suja.
@@ -891,6 +1117,7 @@ class _PecaMapa extends StatelessWidget {
     required this.token,
     required this.lado,
     this.comNome = true,
+    this.daVez = false,
   });
 
   @override
@@ -905,9 +1132,22 @@ class _PecaMapa extends StatelessWidget {
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             color: Cores.fundo,
-            border: Border.all(color: cor, width: 3),
-            boxShadow: const [
-              BoxShadow(color: Colors.black87, blurRadius: 6, spreadRadius: 1),
+            border: Border.all(
+              color: daVez ? Cores.energiaViva : cor,
+              width: daVez ? 4 : 3,
+            ),
+            boxShadow: [
+              const BoxShadow(
+                color: Colors.black87,
+                blurRadius: 6,
+                spreadRadius: 1,
+              ),
+              if (daVez)
+                BoxShadow(
+                  color: Cores.energiaViva.withValues(alpha: .8),
+                  blurRadius: 14,
+                  spreadRadius: 4,
+                ),
             ],
           ),
           clipBehavior: Clip.antiAlias,
@@ -1176,11 +1416,15 @@ class _Miniatura extends StatelessWidget {
 
 /// Quem está no mapa: fichas publicadas, NPCs do aparelho e peça avulsa.
 class _FolhaPecas extends StatefulWidget {
+  final MesaService servico;
+  final String mesaId;
   final List<FichaNaMesa> fichas;
   final List<TokenMapa> tokens;
   final Future<void> Function(List<TokenMapa>) aoTrocar;
 
   const _FolhaPecas({
+    required this.servico,
+    required this.mesaId,
     required this.fichas,
     required this.tokens,
     required this.aoTrocar,
@@ -1240,6 +1484,98 @@ class _FolhaPecasState extends State<_FolhaPecas> {
       );
     });
     _salvar();
+  }
+
+  /// Imagem da galeria (Monstros ou NPCs) vira peça com a própria imagem.
+  /// Monstro entra como ameaça; NPC, não.
+  void _porDaGaleria(ItemGaleria item) {
+    final ameaca = item.categoria == CategoriaGaleria.monstro;
+    final nome = item.legenda.isEmpty ? item.categoria.singular : item.legenda;
+    setState(() {
+      _tokens.add(
+        TokenMapa(
+          id: 'npc:${DateTime.now().microsecondsSinceEpoch}',
+          nome: nome,
+          retrato: ImagemMural.peca(item.miniaturaBase64),
+          cor: corDaPeca(nome, inimigo: ameaca),
+          x: .5,
+          y: .5,
+          inimigo: ameaca,
+        ),
+      );
+    });
+    _salvar();
+  }
+
+  Widget _daGaleria() {
+    return StreamBuilder<List<ItemGaleria>>(
+      stream: widget.servico.observarGaleria(widget.mesaId),
+      builder: (context, snap) {
+        final itens = [
+          for (final i in snap.data ?? const <ItemGaleria>[])
+            if (i.categoria == CategoriaGaleria.monstro ||
+                i.categoria == CategoriaGaleria.npc)
+              i,
+        ];
+        if (itens.isEmpty) {
+          return const Text(
+            'Nenhuma imagem em Monstros ou NPCs na galeria.',
+            style: TextStyle(fontSize: 12, color: Cores.tinta2),
+          );
+        }
+        return SizedBox(
+          height: 92,
+          child: ListView(
+            scrollDirection: Axis.horizontal,
+            children: [
+              for (final i in itens)
+                Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: InkWell(
+                    key: ValueKey('galeria-peca-${i.id}'),
+                    borderRadius: BorderRadius.circular(8),
+                    onTap: () => _porDaGaleria(i),
+                    child: SizedBox(
+                      width: 64,
+                      child: Column(
+                        children: [
+                          Container(
+                            width: 56,
+                            height: 56,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: i.categoria == CategoriaGaleria.monstro
+                                    ? Cores.sangue
+                                    : Cores.linha,
+                                width: 2,
+                              ),
+                            ),
+                            clipBehavior: Clip.antiAlias,
+                            child: Image.memory(
+                              base64Decode(i.miniaturaBase64),
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, _, _) =>
+                                  const Icon(Icons.broken_image_outlined),
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            i.legenda,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(fontSize: 11),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   Future<void> _escolherNpc() async {
@@ -1365,9 +1701,9 @@ class _FolhaPecasState extends State<_FolhaPecas> {
             ),
             const SizedBox(height: 4),
             const Text(
-              'Agente com ficha publicada entra com o retrato dele. NPC do '
-              'bestiário entra com o brasão. Toque numa peça no mapa para '
-              'mudar o tamanho.',
+              'Agente com ficha publicada entra com o retrato dele. Monstro '
+              'e NPC da galeria entram com a imagem; do bestiário, com o '
+              'brasão. Toque numa peça no mapa para mudar o tamanho.',
               style: TextStyle(fontSize: 12, color: Cores.tinta2),
             ),
             const SizedBox(height: 12),
@@ -1384,6 +1720,13 @@ class _FolhaPecasState extends State<_FolhaPecas> {
                 title: Text(f.nome.isEmpty ? 'Sem nome' : f.nome),
               ),
             const Divider(height: 24),
+            const Text(
+              'Da galeria (Monstros e NPCs)',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+            ),
+            const SizedBox(height: 8),
+            _daGaleria(),
+            const SizedBox(height: 12),
             Align(
               alignment: Alignment.centerLeft,
               child: OutlinedButton.icon(
@@ -1450,6 +1793,84 @@ class _FolhaPecasState extends State<_FolhaPecas> {
       ),
     );
   }
+}
+
+/// A linha da régua, com as pontas e o rótulo no meio.
+class _PintorRegua extends CustomPainter {
+  final Offset? de;
+  final Offset? ate;
+  final String? rotulo;
+  final bool calibrando;
+
+  _PintorRegua({
+    required this.de,
+    required this.ate,
+    required this.rotulo,
+    required this.calibrando,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final a = de;
+    final b = ate;
+    if (a == null || b == null) return;
+    final pa = Offset(a.dx * size.width, a.dy * size.height);
+    final pb = Offset(b.dx * size.width, b.dy * size.height);
+    final cor = calibrando ? Cores.conhecimento : Cores.energiaViva;
+    final linha = Paint()
+      ..color = cor
+      ..strokeWidth = 3
+      ..strokeCap = StrokeCap.round;
+    canvas.drawLine(
+      pa,
+      pb,
+      Paint()
+        ..color = Colors.black54
+        ..strokeWidth = 6
+        ..strokeCap = StrokeCap.round,
+    );
+    canvas.drawLine(pa, pb, linha);
+    canvas.drawCircle(pa, 5, Paint()..color = cor);
+    canvas.drawCircle(pb, 5, Paint()..color = cor);
+    final texto = rotulo;
+    if (texto == null || (pb - pa).distance < 4) return;
+    final pintor = TextPainter(
+      text: TextSpan(
+        text: texto,
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 13,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+      textDirection: TextDirection.ltr,
+    )..layout(maxWidth: size.width);
+    var centro = Offset.lerp(pa, pb, .5)! - const Offset(0, 22);
+    final meia = Offset(pintor.width / 2 + 8, pintor.height / 2 + 4);
+    centro = Offset(
+      centro.dx.clamp(meia.dx, size.width - meia.dx),
+      centro.dy.clamp(meia.dy, size.height - meia.dy),
+    );
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromCenter(
+          center: centro,
+          width: pintor.width + 16,
+          height: pintor.height + 8,
+        ),
+        const Radius.circular(6),
+      ),
+      Paint()..color = Colors.black.withValues(alpha: .8),
+    );
+    pintor.paint(canvas, centro - Offset(pintor.width / 2, pintor.height / 2));
+  }
+
+  @override
+  bool shouldRepaint(_PintorRegua velho) =>
+      velho.de != de ||
+      velho.ate != ate ||
+      velho.rotulo != rotulo ||
+      velho.calibrando != calibrando;
 }
 
 class _Recado extends StatelessWidget {

@@ -14,6 +14,7 @@ import '../mesa/ouvinte_mapa.dart';
 import '../mesa/ouvinte_mural.dart';
 import '../mesa/ponte_rolagens.dart';
 import '../mesa/telas/mesa_aba.dart';
+import '../mesa/telas/pistas_mesa.dart';
 import '../models/ficha_op.dart';
 import '../regras/pendencias.dart';
 import '../store/ficha_store.dart';
@@ -61,7 +62,13 @@ class _HomeScreenState extends State<HomeScreen> {
             servico: PonteRolagens.servico,
             mesaId: estado.mesaId,
             mestre: estado.papel == PapelMesa.mestre,
-            child: corpo,
+            child: OuvintePistas(
+              key: ValueKey('pistas-${estado.mesaId}'),
+              servico: PonteRolagens.servico,
+              mesaId: estado.mesaId,
+              mestre: estado.papel == PapelMesa.mestre,
+              child: corpo,
+            ),
           ),
         );
       },

@@ -62,6 +62,30 @@ service cloud.firestore {
         allow create, update: if logado();
         allow delete: if souMestre(mesaId);
       }
+      // PV das ameaças no combate: jogador não sabe quanto falta.
+      match /privado/combate {
+        allow read, write: if souMestre(mesaId);
+      }
+
+      // Pista entregue a jogadores escolhidos. Só quem está em `veem` lê.
+      // Quem tem pode repassar: só acrescenta gente (nunca tira) e anota
+      // o repasse.
+      match /pistas/{pistaId} {
+        function vejo() {
+          return souMembro(mesaId) && uid() in resource.data.veem;
+        }
+        allow read: if souMestre(mesaId) || vejo();
+        allow create, delete: if souMestre(mesaId);
+        allow update: if souMestre(mesaId) || (vejo() &&
+          request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['veem', 'repasses']) &&
+          request.resource.data.veem.hasAll(resource.data.veem));
+      }
+      match /pistasImagens/{pistaId} {
+        allow read: if souMestre(mesaId) || (souMembro(mesaId) &&
+          uid() in get(/databases/$(db)/documents/mesas/$(mesaId)/pistas/$(pistaId)).data.veem);
+        allow write: if souMestre(mesaId);
+      }
 
       match /membros/{membroUid} {
         allow read: if souMembro(mesaId) || (logado() && membroUid == uid());
