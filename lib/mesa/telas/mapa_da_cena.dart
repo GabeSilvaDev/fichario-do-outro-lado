@@ -260,17 +260,63 @@ class _MapaDaCenaState extends State<MapaDaCena> {
     ];
   }
 
-  Future<void> _porNaMesa(String imagemId, String nome) async {
+  Future<void> _porNaMesa(String imagemId, String nome) => _trocarPara(
+    ImagemDeMapa(
+      id: imagemId,
+      nome: nome,
+      miniaturaBase64: '',
+      em: DateTime.now(),
+    ),
+  );
+
+  /// Troca o mapa da mesa para [destino], para todo mundo. O mapa que sai
+  /// guarda onde estavam as peças; o que entra traz as dele de volta (ou,
+  /// se nunca foi usado, só os agentes publicados, na base). Agente que
+  /// tirou a ficha da mesa não volta; quem publicou e não tinha peça entra.
+  Future<void> _trocarPara(ImagemDeMapa destino) async {
+    final atual = _mapa;
+    if (atual != null && atual.imagemId == destino.id) return;
     setState(() => _ocupado = true);
     try {
-      // Quem publicou a ficha e ainda não tem peça entra junto, na base.
-      final iniciais = await _pecasIniciais();
-      final tokens = [
-        ..._tokens,
-        for (final p in iniciais)
-          if (!_tokens.any((t) => t.id == p.id)) p,
+      if (atual != null && atual.imagemId.isNotEmpty) {
+        await widget.servico.guardarPecasDoMapa(
+          widget.mesaId,
+          atual.imagemId,
+          _tokens,
+        );
+      }
+      // A planta da faixa pode estar velha: lê as peças guardadas de agora.
+      final guardadas =
+          (await widget.servico
+                  .observarMapasGuardados(widget.mesaId)
+                  .first
+                  .timeout(
+                    const Duration(seconds: 8),
+                    onTimeout: () => const [],
+                  ))
+              .where((m) => m.id == destino.id)
+              .firstOrNull
+              ?.pecas ??
+          destino.pecas;
+      final agentes = await _pecasIniciais();
+      final publicados = {for (final a in agentes) a.id: a};
+      final tokens = <TokenMapa>[
+        for (final t in guardadas ?? const <TokenMapa>[])
+          if (t.id.startsWith('npc:'))
+            t
+          else if (publicados[t.id] case final agora?)
+            // Volta onde estava, com nome e foto de agora.
+            t.copiar(nome: agora.nome, retrato: agora.retrato),
       ];
-      await widget.servico.abrirMapa(widget.mesaId, imagemId, nome, tokens);
+      for (final a in agentes) {
+        if (!tokens.any((t) => t.id == a.id)) tokens.add(a);
+      }
+      await widget.servico.abrirMapa(
+        widget.mesaId,
+        destino.id,
+        destino.nome,
+        tokens,
+      );
     } catch (e) {
       _erro(e);
     } finally {
@@ -396,9 +442,24 @@ class _MapaDaCenaState extends State<MapaDaCena> {
           ],
         ],
       ),
-      body: _ocupado
-          ? const Center(child: CircularProgressIndicator())
-          : _corpo(mapa),
+      body: Column(
+        children: [
+          if (widget.mestre)
+            _FaixaMapas(
+              servico: widget.servico,
+              mesaId: widget.mesaId,
+              atual: mapa?.imagemId ?? '',
+              aoEscolher: _trocarPara,
+              aoSubir: _subirPlanta,
+              aoErro: _erro,
+            ),
+          Expanded(
+            child: _ocupado
+                ? const Center(child: CircularProgressIndicator())
+                : _corpo(mapa),
+          ),
+        ],
+      ),
     );
   }
 
@@ -487,6 +548,337 @@ class _MapaDaCenaState extends State<MapaDaCena> {
 }
 
 /// A peça em si: retrato quando existe, inicial quando não.
+/// A faixa de plantas do mestre, em cima do mapa: um toque troca o mapa de
+/// todo mundo. Agrupa pelo grupo que o mestre der ("Missão 3"); segurar
+/// abre renomear, grupo, mover e apagar.
+class _FaixaMapas extends StatelessWidget {
+  final MesaService servico;
+  final String mesaId;
+  final String atual;
+  final Future<void> Function(ImagemDeMapa) aoEscolher;
+  final Future<void> Function() aoSubir;
+  final void Function(Object) aoErro;
+
+  const _FaixaMapas({
+    required this.servico,
+    required this.mesaId,
+    required this.atual,
+    required this.aoEscolher,
+    required this.aoSubir,
+    required this.aoErro,
+  });
+
+  /// Plantas na ordem da faixa: por grupo (sem grupo primeiro), depois pela
+  /// ordem dentro do grupo.
+  static List<ImagemDeMapa> ordenar(List<ImagemDeMapa> mapas) {
+    final grupos = <String>[];
+    for (final m in mapas) {
+      if (!grupos.contains(m.grupo)) grupos.add(m.grupo);
+    }
+    grupos.sort((a, b) {
+      if (a.isEmpty) return -1;
+      if (b.isEmpty) return 1;
+      return a.toLowerCase().compareTo(b.toLowerCase());
+    });
+    return [for (final g in grupos) ...mapas.where((m) => m.grupo == g)];
+  }
+
+  Future<void> _mover(
+    BuildContext context,
+    List<ImagemDeMapa> doGrupo,
+    int de,
+    int para,
+  ) async {
+    final lista = [...doGrupo];
+    final m = lista.removeAt(de);
+    lista.insert(para, m);
+    try {
+      for (var i = 0; i < lista.length; i++) {
+        if (lista[i].ordem != i * 10) {
+          await servico.editarMapaGuardado(mesaId, lista[i].id, ordem: i * 10);
+        }
+      }
+    } catch (e) {
+      aoErro(e);
+    }
+  }
+
+  Future<void> _editar(BuildContext context, ImagemDeMapa m) async {
+    final nome = TextEditingController(text: m.nome);
+    final grupo = TextEditingController(text: m.grupo);
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Planta'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              key: const ValueKey('planta-nome'),
+              controller: nome,
+              decoration: const InputDecoration(labelText: 'Nome'),
+            ),
+            const SizedBox(height: 8),
+            TextField(
+              key: const ValueKey('planta-grupo'),
+              controller: grupo,
+              decoration: const InputDecoration(
+                labelText: 'Grupo (opcional)',
+                hintText: 'Ex.: Missão 3',
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Salvar'),
+          ),
+        ],
+      ),
+    );
+    if (ok != true) return;
+    try {
+      await servico.editarMapaGuardado(
+        mesaId,
+        m.id,
+        nome: nome.text.trim().isEmpty ? m.nome : nome.text.trim(),
+        grupo: grupo.text.trim(),
+      );
+    } catch (e) {
+      aoErro(e);
+    }
+  }
+
+  Future<void> _apagar(BuildContext context, ImagemDeMapa m) async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Apagar esta planta?'),
+        content: Text(
+          '"${m.nome}" sai da biblioteca da mesa, com as posições das peças '
+          'guardadas nela. Isso não pode ser desfeito.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Apagar'),
+          ),
+        ],
+      ),
+    );
+    if (ok != true) return;
+    try {
+      await servico.apagarMapaGuardado(mesaId, m.id);
+    } catch (e) {
+      aoErro(e);
+    }
+  }
+
+  Future<void> _opcoes(
+    BuildContext context,
+    ImagemDeMapa m,
+    List<ImagemDeMapa> doGrupo,
+  ) async {
+    final i = doGrupo.indexWhere((x) => x.id == m.id);
+    final escolha = await showModalBottomSheet<String>(
+      context: context,
+      backgroundColor: Cores.carta,
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
+              child: Text(
+                m.nome,
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ),
+            ListTile(
+              key: const ValueKey('planta-editar'),
+              leading: const Icon(Icons.edit_outlined),
+              title: const Text('Renomear / grupo'),
+              onTap: () => Navigator.pop(ctx, 'editar'),
+            ),
+            if (i > 0)
+              ListTile(
+                leading: const Icon(Icons.arrow_back),
+                title: const Text('Mover para a esquerda'),
+                onTap: () => Navigator.pop(ctx, 'esq'),
+              ),
+            if (i >= 0 && i < doGrupo.length - 1)
+              ListTile(
+                leading: const Icon(Icons.arrow_forward),
+                title: const Text('Mover para a direita'),
+                onTap: () => Navigator.pop(ctx, 'dir'),
+              ),
+            if (m.id != atual)
+              ListTile(
+                leading: const Icon(Icons.delete_outline, color: Cores.sangue),
+                title: const Text(
+                  'Apagar planta',
+                  style: TextStyle(color: Cores.sangue),
+                ),
+                onTap: () => Navigator.pop(ctx, 'apagar'),
+              ),
+          ],
+        ),
+      ),
+    );
+    if (!context.mounted) return;
+    switch (escolha) {
+      case 'editar':
+        await _editar(context, m);
+      case 'esq':
+        await _mover(context, doGrupo, i, i - 1);
+      case 'dir':
+        await _mover(context, doGrupo, i, i + 1);
+      case 'apagar':
+        await _apagar(context, m);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 104,
+      color: Cores.carta,
+      child: StreamBuilder<List<ImagemDeMapa>>(
+        stream: servico.observarMapasGuardados(mesaId),
+        builder: (context, snap) {
+          final mapas = ordenar(snap.data ?? const []);
+          final filhos = <Widget>[];
+          String? grupoAnterior;
+          for (final m in mapas) {
+            if (m.grupo != grupoAnterior) {
+              grupoAnterior = m.grupo;
+              if (m.grupo.isNotEmpty) {
+                filhos.add(
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(10, 0, 4, 0),
+                    child: RotatedBox(
+                      quarterTurns: 3,
+                      child: Text(
+                        m.grupo.toUpperCase(),
+                        style: const TextStyle(
+                          fontSize: 10,
+                          letterSpacing: 1.2,
+                          fontWeight: FontWeight.bold,
+                          color: Cores.conhecimento,
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              }
+            }
+            final doGrupo = mapas.where((x) => x.grupo == m.grupo).toList();
+            final selecionado = m.id == atual;
+            filhos.add(
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+                child: InkWell(
+                  key: ValueKey('faixa-${m.id}'),
+                  borderRadius: BorderRadius.circular(8),
+                  // No mapa já aberto, tocar abre o menu; no PC, o
+                  // botão direito também (mouse não faz toque longo).
+                  onTap: selecionado
+                      ? () => _opcoes(context, m, doGrupo)
+                      : () => aoEscolher(m),
+                  onLongPress: () => _opcoes(context, m, doGrupo),
+                  onSecondaryTap: () => _opcoes(context, m, doGrupo),
+                  child: SizedBox(
+                    width: 96,
+                    child: Column(
+                      children: [
+                        Container(
+                          height: 60,
+                          width: 96,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: selecionado
+                                  ? Cores.energiaViva
+                                  : Cores.linha,
+                              width: selecionado ? 3 : 1,
+                            ),
+                          ),
+                          clipBehavior: Clip.antiAlias,
+                          child: m.miniaturaBase64.isEmpty
+                              ? const Icon(Icons.map_outlined)
+                              : Image.memory(
+                                  base64Decode(m.miniaturaBase64),
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (_, _, _) =>
+                                      const Icon(Icons.broken_image_outlined),
+                                ),
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          m.nome,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: selecionado
+                                ? FontWeight.bold
+                                : FontWeight.normal,
+                            color: selecionado ? Cores.tinta : Cores.tinta2,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            );
+          }
+          filhos.add(
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 6),
+              child: SizedBox(
+                width: 72,
+                child: OutlinedButton(
+                  key: const ValueKey('faixa-subir'),
+                  onPressed: aoSubir,
+                  style: OutlinedButton.styleFrom(
+                    padding: EdgeInsets.zero,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  child: const Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.add_photo_alternate_outlined),
+                      SizedBox(height: 2),
+                      Text('Nova', style: TextStyle(fontSize: 11)),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          );
+          return ListView(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 10),
+            children: filhos,
+          );
+        },
+      ),
+    );
+  }
+}
+
 class _PecaMapa extends StatelessWidget {
   final TokenMapa token;
   final double lado;
