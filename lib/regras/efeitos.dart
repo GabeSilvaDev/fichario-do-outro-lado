@@ -1,6 +1,6 @@
 import 'condicoes.dart';
 
-/// Tudo o que poderes, origem, condições, ferimentos e idade somam na
+/// Tudo o que poderes, origem, proteção e idade somam na
 /// ficha, já juntado. Quem calcula Defesa, PV, testes e dano lê daqui em
 /// vez de conhecer cada fonte.
 ///
@@ -38,7 +38,7 @@ class Efeitos {
   int custoPeCondicao = 0;
   bool semAcoes = false;
 
-  /// d20 a menos que se somam (fontes diferentes): ferimento, proteção sem
+  /// d20 a menos que se somam (fontes diferentes): proteção sem
   /// proficiência.
   final Map<String, int> dadosPenalidade = {};
 

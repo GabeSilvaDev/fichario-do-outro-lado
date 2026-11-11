@@ -8,7 +8,6 @@ void main() {
   final especialista = DadosOP.classePorNome('Especialista')!;
   final ocultista = DadosOP.classePorNome('Ocultista')!;
   final mundano = DadosOP.classePorNome('Mundano')!;
-  final sobrevivente = DadosOP.classePorNome('Sobrevivente')!;
 
   FichaOP agente(String classe, int nex, [Map<String, int> attrs = const {}]) {
     final f = FichaOP.nova('x')..classe = classe;
@@ -144,12 +143,6 @@ void main() {
       f.nex = 10;
       expect(f.pv, f.pvMax);
     });
-
-    test('estágio do sobrevivente também', () {
-      final f = agente('Sobrevivente', 0, {'VIG': 1});
-      f.estagio = 3;
-      expect(f.pv, f.pvMax);
-    });
   });
 
   group('Aumento de Atributo', () {
@@ -160,12 +153,10 @@ void main() {
       expect(ocultista.aumentosAtributo(80), 3);
       expect(ocultista.aumentosAtributo(99), 4);
     });
+  });
 
-    test('sobrevivente ganha o dele no estágio 3; mundano nenhum', () {
-      expect(sobrevivente.aumentosAtributo(0, estagio: 2), 0);
-      expect(sobrevivente.aumentosAtributo(0, estagio: 3), 1);
-      expect(mundano.aumentosAtributo(0), 0);
-    });
+  test('mundano não ganha Aumento de Atributo', () {
+    expect(mundano.aumentosAtributo(0), 0);
   });
 
   group('Grau de Treinamento', () {

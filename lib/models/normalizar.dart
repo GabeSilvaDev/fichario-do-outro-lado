@@ -16,7 +16,6 @@ void normalizarFicha(Map<String, dynamic> d) {
     }
   }
   if (d['nex'] is int) d['nex'] = (d['nex'] as int).clamp(0, 99);
-  if (d['estagio'] is int) d['estagio'] = (d['estagio'] as int).clamp(1, 5);
   for (final chave in ['pv', 'san', 'pe', 'pd', 'pvTemporario', 'pp']) {
     if (d[chave] is int && (d[chave] as int) < 0) d[chave] = 0;
   }
@@ -110,7 +109,6 @@ Map<String, dynamic> _itemNormalizado(Map item) {
 
 const _inteiros = [
   'nex',
-  'estagio',
   'deslocamento',
   'idade',
   'pv',
@@ -133,7 +131,6 @@ const _inteiros = [
   'sanDanoExcedente',
   'peDanoExcedente',
   'pdDanoExcedente',
-  'exSobrevivente',
   'estabilizacoes',
   'acalmado',
 ];
@@ -147,7 +144,6 @@ const _booleanos = [
   'modoLivre',
   'escudo',
   'insano',
-  'regraDeterminacao',
 ];
 
 const _textos = [
@@ -186,8 +182,8 @@ const _listasDeMapas = ['ataques', 'habilidades', 'rituais', 'inventario'];
 const _listasDeTextos = [
   'proficiencias',
   'condicoes',
-  'ferimentos',
   'desvantagens',
+  'pendenciasIgnoradas',
 ];
 
 const _inteirosDeItem = {
@@ -197,7 +193,6 @@ const _inteirosDeItem = {
   'espacos',
   'quantidade',
   'nex',
-  'estagio',
 };
 const _booleanosDeItem = {
   'transcender',

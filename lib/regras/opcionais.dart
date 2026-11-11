@@ -1,10 +1,6 @@
 /// Regras opcionais que mexem nos números da ficha.
 ///
 /// - Idade variada (OPRPG p. 172–174): faixa etária e desvantagens de idade.
-/// - Ferimentos debilitantes (SAH p. 105): −O num atributo; no Vigor, −1 PV
-///   máximo por 5% de NEX.
-/// - Jogando sem Sanidade (SAH p. 104–105): Pontos de Determinação no lugar
-///   de PE e SAN.
 class FaixaEtaria {
   final String nome;
   final String efeito;
@@ -177,14 +173,4 @@ class RegrasOpcionais {
     }
     return null;
   }
-
-  /// Pontos de Determinação (SAH p. 104): (inicial, por NEX, soma Pre por
-  /// NEX?). O Sobrevivente sobe por estágio: 4+Pre, +2 por estágio.
-  static const Map<String, (int, int, bool)> determinacao = {
-    'Combatente': (6, 3, true),
-    'Especialista': (8, 4, true),
-    'Ocultista': (10, 5, true),
-    'Sobrevivente': (4, 2, false),
-    'Mundano': (4, 0, false),
-  };
 }

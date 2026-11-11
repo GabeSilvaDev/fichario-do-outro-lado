@@ -285,61 +285,10 @@ void main() {
     });
   });
 
-  group('sobrevivente (Sobrevivendo ao Horror)', () {
-    final sobrevivente = DadosOP.classePorNome('Sobrevivente')!;
-
-    test('estágio 1 com Vigor 1 e Presença 1', () {
-      expect(sobrevivente.pvMax(0, 1, estagio: 1), 9);
-      expect(sobrevivente.peMax(0, 1, estagio: 1), 3);
-      expect(sobrevivente.sanMax(0, estagio: 1), 8);
-    });
-
-    test('estágio 5 soma quatro passos', () {
-      expect(sobrevivente.pvMax(0, 1, estagio: 5), 17);
-      expect(sobrevivente.peMax(0, 1, estagio: 5), 7);
-      expect(sobrevivente.sanMax(0, estagio: 5), 16);
-    });
-
-    test('o limite de PE fica em 1 em qualquer estágio', () {
-      expect(sobrevivente.limitePe(0), 1);
-      expect(sobrevivente.limitePe(99), 1);
-      expect(combatente.limitePe(30), 6);
-    });
-
-    test('recebe 3 pontos de atributo, como o civil', () {
-      expect(sobrevivente.pontosAtributo, 3);
-      expect(combatente.pontosAtributo, 4);
-    });
-
-    test('a ficha usa o estágio no lugar do NEX', () {
-      final f = FichaOP.nova('s');
-      f.classe = 'Sobrevivente';
-      f.definirAtributo('VIG', 2);
-      f.definirAtributo('PRE', 1);
-      expect(f.porEstagio, isTrue);
-      expect(f.pvMax, 10);
-      f.estagio = 3;
-      expect(f.pvMax, 14);
-      expect(f.limitePeTurno, 1);
-    });
-
-    test('estágio fica preso entre 1 e 5', () {
-      final f = FichaOP.nova('s');
-      f.estagio = 9;
-      expect(f.estagio, 5);
-      f.estagio = 0;
-      expect(f.estagio, 1);
-    });
-
-    test('classe de agente ignora o estágio gravado', () {
-      final f = FichaOP.nova('a');
-      f.classe = 'Combatente';
-      f.nex = 10;
-      f.definirAtributo('VIG', 2);
-      f.estagio = 5;
-      expect(f.pvMax, 28);
-      expect(f.porEstagio, isFalse);
-    });
+  test('limite de PE e pontos de atributo do civil e do agente', () {
+    expect(combatente.limitePe(30), 6);
+    expect(mundano.pontosAtributo, 3);
+    expect(combatente.pontosAtributo, 4);
   });
 
   group('proteção e Defesa', () {
@@ -527,6 +476,16 @@ void _assets() {
       (j as Map).cast<String, dynamic>();
 
   group('assets do sistema', () {
+    test('as 26 origens do Livro de Regras, sem repetir', () {
+      final lista =
+          jsonDecode(File('assets/data/origens.json').readAsStringSync())
+              as List;
+      final origens = [for (final j in lista) Origem.fromJson(comoMapa(j))];
+      expect(origens, hasLength(26));
+      expect(origens.every((o) => o.fonte == 'Livro de Regras'), isTrue);
+      expect(origens.map((o) => o.nome).toSet(), hasLength(26));
+    });
+
     test('as 28 perícias com atributo-base válido', () {
       final lista =
           jsonDecode(File('assets/data/pericias.json').readAsStringSync())
@@ -540,45 +499,6 @@ void _assets() {
           contains(p.atributo),
           reason: '${p.nome} tem atributo-base inválido',
         );
-      }
-    });
-
-    test('as 46 origens — 26 do básico e 20 de Sobrevivendo ao Horror', () {
-      final lista =
-          jsonDecode(File('assets/data/origens.json').readAsStringSync())
-              as List;
-      final origens = [for (final j in lista) Origem.fromJson(comoMapa(j))];
-      expect(origens.length, 46);
-      expect(origens.where((o) => o.fonte == 'Livro de Regras').length, 26);
-      expect(
-        origens.where((o) => o.fonte == 'Sobrevivendo ao Horror').length,
-        20,
-      );
-      expect(
-        origens.map((o) => o.nome).toSet().length,
-        46,
-        reason: 'origem repetida entre os dois livros',
-      );
-
-      final nomesDePericia = {
-        for (final j
-            in jsonDecode(File('assets/data/pericias.json').readAsStringSync())
-                as List)
-          Pericia.fromJson(comoMapa(j)).nome,
-      };
-      const parciais = {'Amnésico', 'Profetizado'};
-      for (final o in origens) {
-        expect(o.poder, isNotEmpty, reason: '${o.nome} sem poder');
-        if (!parciais.contains(o.nome)) {
-          expect(o.pericias.length, 2, reason: o.nome);
-        }
-        for (final p in o.pericias) {
-          expect(
-            nomesDePericia,
-            contains(p),
-            reason: '${o.nome} treina perícia inexistente: $p',
-          );
-        }
       }
     });
 
@@ -604,7 +524,6 @@ void _assets() {
       expect(origens['Policial']!.mod('defesa'), 2);
       expect(origens['Desgarrado']!.mod('pvPorNivel'), 1);
       expect(origens['Vítima']!.mod('sanPorNivel'), 1);
-      expect(origens['Mergulhador']!.mod('pv'), 5);
       expect(origens['Universitário']!.mod('limitePe'), 1);
       expect(origens['Cultista Arrependido']!.flag('sanMetade'), isTrue);
     });
