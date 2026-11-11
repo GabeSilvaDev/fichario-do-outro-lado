@@ -9,11 +9,14 @@ duração, resistência) vem do extrator, que lê o PDF de quem tem o livro; o
 EFEITO vem de ferramentas/notacao_rituais.py, escrito à mão em notação de
 mesa. Nenhum parágrafo de livro entra aqui.
 
-ARMAS: só a linha da tabela — dano, crítico, alcance, tipo, espaços,
-categoria. Tabela é mecânica, e mecânica a licença libera; a descrição em
-prosa que o extrator captura é descartada de propósito.
+ARMAS: a linha da tabela — dano, crítico, alcance, tipo, espaços,
+categoria — vem do extrator; habilidades, regras especiais e a descrição de
+uma linha vêm de ferramentas/notacao_armas.py, escritas à mão. A prosa que o
+extrator captura é descartada de propósito. Munições, modificações,
+maldições de arma, itens de ataque e componentes ritualísticos saem da
+notação também.
 
-Uso: python3 ferramentas/gerar_catalogo.py
+Uso: python3 ferramentas/gerar_catalogo.py [--so-armas]
 """
 
 import json
@@ -25,10 +28,18 @@ import unicodedata
 RAIZ = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-RITUAIS_CRU = os.path.join(RAIZ, "..", "..", "Ordem", "App-Mestre", "dados",
-                           "rituais-cru.json")
-REGRAS_LOCAL = os.path.join(RAIZ, "..", "..", "Ordem", "App-Mestre", "dados",
-                            "regras.local.js")
+def _app_mestre(*partes):
+    """O App-Mestre mora em pessoal/ordem-paranormal/ (antes, Ordem/)."""
+    for pasta in ("ordem-paranormal", "Ordem"):
+        caminho = os.path.join(RAIZ, "..", "..", pasta, "App-Mestre", *partes)
+        if os.path.exists(caminho):
+            return caminho
+    return os.path.join(RAIZ, "..", "..", "ordem-paranormal", "App-Mestre",
+                        *partes)
+
+
+RITUAIS_CRU = _app_mestre("dados", "rituais-cru.json")
+REGRAS_LOCAL = _app_mestre("dados", "regras.local.js")
 SAIDA_RITUAIS = os.path.join(RAIZ, "assets", "catalogo", "rituais.json")
 SAIDA_ARMAS = os.path.join(RAIZ, "assets", "catalogo", "armas.json")
 
@@ -103,6 +114,9 @@ def carrega_armas():
     def limpa(valor):
         return "" if valor in ("—", "-", None) else str(valor).strip()
 
+    import notacao_armas as na
+
+    municoes = {m["nome"] for m in na.MUNICOES}
     armas = [
         {
             "nome": a["nome"],
@@ -114,9 +128,31 @@ def carrega_armas():
             "alcance": limpa(a.get("alcance")),
             "tipo": limpa(a.get("tipo")),
             "espacos": limpa(a.get("espacos")),
+            "pagina": 55,
         }
         for a in dados.get("armas", [])
+        if a["nome"] not in municoes
     ]
+    faltando = []
+    for a in armas:
+        nota = na.ARMAS.get(a["nome"])
+        if nota is None:
+            faltando.append(a["nome"])
+            continue
+        a["descricao"] = nota["desc"]
+        a["especial"] = nota.get("especial", [])
+        for flag in ("agil", "automatica", "arremesso", "somaForca"):
+            if nota.get(flag):
+                a[flag] = True
+        if nota.get("penalidadeDados"):
+            a["penalidadeDados"] = nota["penalidadeDados"]
+        if nota.get("municao"):
+            a["municao"] = nota["municao"]
+        if a["tipo"] == "Fogo":
+            a["tipo"] = "F"
+    if faltando:
+        raise SystemExit("armas sem notação (escreva em notacao_armas.py): "
+                         + ", ".join(faltando))
     protecoes = [
         {
             "nome": p["nome"],
@@ -129,36 +165,55 @@ def carrega_armas():
     return armas, protecoes
 
 
+def extras_armas():
+    import notacao_armas as na
+    return {
+        "municoes": na.MUNICOES,
+        "modificacoes": na.MODIFICACOES,
+        "maldicoes": na.MALDICOES,
+        "itensDeAtaque": na.ITENS_DE_ATAQUE,
+        "componentes": na.COMPONENTES,
+        "opressores": na.OPRESSORES,
+        "habilidades": {"agil": na.AGIL, "automatica": na.AUTOMATICA,
+                        "arremesso": na.ARREMESSO},
+    }
+
+
 TIPOS_DANO = {"C": "corte", "P": "perfuração", "I": "impacto",
               "B": "balístico", "F": "fogo", "E": "elétrico",
               "Q": "químico"}
 
 
 def main():
+    so_armas = "--so-armas" in sys.argv
+    armas, protecoes = carrega_armas()
+    os.makedirs(os.path.dirname(SAIDA_ARMAS), exist_ok=True)
+    with open(SAIDA_ARMAS, "w", encoding="utf-8") as fh:
+        json.dump({
+            "versao": 2,
+            "aviso": "Tabela de armas e proteções (mecânica) + habilidades, "
+                     "regras e descrições em notação própria. Nenhum texto "
+                     "de livro reproduzido.",
+            "tiposDeDano": TIPOS_DANO,
+            "armas": armas,
+            "protecoes": protecoes,
+            **extras_armas(),
+        }, fh, ensure_ascii=False, separators=(",", ":"))
+    if so_armas:
+        print("ok: %d armas, %d proteções" % (len(armas), len(protecoes)))
+        return
+
     rituais, faltando = carrega_rituais()
     if faltando:
         print("rituais sem notação (escreva em notacao_rituais.py): %s"
               % ", ".join(faltando), file=sys.stderr)
 
-    armas, protecoes = carrega_armas()
-
-    os.makedirs(os.path.dirname(SAIDA_RITUAIS), exist_ok=True)
     with open(SAIDA_RITUAIS, "w", encoding="utf-8") as fh:
         json.dump({
             "versao": 1,
             "aviso": "Ficha técnica dos rituais + efeito em notação própria. "
                      "Nenhum texto de livro reproduzido.",
             "rituais": rituais,
-        }, fh, ensure_ascii=False, separators=(",", ":"))
-
-    with open(SAIDA_ARMAS, "w", encoding="utf-8") as fh:
-        json.dump({
-            "versao": 1,
-            "aviso": "Tabela de armas e proteções (mecânica). As descrições "
-                     "em prosa do livro não entram.",
-            "tiposDeDano": TIPOS_DANO,
-            "armas": armas,
-            "protecoes": protecoes,
         }, fh, ensure_ascii=False, separators=(",", ":"))
 
     kb = (os.path.getsize(SAIDA_RITUAIS) + os.path.getsize(SAIDA_ARMAS)) // 1024
