@@ -61,12 +61,8 @@ Nenhuma delas é frase de livro, e um teste reprova qualquer uma que cresça
 a ponto de virar prosa.
 
 As 26 origens, as 28 perícias, as 5 patentes e as caixas de características
-das classes vêm do **Livro de Regras v1.3**; as 20 origens marcadas com
-`"fonte": "Sobrevivendo ao Horror"` e a classe **Sobrevivente** vêm de
-*Sobrevivendo ao Horror* (Jambô, 2024). De ambos saem só nome, número e
-tabela — a mesma regra de sempre. Quem quiser jogar com o conteúdo do
-suplemento precisa do livro na mão; o app marca de onde cada coisa veio
-justamente para a mesa saber o que está usando.
+das classes vêm do **Livro de Regras v1.3** — o único livro que o app usa.
+Dele saem só nome, número e tabela — a mesma regra de sempre.
 
 O PDF oficial não é lido, embutido nem distribuído pelo app.
 
