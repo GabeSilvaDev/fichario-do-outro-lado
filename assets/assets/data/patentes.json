@@ -1,0 +1,57 @@
+[
+ {
+  "nome": "Recruta",
+  "pp": 0,
+  "credito": "Baixo",
+  "limites": {
+   "I": 2,
+   "II": 0,
+   "III": 0,
+   "IV": 0
+  }
+ },
+ {
+  "nome": "Operador",
+  "pp": 20,
+  "credito": "Médio",
+  "limites": {
+   "I": 3,
+   "II": 1,
+   "III": 0,
+   "IV": 0
+  }
+ },
+ {
+  "nome": "Agente Especial",
+  "pp": 50,
+  "credito": "Médio",
+  "limites": {
+   "I": 3,
+   "II": 2,
+   "III": 1,
+   "IV": 0
+  }
+ },
+ {
+  "nome": "Oficial de Operações",
+  "pp": 100,
+  "credito": "Alto",
+  "limites": {
+   "I": 3,
+   "II": 3,
+   "III": 2,
+   "IV": 1
+  }
+ },
+ {
+  "nome": "Agente de Elite",
+  "pp": 200,
+  "credito": "Ilimitado",
+  "limites": {
+   "I": 3,
+   "II": 3,
+   "III": 3,
+   "IV": 2
+  }
+ }
+]

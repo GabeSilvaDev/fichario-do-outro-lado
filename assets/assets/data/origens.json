@@ -1,0 +1,302 @@
+[
+  {
+    "nome": "Acadêmico",
+    "pericias": [
+      "Ciências",
+      "Investigação"
+    ],
+    "periciasTexto": "Ciências e Investigação",
+    "poder": "Saber é Poder",
+    "poderDescricao": "2 PE → +5 em um teste de Intelecto.",
+    "fonte": "Livro de Regras"
+  },
+  {
+    "nome": "Agente de Saúde",
+    "pericias": [
+      "Intuição",
+      "Medicina"
+    ],
+    "periciasTexto": "Intuição e Medicina",
+    "poder": "Técnica Medicinal",
+    "poderDescricao": "Ao curar alguém, soma seu Intelecto aos PV recuperados.",
+    "fonte": "Livro de Regras"
+  },
+  {
+    "nome": "Amnésico",
+    "pericias": [],
+    "periciasTexto": "Duas à escolha do mestre",
+    "poder": "Vislumbres do Passado",
+    "poderDescricao": "1×/sessão: Intelecto DT 10 para reconhecer algo do passado → 1d4 PE temporários + uma informação.",
+    "fonte": "Livro de Regras"
+  },
+  {
+    "nome": "Artista",
+    "pericias": [
+      "Artes",
+      "Enganação"
+    ],
+    "periciasTexto": "Artes e Enganação",
+    "poder": "Magnum Opus",
+    "poderDescricao": "1×/missão: alguém em cena de interação te reconhece → +5 em Presença e perícias de PRE contra ela.",
+    "fonte": "Livro de Regras"
+  },
+  {
+    "nome": "Atleta",
+    "pericias": [
+      "Acrobacia",
+      "Atletismo"
+    ],
+    "periciasTexto": "Acrobacia e Atletismo",
+    "poder": "110%",
+    "poderDescricao": "2 PE → +5 em teste de perícia de Força ou Agilidade (exceto Luta e Pontaria).",
+    "fonte": "Livro de Regras"
+  },
+  {
+    "nome": "Chef",
+    "pericias": [
+      "Fortitude",
+      "Profissão"
+    ],
+    "periciasTexto": "Fortitude e Profissão (cozinheiro)",
+    "poder": "Ingrediente Secreto",
+    "poderDescricao": "Interlúdio: ao alimentar-se, você e quem comeu junto recebem o benefício de 2 pratos.",
+    "fonte": "Livro de Regras"
+  },
+  {
+    "nome": "Criminoso",
+    "pericias": [
+      "Crime",
+      "Furtividade"
+    ],
+    "periciasTexto": "Crime e Furtividade",
+    "poder": "O Crime Compensa",
+    "poderDescricao": "Fim de missão: 1 item achado nela entra na próxima sem contar no limite da patente.",
+    "fonte": "Livro de Regras"
+  },
+  {
+    "nome": "Cultista Arrependido",
+    "pericias": [
+      "Ocultismo",
+      "Religião"
+    ],
+    "periciasTexto": "Ocultismo e Religião",
+    "poder": "Traços do Outro Lado",
+    "poderDescricao": "1 poder paranormal à escolha; começa com metade da Sanidade da classe.",
+    "fonte": "Livro de Regras",
+    "modificadores": {
+      "sanMetade": true
+    }
+  },
+  {
+    "nome": "Desgarrado",
+    "pericias": [
+      "Fortitude",
+      "Sobrevivência"
+    ],
+    "periciasTexto": "Fortitude e Sobrevivência",
+    "poder": "Calejado",
+    "poderDescricao": "+1 PV para cada 5% de NEX.",
+    "fonte": "Livro de Regras",
+    "modificadores": {
+      "pvPorNivel": 1
+    }
+  },
+  {
+    "nome": "Engenheiro",
+    "pericias": [
+      "Profissão",
+      "Tecnologia"
+    ],
+    "periciasTexto": "Profissão e Tecnologia",
+    "poder": "Ferramenta Favorita",
+    "poderDescricao": "1 item à escolha (exceto arma) conta uma categoria abaixo.",
+    "fonte": "Livro de Regras"
+  },
+  {
+    "nome": "Executivo",
+    "pericias": [
+      "Diplomacia",
+      "Profissão"
+    ],
+    "periciasTexto": "Diplomacia e Profissão",
+    "poder": "Processo Otimizado",
+    "poderDescricao": "2 PE → +5 em teste de perícia dentro de teste estendido ou ao revisar documentos.",
+    "fonte": "Livro de Regras"
+  },
+  {
+    "nome": "Investigador",
+    "pericias": [
+      "Investigação",
+      "Percepção"
+    ],
+    "periciasTexto": "Investigação e Percepção",
+    "poder": "Faro para Pistas",
+    "poderDescricao": "1×/cena: 1 PE → +5 no teste para procurar pistas.",
+    "fonte": "Livro de Regras"
+  },
+  {
+    "nome": "Lutador",
+    "pericias": [
+      "Luta",
+      "Reflexos"
+    ],
+    "periciasTexto": "Luta e Reflexos",
+    "poder": "Mão Pesada",
+    "poderDescricao": "+2 em rolagens de dano com ataques corpo a corpo.",
+    "fonte": "Livro de Regras"
+  },
+  {
+    "nome": "Magnata",
+    "pericias": [
+      "Diplomacia",
+      "Pilotagem"
+    ],
+    "periciasTexto": "Diplomacia e Pilotagem",
+    "poder": "Patrocinador da Ordem",
+    "poderDescricao": "Limite de crédito conta sempre um acima do atual.",
+    "fonte": "Livro de Regras"
+  },
+  {
+    "nome": "Mercenário",
+    "pericias": [
+      "Iniciativa",
+      "Intimidação"
+    ],
+    "periciasTexto": "Iniciativa e Intimidação",
+    "poder": "Posição de Combate",
+    "poderDescricao": "1º turno da cena de ação: 2 PE → 1 ação de movimento adicional.",
+    "fonte": "Livro de Regras"
+  },
+  {
+    "nome": "Militar",
+    "pericias": [
+      "Pontaria",
+      "Tática"
+    ],
+    "periciasTexto": "Pontaria e Tática",
+    "poder": "Para Bellum",
+    "poderDescricao": "+2 em rolagens de dano com armas de fogo.",
+    "fonte": "Livro de Regras"
+  },
+  {
+    "nome": "Operário",
+    "pericias": [
+      "Fortitude",
+      "Profissão"
+    ],
+    "periciasTexto": "Fortitude e Profissão",
+    "poder": "Ferramenta de Trabalho",
+    "poderDescricao": "1 arma simples ou tática da sua profissão: proficiência e +1 em ataque, dano e margem de ameaça.",
+    "fonte": "Livro de Regras"
+  },
+  {
+    "nome": "Policial",
+    "pericias": [
+      "Percepção",
+      "Pontaria"
+    ],
+    "periciasTexto": "Percepção e Pontaria",
+    "poder": "Patrulha",
+    "poderDescricao": "+2 em Defesa.",
+    "fonte": "Livro de Regras",
+    "modificadores": {
+      "defesa": 2
+    }
+  },
+  {
+    "nome": "Religioso",
+    "pericias": [
+      "Religião",
+      "Vontade"
+    ],
+    "periciasTexto": "Religião e Vontade",
+    "poder": "Acalentar",
+    "poderDescricao": "+5 em Religião para acalmar; quem você acalma recupera 1d6 + Presença de Sanidade.",
+    "fonte": "Livro de Regras"
+  },
+  {
+    "nome": "Servidor Público",
+    "pericias": [
+      "Intuição",
+      "Vontade"
+    ],
+    "periciasTexto": "Intuição e Vontade",
+    "poder": "Espírito Cívico",
+    "poderDescricao": "1 PE → +2 no bônus que você concede ao ajudar.",
+    "fonte": "Livro de Regras"
+  },
+  {
+    "nome": "Teórico da Conspiração",
+    "pericias": [
+      "Investigação",
+      "Ocultismo"
+    ],
+    "periciasTexto": "Investigação e Ocultismo",
+    "poder": "Eu Já Sabia",
+    "poderDescricao": "Resistência a dano mental igual ao seu Intelecto.",
+    "fonte": "Livro de Regras"
+  },
+  {
+    "nome": "T.I.",
+    "pericias": [
+      "Investigação",
+      "Tecnologia"
+    ],
+    "periciasTexto": "Investigação e Tecnologia",
+    "poder": "Motor de Busca",
+    "poderDescricao": "Com acesso à internet: 2 PE → troca um teste de perícia qualquer por Tecnologia.",
+    "fonte": "Livro de Regras"
+  },
+  {
+    "nome": "Trabalhador Rural",
+    "pericias": [
+      "Adestramento",
+      "Sobrevivência"
+    ],
+    "periciasTexto": "Adestramento e Sobrevivência",
+    "poder": "Desbravador",
+    "poderDescricao": "2 PE → +5 em Adestramento ou Sobrevivência; sem penalidade de deslocamento em terreno difícil.",
+    "fonte": "Livro de Regras"
+  },
+  {
+    "nome": "Trambiqueiro",
+    "pericias": [
+      "Crime",
+      "Enganação"
+    ],
+    "periciasTexto": "Crime e Enganação",
+    "poder": "Impostor",
+    "poderDescricao": "1×/cena: 2 PE → troca um teste de perícia qualquer por Enganação.",
+    "fonte": "Livro de Regras"
+  },
+  {
+    "nome": "Universitário",
+    "pericias": [
+      "Atualidades",
+      "Investigação"
+    ],
+    "periciasTexto": "Atualidades e Investigação",
+    "poder": "Dedicação",
+    "poderDescricao": "+1 PE (e mais 1 a cada NEX ímpar: 15%, 25%…) e +1 no limite de PE por turno.",
+    "fonte": "Livro de Regras",
+    "modificadores": {
+      "pe": 1,
+      "pePorNivelImpar": 1,
+      "limitePe": 1
+    }
+  },
+  {
+    "nome": "Vítima",
+    "pericias": [
+      "Reflexos",
+      "Vontade"
+    ],
+    "periciasTexto": "Reflexos e Vontade",
+    "poder": "Cicatrizes Psicológicas",
+    "poderDescricao": "+1 de Sanidade para cada 5% de NEX.",
+    "fonte": "Livro de Regras",
+    "modificadores": {
+      "sanPorNivel": 1
+    }
+  }
+]
